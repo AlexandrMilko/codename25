@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="background-home-image"></div> <!-- BACKGROUND IMAGE AND OVERLAY -->
+<div class="overlay"></div>
+<div class="container">
+  <div class="form-container">
+    <h1 style="color: white; font-family: 'Roboto', sans-serif;">Sign In</h1>
+    <div class="form-background">
+    <form method="POST" action="{{ url_for('login') }}">
+      {{ form.hidden_tag() }}
+      <div class="form-group">
+        {{ form.email.label(style="color: white; font-family: 'Roboto', sans-serif;")}}
+        {{ form.email(class="form-control", id="email") }}
+        {% for error in form.email.errors %}
+        <span class="error" style="color: white; font-family: 'Roboto', sans-serif;">{{ error }}</span>
+        {% endfor %}
+      </div>
+      <div class="form-group" style="margin-top: 10px;">
+        {{ form.password.label(style="color: white; font-family: 'Roboto', sans-serif;")}}
+        {{ form.password(class="form-control", id="password") }}
+        {% for error in form.password.errors %}
+        <span class="error" style="color: white; font-family: 'Roboto', sans-serif;">{{ error }}</span>
+        {% endfor %}
+      </div>
+      <div class="form-check">
+        {{ form.remember(class="form-check-input") }}
+        {{ form.remember.label(class="form-check-label", style="color: white;") }}
+      </div>
+      <small class="text-muted ml-2">
+        <a href="#">Forgot Password?</a>
+      </small>
+      <div class="form-group">
+        {{ form.submit(class="btn btn-outline-info", style="font-family: 'Roboto', sans-serif; margin-top: 20px; margin-left: 65px;") }}
+      </div>
+    </form>
+      <div class="border-top pt-3" style="margin-top: 10px;">
+        Dont Have an Account? <a class="ml-2" href="{{ url_for('register') }}">Sign Up</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
