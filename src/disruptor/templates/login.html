@@ -12,14 +12,14 @@
         {{ form.email.label(style="color: white; font-family: 'Roboto', sans-serif;")}}
         {{ form.email(class="form-control", id="email") }}
         {% for error in form.email.errors %}
-        <span class="error" style="color: white; font-family: 'Roboto', sans-serif;">{{ error }}</span>
+        <span class="error" style="color: red; font-family: 'Roboto', sans-serif;">{{ error }}</span>
         {% endfor %}
       </div>
       <div class="form-group" style="margin-top: 10px;">
         {{ form.password.label(style="color: white; font-family: 'Roboto', sans-serif;")}}
         {{ form.password(class="form-control", id="password") }}
         {% for error in form.password.errors %}
-        <span class="error" style="color: white; font-family: 'Roboto', sans-serif;">{{ error }}</span>
+        <span class="error" style="color: red; font-family: 'Roboto', sans-serif;">{{ error }}</span>
         {% endfor %}
       </div>
       <div class="form-check">
