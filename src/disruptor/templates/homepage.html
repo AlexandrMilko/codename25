@@ -6,7 +6,8 @@
   <h1>Catchphrase Here</h1>
   <p>Additional text goes here</p>
   {% if current_user.is_authenticated %}
-  <a href="{{ url_for('logout') }}" class="btn btn-primary btn-lg btn-register">Log Out</a>
+  <a href="{{ url_for('space') }}" class="btn btn-primary btn-lg btn-register">Start</a>
+  <a href="{{ url_for('logout') }}" class="btn btn-secondary">Log Out</a>
   {% else %}
   <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg btn-register">Register</a>
   {% endif%}

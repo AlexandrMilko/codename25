@@ -4,6 +4,7 @@ from disruptor import app, db
 from flask_bcrypt import generate_password_hash, check_password_hash
 from disruptor.models import User
 from flask_login import login_user, logout_user, login_required
+from disruptor.sdquery import query
 
 @app.route("/")
 @app.route("/home")
@@ -40,8 +41,33 @@ def login():
             flash(f"Wrong email or password", 'danger')
     return render_template('login.html', title="Login", form=form)
 
+
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('home'))
+
+@app.route("/space")
+def space():
+    return render_template('space.html')
+
+@app.route("/result")
+def result():
+    return render_template('result.html')
+
+@app.route('/handle-option', methods=['POST'])
+def handle_option():
+    data = request.get_json()
+    selected_option = data['option']
+    current_page = data['currentPage']
+    imageName = data['imageName']
+
+    # Process the selected option, current page, and template name as needed
+    print('Selected option:', selected_option)
+    print('Current page:', current_page)
+    print('Image name:', imageName)
+
+    query({'prompt': imageName + ' room'}, 'disruptor/static/images/result_image.jpg')
+
+    return redirect(url_for('result'))
