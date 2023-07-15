@@ -1,6 +1,7 @@
 import json
 import base64
 
+import os
 import requests
 
 
@@ -19,7 +20,17 @@ def save_encoded_image(b64_image: str, output_path: str):
         image_file.write(base64.b64decode(b64_image))
 
 
-def query(data: dict, filename: str):
+def text_query(data: dict, filename: str):
     txt2img_url = 'http://127.0.0.1:7861/sdapi/v1/txt2img'
     response = submit_post(txt2img_url, data)
-    save_encoded_image(response.json()['images'][0], filename)
+    output_dir = "disruptor/static/images"
+    output_filename = os.path.join(output_dir, filename)
+    save_encoded_image(response.json()['images'][0], output_filename)
+
+def image_query(data: dict, filename: str):
+    img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
+    response = submit_post(img2img_url, data)
+    output_dir = "disruptor\static\images"
+    output_filename = os.path.join(output_dir, filename)
+    print(response.json())
+    save_encoded_image(response.json()['images'][0], output_filename)
