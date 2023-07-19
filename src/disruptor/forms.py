@@ -4,14 +4,14 @@ from wtforms.validators import Length, DataRequired, Email, EqualTo, ValidationE
 from disruptor.models import User
 
 class RegistrationForm(FlaskForm):
-    username = StringField('Username',
-                           validators=[DataRequired(), Length(min=2, max=20)])
+    username = StringField('Username', # TODO Have no idea why but it does not change the message to English
+                           validators=[DataRequired(message="Please, fill in this field"), Length(min=2, max=20)])
     email = StringField('Email',
-                        validators=[DataRequired(), Email()])
+                        validators=[DataRequired(message="Please, fill in this field"), Email()])
     password = StringField('Password',
-                           validators=[DataRequired()])
+                           validators=[DataRequired(message="Please, fill in this field")])
     confirm_password = StringField('Confirm Password',
-                                   validators=[DataRequired(), EqualTo('password')])
+                                   validators=[DataRequired(message="Please, fill in this field"), EqualTo('password')])
     submit = SubmitField('Sign Up')
 
     def validate_username(self, username):
