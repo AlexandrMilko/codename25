@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}" />  <!-- changing logo in the browser tab -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}" />
+    {% block title %} {% endblock title %}
+  </head>
+  <body>
+    <section class="page">
+      {% block header %} {% endblock header%}
+      <div class="image-picker">
+        <div class="image_with_text current-image">
+          <img src="{{ image_url }}"/><!-- change your image here (it is the image with text on it) -->
+          <div class="text-overlay">{{ text }}</div>
+        </div>
+        <div class="image-picker-2x2">
+          {% block options %}
+          {% endblock options %}
+        </div>
+      </div>
+<!--      In case we have already chose at least one favourite-->
+      {% if chosen_favourite: %}
+      <a class="apply-button" href="result">Apply</a>
+      {% endif %}
+    </section>
+    <script src="{{ url_for('static', filename='script/script.js') }}"></script>
+  </body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}" />  <!-- changing logo in the browser tab -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}" />
+    {% block title %} {% endblock title %}
+  </head>
+
+  <body>
+<!--  250 for image width, 10 for spacing and 20 for padding-->
+    <section class="page" style="max-width: calc(3 * (250px + 10px) + 20px);">
+      {% block header %}  {% endblock header %}
+      <div class="image-picker first">
+        {% block options %}
+        {% endblock options %}
+      </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='script/script.js') }}"></script>
+  </body>
+</html>

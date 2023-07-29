@@ -12,6 +12,6 @@ login_manager.login_message_category = 'info'
 
 from disruptor import routes
 
-with app.app_context():
-    db.drop_all()
-    db.create_all()
+# with app.app_context():
+#     db.drop_all()
+#     db.create_all()

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='images/logo.png') }}"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/applyStyle.css') }}" />
+    <title>Apply Style</title>
+  </head>
+  <body>
+    <section class="page">
+      <h1>Apply the style to your space</h1>
+      <div class="result-image">
+        <!-- uploaded image -->
+        <img
+          id="uploadedImage"
+          src=""
+          alt="Uploaded Image"
+          style="
+            display: none;
+            max-width: 100%;
+            max-height: 300px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+          "
+        />
+        <input
+          type="file"
+          id="fileInput"
+          accept="image/*"
+          style="display: none"
+        />
+        <label for="fileInput" class="upload-button">Upload Picture</label>
+      </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='script/uploadBtn.js') }}"></script>
+  </body>
+</html>

@@ -1,0 +1,74 @@
+body {
+    font-family: 'Verdana', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-image: radial-gradient(circle, #444, #222);
+    /* gradient */
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center; 
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: rgba(50, 50, 50, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    height: 70vh;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 40px;
+    color: #ddd;
+}
+
+.result-image {
+    position: relative; 
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+    align-items: center;
+    margin-top: 40px;
+}
+
+/* Design for the upload button */
+.upload-button {
+    display: inline-block;
+    padding: 12px 20px;
+    background-color: #FF1493;
+    color: #fff;
+    font-size: 18px;
+    border-radius: 25px; 
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s; /* Add transitions for smooth hover effect */
+}
+
+.upload-button:hover {
+    background-color: #FF69B4;
+    transform: scale(1.05); 
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+
+.result-image img {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    margin-bottom: 40px;
+  }
+
+  #uploadedImage {
+    max-width: 100%;
+    max-height: 300px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}

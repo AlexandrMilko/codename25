@@ -1,0 +1,214 @@
+/* basic style for the page */
+body {
+        font-family: 'Verdana', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-image: radial-gradient(circle, #444, #222); /* gradient */
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+      }
+
+      .page {
+        margin: 0 auto;
+        padding: 20px;
+        max-width: 1000px;
+        background-color: rgba(50, 50, 50, 0.9);
+        border-radius: 20px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.4); /* shadow for the page*/
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 40px;
+        color: #ddd;
+      }
+
+      .image-picker-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        gap: 10px; /* Adjust this value to set the gap between images */
+        justify-content: center;
+      }
+
+      /* designing image pickers */
+      .image-picker {
+        display: flex;
+        justify-content: center;
+      }
+
+      .image-picker a {
+        display: block;
+        position: relative;
+        margin: 5px;
+        overflow: hidden;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        box-shadow: 0 0 6px rgba(0, 0, 0, 0.4); /* box shadow that for the image */
+        transform-origin: center center;
+        transition: transform 0.3s, border-color 0.3s; /* how fast image and its border will tansform (in our case increasing size) */
+      }
+
+      .image-picker a:hover {
+        transform: scale(1.05);
+        border-color: #F8F8FF;
+      }
+
+      .image-picker img {
+        width: 200px;
+        height: 200px;
+        object-fit: cover;
+        margin: 5px;
+        cursor: pointer;
+      }
+
+      .image-picker-2x2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        justify-items: center;
+        align-items: center;
+      }
+
+      .image-picker-2x2 img {
+        width: 200px;
+        height: 200px;
+        object-fit: cover;
+        margin: 5px;
+      }
+
+
+      .image-picker a.clicked img {
+        filter: brightness(50%); /* change brightness of the image when user click on it */
+        border-color: #ff6c00;
+      }
+
+
+
+      .image-picker a img {
+        transition: filter 0.8s ease; /* how fast brightness will change */
+      }
+
+      .image-picker a.clicked div {
+        background-color: rgba(0, 0, 0, 0.5); /* changing background of text on the image with text */
+        color: rgb(150, 150, 150); /* changing color of text on the image with text */
+      }
+
+
+
+
+      /* design apply button */
+      .apply-button {
+        display: block;
+        width: 200px;
+        margin: 20px auto;
+        text-align: center;
+        padding: 10px;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 5px;
+        background-color: #666;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s;
+      }
+
+      .apply-button:hover {
+        background-color: #444;
+        transform: scale(1.1);
+      }
+
+
+
+      /* designing images for the first page (I made images there bigger in size) */
+      .first {
+        display: flex;
+        justify-content: center;
+        width: fit-content;
+      }
+
+      .first img {
+        width: 250px;
+        height: 250px;
+      }
+
+      .first a {
+        width: 250px;
+        height: 250px;
+      }
+
+      /* designing the photo with text and text on it */
+      .image_with_text {
+        position: relative;
+        width: 425px;
+        height: 425px;
+        margin-right: 50px;
+      }
+
+      .image_with_text a {
+        width: 425px;
+        height: 425px;
+      }
+
+      .image_with_text img {
+        width: 425px;
+        height: 425px;
+        object-fit: cover;
+        margin: 5px;
+      }
+
+      .image_with_text a {
+        display: block;
+        position: relative;
+        margin: 5px;
+        overflow: hidden;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        box-shadow: 0 0 6px rgba(0, 0, 0, 0.4); /* box shadow that for the image */
+        transform-origin: center center;
+        transition: transform 0.3s, border-color 0.3s; /* how fast image and its border will tansform (in our case increasing size) */
+
+      }
+
+      .image_with_text a:hover {
+        transform: scale(1.05);
+        border-color: #F8F8FF;
+      }
+
+
+      .text-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 10px;
+        border-radius: 5px;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
+
+      .image-text {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: #ddd;
+          font-size: 25px;
+          font-weight: bold;
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+
+      /* designing result image */
+    .current-image {
+      display: flex;
+      justify-content: center;
+    }
+
+    .current-image img {
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);/* shadow for the image */
+    }

@@ -1,203 +1,38 @@
-<!--{% extends "layout.html" %}-->
-<!--{% block content%}-->
-<!DOCTYPE html>
-<html  >
-<head>
-  <!-- Site made with Mobirise Website Builder v5.8.14, https://mobirise.com -->
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="generator" content="Mobirise v5.8.14, mobirise.com">
-  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-  <link rel="shortcut icon" href="{{ url_for('static', filename='images/logo5.png') }}" type="image/x-icon">
-  <meta name="description" content="">
+{% extends "FirstSelectLayout.html" %}
+{% block title %}
+<title>Space</title>
+{% endblock title %}
 
+{% block header %}
+<h1>What is your space?</h1>
+{% endblock header %}
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap-grid.min.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap-reboot.min.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='assets/theme/css/style.css') }}">
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,400;0,700;1,400;1,700&display=swap&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,400;0,700;1,400;1,700&display=swap&display=swap"></noscript>
-  <link rel="preload" as="style" href="{{ url_for('static', filename='assets/mobirise/css/mbr-additional.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='assets/mobirise/css/mbr-additional.css') }}" type="text/css">
-    <style>
-    /* Reduce gap between images */
-    .item.features-image {
-      margin-bottom: 10px;
-    }
-
-    /* Adjust image dimensions */
-    .item-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      height: 100%;
-    }
-
-    .item-img img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-
-    /* Override Bootstrap's row margin */
-    .row {
-      margin-left: -5px;
-      margin-right: -5px;
-    }
-
-    .image-list {
-      list-style: none;
-      padding: 0;
-      margin-top: 20;
-      display: flex;
-    }
-
-    .image-list li {
-      margin: 10px;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .image-list li img {
-      width: 350px;
-      height: 350px;
-      object-fit: cover;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      transition: transform 0.3s;
-    }
-
-    .image-list li img:hover {
-      transform: scale(1.1);
-    }
-
-    .image-list li .image-text {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #fff;
-      font-size: 30px;
-      font-weight: bold;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-    }
-  </style>
-
-
-
-
-</head>
-<body>
-
-  <section data-bs-version="5.1" class="gallery1 cid-tIyIl6B3oR" id="gallery1-m">
-
-
-    <div class="container">
-        <div class="mbr-section-head">
-            <h4 class="mbr-section-title mbr-fonts-style align-center mb-0 display-2">
-                <strong>What is your space?</strong></h4>
-        </div>
-    <ul class="image-list">
-        <li>
-          <form action="{{ url_for('room') }}" method="GET">
-            <button type="submit">
-              <img src="{{ url_for('static', filename='images/residential.jpg') }}" alt="Option 1">
-              <span class="image-text">Residential</span>
-            </button>
-            <input type="hidden" name="image_url" value="{{ url_for('static', filename='images/residential.jpg') }}">
-            <input type="hidden" name="text" value="Residential">
-          </form>
-        </li>
-        <li>
-          <form action="{{ url_for('room') }}" method="GET">
-            <button type="submit">
-              <img src="{{ url_for('static', filename='images/hospitality.jpg') }}" alt="Option 2">
-              <span class="image-text">Hospitality</span>
-            </button>
-            <input type="hidden" name="image_url" value="{{ url_for('static', filename='images/hospitality.jpg') }}">
-            <input type="hidden" name="text" value="Hospitality">
-          </form>
-        </li>
-        <li>
-          <form action="{{ url_for('room') }}" method="GET">
-            <button type="submit">
-              <img src="{{ url_for('static', filename='images/healthcare.jpg') }}" alt="Option 3">
-              <span class="image-text">Healthcare</span>
-            </button>
-            <input type="hidden" name="image_url" value="{{ url_for('static', filename='images/healthcare.jpg') }}">
-            <input type="hidden" name="text" value="Healthcare">
-          </form>
-        </li>
-        <li>
-          <form action="{{ url_for('room') }}" method="GET">
-            <button type="submit">
-              <img src="{{ url_for('static', filename='images/corporate_workspace.jpg') }}" alt="Option 4">
-              <span class="image-text">Corporate Workspace</span>
-            </button>
-            <input type="hidden" name="image_url" value="{{ url_for('static', filename='images/corporate_workspace.jpg') }}">
-            <input type="hidden" name="text" value="Corporate Workspace">
-          </form>
-        </li>
-      </ul>
-    </div>
-  </section>
-<!--&lt;!&ndash;        TODO make this selector a layout and use it in other pages&ndash;&gt;-->
-<!--&lt;!&ndash;      TODO make it load with a for loop from FLASK. Use images from databases &ndash;&gt;-->
-<!--        <ul class="image-list">-->
-<!--        <li>-->
-<!--          <img src="{{ url_for('static', filename='images/residential.jpg') }}" alt="Option 1" onclick="selectOption('Residential', 'residential.jpg')">-->
-<!--          <span class="image-text">Residential</span>-->
-<!--        </li>-->
-<!--        <li>-->
-<!--          <img src="{{ url_for('static', filename='images/hospitality.jpg') }}" alt="Option 2" onclick="selectOption('Hospitality', 'hospitality.jpg')">-->
-<!--          <span class="image-text">Hospitality</span>-->
-<!--        </li>-->
-<!--        <li>-->
-<!--          <img src="{{ url_for('static', filename='images/healthcare.jpg') }}" alt="Option 3" onclick="selectOption('Healthcare', 'healthcare.jpg')">-->
-<!--          <span class="image-text">Healthcare</span>-->
-<!--        </li>-->
-<!--        <li>-->
-<!--          <img src="{{ url_for('static', filename='images/corporate_workspace.jpg') }}" alt="Option 4" onclick="selectOption('Corporate Workspace', 'corporate_workspace.jpg')">-->
-<!--          <span class="image-text">Corporate Workspace</span>-->
-<!--        </li>-->
-<!--      </ul>-->
-<!--    </div>-->
-<!--</section>-->
-
-<!--  <script>-->
-<!--    function selectOption(option, imageName) {-->
-<!--  var currentPage = window.location.pathname;-->
-
-<!--  // Send the selected option, current page, and template name to the Flask app-->
-<!--  fetch('/space', {-->
-<!--    method: 'POST',-->
-<!--    headers: {-->
-<!--      'Content-Type': 'application/json',-->
-<!--    },-->
-<!--    body: JSON.stringify({ option: option, currentPage: currentPage, imageName: imageName}),-->
-<!--  })-->
-<!--    .then(response => {-->
-<!--      if (response.ok) {-->
-<!--        console.log('Option selection sent to Flask app');-->
-<!--        // window.location.href = '/room';-->
-<!--        // Optionally, you can perform additional actions after successful request-->
-<!--      } else {-->
-<!--        console.log('Failed to send option selection to Flask app');-->
-<!--        // Handle error case if needed-->
-<!--      }-->
-<!--    })-->
-<!--    .catch(error => {-->
-<!--      console.error('An error occurred while sending the option selection:', error);-->
-<!--      // Handle error case if needed-->
-<!--    });-->
-<!--}-->
-
-
-
-
-
-<!--  </script>-->
-
-</body>
-</html>
-  <!--{% endblock content %}-->
+{% block options %}
+<!-- No idea why we need this class, Chat-GPT said so. And it worked to get the 2 by 3 grid -->
+<div class="image-picker-container">
+        <a href="{{ url_for('room', image_url=url_for('static', filename='images/residential.jpg'), text='Residential') }}">
+            <span class="image-text">Residential</span>
+            <img src="{{ url_for('static', filename='images/residential.jpg') }}" alt="Residential" /> <!-- change your image here -->
+        </a>
+        <a href="{{ url_for('room', image_url=url_for('static', filename='images/hospitality.jpg'), text='Hospitality') }}">
+            <span class="image-text">Hospitality</span>
+            <img src="{{ url_for('static', filename='images/hospitality.jpg') }}" alt="Hospitality" /> <!-- change your image here -->
+        </a>
+        <a href="{{ url_for('room', image_url=url_for('static', filename='images/healthcare.jpg'), text='Healthcare') }}">
+            <span class="image-text">Healthcare</span>
+            <img src="{{ url_for('static', filename='images/healthcare.jpg') }}" alt="Healthcare" /> <!-- change your image here -->
+        </a>
+        <a href="{{ url_for('room', image_url=url_for('static', filename='images/corporate_workspace.jpg'), text='Corporate Workspace') }}">
+            <span class="image-text">Corporate Workspace</span>
+            <img src="{{ url_for('static', filename='images/corporate_workspace.jpg') }}" alt="Corporate Workspace" /> <!-- change your image here -->
+        </a>
+        <a href="{{ url_for('room', image_url=url_for('static', filename='images/retail.jpg'), text='Retail') }}">
+            <span class="image-text">Retail</span>
+            <img src="{{ url_for('static', filename='images/retail.jpg') }}" alt="Retail" /> <!-- change your image here -->
+        </a>
+        <a href="{{ url_for('room', image_url=url_for('static', filename='images/education.jpg'), text='Education') }}">
+            <span class="image-text">Education</span>
+            <img src="{{ url_for('static', filename='images/education.jpg') }}" alt="Education" /> <!-- change your image here -->
+        </a>
+</div>
+{% endblock options %}

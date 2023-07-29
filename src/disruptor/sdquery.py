@@ -34,3 +34,9 @@ def image_query(data: dict, filename: str):
     output_filename = os.path.join(output_dir, filename)
     print(response.json())
     save_encoded_image(response.json()['images'][0], output_filename)
+
+def set_deliberate():
+    data = {"sd_model_checkpoint": "deliberate_v2.safetensors"}
+    options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
+    response = submit_post(options_url, data)
+    print(response)
