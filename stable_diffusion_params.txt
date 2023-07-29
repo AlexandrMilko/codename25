@@ -1,0 +1,16 @@
+Sampling method:
+DPM2 Karras (for photorealistic sharp results)
+
+Negative prompt:
+"ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish"
+
+Prompt:
+", elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
+
+Model:
+Deliberate v2 (for photorealistic images)
+v1-5-pruned-emaonly.safetensors
+
+Controlnet 1.1 for applying styles
+
+t2iadapter_style
