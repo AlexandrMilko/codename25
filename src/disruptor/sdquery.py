@@ -83,8 +83,7 @@ class ControlNetImageQuery(Query):
         self.user_image_b64 = get_encoded_image(user_path)
         self.set_image_size(user_path)
 
-        # self.prompt = f'interior design, equipped, {text}, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
-        self.prompt = "interior design, equipped bedroom, scandinavian style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>"
+        self.prompt = f'interior design, equipped, {text}, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
         self.output_filename = output_filename
 
     def run(self):
