@@ -9,7 +9,7 @@ from flask_login import (
     logout_user,
 )
 from disruptor.google_auth import *
-from disruptor.sdquery import text_query, image_query, set_deliberate
+from disruptor.sdquery import set_deliberate, TextQuery, ImageQuery
 import base64
 import json
 import uuid
@@ -163,25 +163,14 @@ def logout():
 def result():
     return render_template('result.html', title="Result")
 
-def generate_image(text, filename, image_url=None, denoising_strength=0.5):
+def generate_image(text, filename, image_url=None, denoising_strength=None):
     if image_url:
-        image_path = "disruptor" + image_url
-        with open(image_path, "rb") as image_file:
-            image_bytes = image_file.read()
-            input_image_b64 = base64.b64encode(image_bytes).decode('utf-8')
-        image_query({'prompt': text + ", elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed",
-                     "sampler_name": "DPM2 Karras", "init_images": [input_image_b64],
-                     "cfg_scale": 7.5,
-                     "denoising_strength": denoising_strength,
-                     "negative_prompt": "ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish",
-                     },
-                    filename)
+        query = ImageQuery(text, image_url, filename, denoising_strength)
+        query.run()
     else:
-        text_query({
-            'prompt': text + ", elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed",
-            "sampler_name": "DPM2 Karras",
-            "negative_prompt": "ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish",
-                    }, filename)
+        query = TextQuery(text, filename)
+        query.run()
+
 def generate_favourites(text, image_url=None, similar_image_number=2, different_image_number=4):
     for i in range(similar_image_number+different_image_number):
         # TODO check if DPM2 Karras parameter indeed works
@@ -199,13 +188,12 @@ def favourites():
     text = request.args.get("text")
     chosen_favourite = request.args.get('chosen_favourite')
     if chosen_favourite: # favourite page -> favourite page
-        pass
         # Generate images from image + text
-        # set_deliberate() # Set the correct model for better results
-        # generate_image(text, "current_image.jpg", image_url)
+        set_deliberate() # Set the correct model for better results
+        generate_image(text, "current_image.jpg", image_url, denoising_strength=0.5)
         # Update the left-side image
-        # image_url = url_for('static', filename="images/current_image.jpg")
-        # generate_favourites(text, image_url)
+        image_url = url_for('static', filename="images/current_image.jpg")
+        generate_favourites(text, image_url)
     else:# If we chose go to favorites from style page
         pass
         #Generate option images from text
