@@ -9,7 +9,7 @@ from flask_login import (
     logout_user,
 )
 from disruptor.google_auth import *
-from disruptor.sdquery import set_deliberate, TextQuery, ImageQuery
+from disruptor.sdquery import set_deliberate, TextQuery, ImageQuery, ControlNetImageQuery
 import base64
 import json
 import uuid
@@ -188,12 +188,13 @@ def favourites():
     text = request.args.get("text")
     chosen_favourite = request.args.get('chosen_favourite')
     if chosen_favourite: # favourite page -> favourite page
+        pass
         # Generate images from image + text
-        set_deliberate() # Set the correct model for better results
-        generate_image(text, "current_image.jpg", image_url, denoising_strength=0.5)
+        # set_deliberate() # Set the correct model for better results
+        # generate_image(text, "current_image.jpg", image_url, denoising_strength=0.5)
         # Update the left-side image
-        image_url = url_for('static', filename="images/current_image.jpg")
-        generate_favourites(text, image_url)
+        # image_url = url_for('static', filename="images/current_image.jpg")
+        # generate_favourites(text, image_url)
     else:# If we chose go to favorites from style page
         pass
         #Generate option images from text
@@ -243,6 +244,9 @@ def save_image():
         print(url_for('static', filename=f'images/{filename}'))
         file_path = "disruptor/static/images/" + filename
         file.save(file_path)
+
+        query = ControlNetImageQuery("Residential, Kitchen, High-End, Industrial", filename, "test1.jpg")
+        query.run()
 
         # Return the URL of the saved image
         return jsonify({'url': url_for('static', filename=f'images/{filename}')})
