@@ -26,7 +26,7 @@
         download="{{ url_for('static', filename='images/current_image.jpg' )}}"
         >Download</a
       >
-      <a class="upgrade-button" href="{{ url_for('applyStyle') }}">Upgrade</a>
+      <a class="upgrade-button" href="{{ url_for('applyStyle', text=text) }}">Upgrade</a>
     </section>
   </body>
 </html>

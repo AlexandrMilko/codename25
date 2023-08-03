@@ -1,3 +1,4 @@
+const text = "{{ text }}";
 const fileInput = document.getElementById('fileInput');
     const uploadedImage = document.getElementById('uploadedImage');
 
@@ -8,6 +9,7 @@ const fileInput = document.getElementById('fileInput');
         reader.addEventListener('load', function () {
             const formData = new FormData();
             formData.append('image', file);
+            formData.append('text', text);
 
             fetch('/save_image', {
                 method: 'POST',
