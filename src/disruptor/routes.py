@@ -161,7 +161,8 @@ def logout():
 
 @app.route("/result")
 def result():
-    return render_template('result.html', title="Result")
+    text = request.args.get("text")
+    return render_template('result.html', title="Result", text=text)
 
 def generate_image(text, filename, image_url=None, denoising_strength=None):
     if image_url:
@@ -188,18 +189,16 @@ def favourites():
     text = request.args.get("text")
     chosen_favourite = request.args.get('chosen_favourite')
     if chosen_favourite: # favourite page -> favourite page
-        pass
         # Generate images from image + text
-        # set_deliberate() # Set the correct model for better results
-        # generate_image(text, "current_image.jpg", image_url, denoising_strength=0.5)
+        set_deliberate() # Set the correct model for better results
+        generate_image(text, "current_image.jpg", image_url, denoising_strength=0.5)
         # Update the left-side image
-        # image_url = url_for('static', filename="images/current_image.jpg")
-        # generate_favourites(text, image_url)
+        image_url = url_for('static', filename="images/current_image.jpg")
+        generate_favourites(text, image_url)
     else:# If we chose go to favorites from style page
-        pass
-        #Generate option images from text
-        # set_deliberate() # Set the correct model for better results
-        # generate_favourites(text)
+        # Generate option images from text
+        set_deliberate() # Set the correct model for better results
+        generate_favourites(text)
     return render_template('favourites.html', title="Favourites", text=text, image_url=image_url, chosen_favourite=chosen_favourite)
 
 @app.route("/style")
@@ -227,10 +226,12 @@ def space():
 
 @app.route("/applyStyle")
 def applyStyle():
-    return render_template('applyStyle.html', title="applyStyle")
+    text = request.args.get("text")
+    return render_template('applyStyle.html', title="applyStyle", text=text)
 
 @app.route("/save_image", methods=["POST"])
 def save_image():
+    text = request.form['text']
     if 'image' not in request.files:
         return jsonify({'error': 'No image part in the request'})
 
@@ -245,11 +246,11 @@ def save_image():
         file_path = "disruptor/static/images/" + filename
         file.save(file_path)
 
-        query = ControlNetImageQuery("Residential, Kitchen, High-End, Industrial", filename, "test1.jpg")
+        query = ControlNetImageQuery(text, filename, "applied.jpg")
         query.run()
 
         # Return the URL of the saved image
-        return jsonify({'url': url_for('static', filename=f'images/{filename}')})
+        return jsonify({'url': url_for('static', filename=f'images/applied.jpg')})
         # return jsonify({'url': file_path})
 
     return jsonify({'error': 'Unknown error'})
