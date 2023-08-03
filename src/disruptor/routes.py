@@ -22,6 +22,8 @@ def home():
     return render_template('homepage.html', title="Home")
 
 @app.route("/register", methods=["GET", "POST"])
+#TODO: remove to be able to register
+@login_required
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
@@ -67,6 +69,8 @@ def login():
     return render_template('login.html', title="Login", form=form)
 
 @app.route("/login-google")
+#TODO: remove to be able to register
+@login_required
 def login_google():
     # Find out what URL to hit for Google login
     google_provider_cfg = get_google_provider_cfg()
@@ -160,6 +164,7 @@ def logout():
     return redirect(url_for('home'))
 
 @app.route("/result")
+@login_required
 def result():
     text = request.args.get("text")
     return render_template('result.html', title="Result", text=text)
@@ -184,6 +189,7 @@ def generate_favourites(text, image_url=None, similar_image_number=2, different_
             generate_image(text, f'fav{i}.jpg')
 
 @app.route("/favourites")
+@login_required
 def favourites():
     image_url = request.args.get("image_url")
     text = request.args.get("text")
@@ -202,17 +208,20 @@ def favourites():
     return render_template('favourites.html', title="Favourites", text=text, image_url=image_url, chosen_favourite=chosen_favourite)
 
 @app.route("/style")
+@login_required
 def style():
     image_url = request.args.get("image_url")
     text = request.args.get("text")
     return render_template('style.html', title="Style", image_url=image_url, text=text)
 @app.route("/budget")
+@login_required
 def budget():
     image_url = request.args.get("image_url")
     text = request.args.get("text")
     return render_template('budget.html', title="Budget", image_url=image_url, text=text)
 
 @app.route("/room")
+@login_required
 def room():
     image_url = request.args.get("image_url")
     text = request.args.get("text")
@@ -221,15 +230,18 @@ def room():
     return render_template('room.html', title="Room", image_url=image_url, text=text)
 
 @app.route("/space")
+@login_required
 def space():
     return render_template('space.html', title="Space")
 
 @app.route("/applyStyle")
+@login_required
 def applyStyle():
     text = request.args.get("text")
     return render_template('applyStyle.html', title="applyStyle", text=text)
 
 @app.route("/save_image", methods=["POST"])
+@login_required
 def save_image():
     text = request.form['text']
     if 'image' not in request.files:
