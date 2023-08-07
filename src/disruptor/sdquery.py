@@ -7,6 +7,9 @@ import requests
 
 import cv2
 from PIL import Image
+import math
+
+MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 
 class Query:
     negative_prompt = "ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish, text"
@@ -80,6 +83,8 @@ class ControlNetImageQuery(Query):
 
         # This one will represent the space
         user_path = "disruptor" + url_for('static', filename=f'images/{user_filename}')
+        if os.path.getsize(user_path) > MAX_CONTROLNET_IMAGE_SIZE_KB * 1024:
+            change_image_size(user_path, user_path, MAX_CONTROLNET_IMAGE_SIZE_KB)
         self.user_image_b64 = get_encoded_image(user_path)
         self.set_image_size(user_path)
 
@@ -182,3 +187,26 @@ def get_encoded_image(image_path):
     # Encode into PNG and send to ControlNet
     retval, bytes = cv2.imencode('.png', img)
     return base64.b64encode(bytes).decode('utf-8')
+
+def change_image_size(input_path, output_path, target_size_kb=20):
+    # Load the image using Pillow
+    img = Image.open(input_path)
+
+    # Set the maximum size (20 KB) in bytes
+    target_size_bytes = target_size_kb * 1024
+
+    # Calculate the current size of the image in bytes
+    img_bytes = os.path.getsize(input_path)
+
+    # Calculate the required compression ratio to achieve the target size
+    compression_ratio = math.sqrt(target_size_bytes / img_bytes)
+
+    # Calculate the new dimensions
+    new_width = int(img.width * compression_ratio)
+    new_height = int(img.height * compression_ratio)
+
+    # Resize the image while preserving the aspect ratio
+    resized_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+    # Save the resized image to the output path
+    resized_img.save(output_path)
