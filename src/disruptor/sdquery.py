@@ -10,6 +10,7 @@ from PIL import Image
 import math
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
+MAX_CONTROLNET_IMAGE_RESOLUTION = 600
 
 class Query:
     negative_prompt = "ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish, text"
@@ -19,15 +20,29 @@ class TextQuery(Query):
         Used for generating favourites for the first time,
         after the user chose the options they like
     """
+    steps = 20
     def __init__(self, text, output_filename):
-        self.prompt = text + ", elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
+        space, room, budget, style = text.split(", ")
+        self.style = style
+
+        if self.style == "Modern":
+            self.prompt = f"{room}, {space} space, {budget} budget, sleek, minimalistic, functional, open, neutral, tech-influenced style, elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
+        elif self.style == "Art-deco":
+            self.prompt = f"{room}, {space} space, {budget} budget, opulent, glamorous, geometric, luxurious, vintage, ornate style, elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
+        else:
+            self.prompt = f"{room}, {space} space, {budget} budget, {style} style, elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
+
+        # self.prompt = text + ", elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
         self.output_filename = output_filename
 
     def run(self):
+        if self.style in ("Modern", "Art-deco"):
+            set_xsarchitectural()
         data = {
             'prompt': self.prompt,
             "sampler_name": self.sampler_name,
-            "negative_prompt": self.negative_prompt
+            "negative_prompt": self.negative_prompt,
+            "steps": self.steps
         }
         txt2img_url = 'http://127.0.0.1:7861/sdapi/v1/txt2img'
         response = submit_post(txt2img_url, data)
@@ -40,6 +55,7 @@ class ImageQuery(Query):
         based on the "favourite" image the user had chosen before that
     """
     cfg_scale = 7.5
+    steps = 20
     def __init__(self, text, image_url, output_filename, denoising_strength):
         # Setting up the input image
         image_path = "disruptor" + image_url
@@ -48,18 +64,21 @@ class ImageQuery(Query):
             input_image_b64 = base64.b64encode(image_bytes).decode('utf-8')
         self.init_images = [input_image_b64]
 
-        self.prompt = text + ", elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
+        space, room, budget, style = text.split(", ")
+        self.prompt = f"{room}, {space} space, {budget} budget, {style} style, elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
+        # self.prompt = text + ", elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
         self.output_filename = output_filename
         self.denoising_strength = denoising_strength
 
     def run(self):
         data = {
-             'prompt': self.prompt,
-             "sampler_name": self.sampler_name,
-             "init_images": self.init_images,
-             "cfg_scale": self.cfg_scale,
-             "denoising_strength": self.denoising_strength,
-             "negative_prompt": self.denoising_strength,
+            'prompt': self.prompt,
+            "sampler_name": self.sampler_name,
+            "init_images": self.init_images,
+            "cfg_scale": self.cfg_scale,
+            "denoising_strength": self.denoising_strength,
+            "negative_prompt": self.denoising_strength,
+            "steps": self.steps
         }
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
@@ -75,7 +94,7 @@ class ControlNetImageQuery(Query):
     # automatic width, height
     denoising_strength = 1
     cfg_scale = 7
-    sampling_steps = 40
+    steps = 40
     def __init__(self, text, user_filename, output_filename, result_filename="current_image.jpg"):
         # We will use result image to transform it into new space of user image
         result_path = "disruptor" + url_for('static', filename=f'images/{result_filename}')
@@ -83,25 +102,89 @@ class ControlNetImageQuery(Query):
 
         # This one will represent the space
         user_path = "disruptor" + url_for('static', filename=f'images/{user_filename}')
-        if os.path.getsize(user_path) > MAX_CONTROLNET_IMAGE_SIZE_KB * 1024:
-            change_image_size(user_path, user_path, MAX_CONTROLNET_IMAGE_SIZE_KB)
+        # if os.path.getsize(user_path) > MAX_CONTROLNET_IMAGE_SIZE_KB * 1024:
+        #     change_image_size(user_path, user_path, MAX_CONTROLNET_IMAGE_SIZE_KB)
         self.user_image_b64 = get_encoded_image(user_path)
-        self.set_image_size(user_path)
+        self.width, self.height = get_max_possible_size(user_path)
+        # self.set_image_size_from_user_image(user_path)
 
-        self.prompt = f'interior design, equipped, {text}, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
+        space, room, budget, style = text.split(", ")
+        self.prompt = f'interior design, equipped {room.lower()}, {style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
         self.output_filename = output_filename
 
     def run(self):
+        # data = {
+        #     "prompt": self.prompt,
+        #     "sampler_name": self.sampler_name,
+        #     "negative_prompt": self.negative_prompt,
+        #     "init_images": [self.result_image_b64],
+        #     "batch_size": 1,
+        #     "steps": self.steps,
+        #     "cfg_scale": self.cfg_scale,
+        #     "denoising_strength": self.denoising_strength,
+        #     "width": self.width,
+        #     "height": self.height,
+        #     "seed": 123,
+        #     "alwayson_scripts": {
+        #         "controlnet": {
+        #             "args": [
+        #                 {
+        #                     "input_image": self.result_image_b64,
+        #                     "module": "seg_ofade20k",
+        #                     "model": "control_sd15_seg [fef5e48e]",
+        #                     "weight": 0.9,
+        #                     "guidance_start": 0.1,
+        #                     "guidance_end": 0.5,
+        #                     "control_mode": 0,
+        #                     "processor_res": 512
+        #                 },
+        #                 {
+        #                     "input_image": self.user_image_b64,
+        #                     "module": "softedge_hed",
+        #                     "model": "control_sd15_hed [fef5e48e]",
+        #                     "weight": 0.55,
+        #                     "guidance_start": 0.1,
+        #                     "guidance_end": 0.5,
+        #                     "control_mode": 0,
+        #                     "processor_res": 512
+        #                 },
+        #                 {
+        #                     "input_image": self.user_image_b64,
+        #                     "module": "seg_ofade20k",
+        #                     "model": "control_sd15_seg [fef5e48e]",
+        #                     "weight": 0.6,
+        #                     "guidance_start": 0,
+        #                     "guidance_end": 0.5,
+        #                     "control_mode": 0,
+        #                     "processor_res": 512
+        #                 },
+        #                 {
+        #                     "input_image": self.user_image_b64,
+        #                     "module": "depth_midas",
+        #                     "model": "control_sd15_depth [fef5e48e]",
+        #                     "weight": 0.4,
+        #                     "guidance_start": 0.1,
+        #                     "guidance_end": 0.5,
+        #                     "control_mode": 0,
+        #                     "processor_res": 512
+        #                 }
+        #             ]
+        #         }
+        #     }
+        # }
+
         data = {
             "prompt": self.prompt,
+            "sampler_name": self.sampler_name,
             "negative_prompt": self.negative_prompt,
             "init_images": [self.result_image_b64],
             "batch_size": 1,
-            "steps": self.sampling_steps,
+            "steps": self.steps,
             "cfg_scale": self.cfg_scale,
             "denoising_strength": self.denoising_strength,
             "width": self.width,
             "height": self.height,
+            # "seed": 123, # TODO add seed, before testing
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
@@ -112,7 +195,7 @@ class ControlNetImageQuery(Query):
                             "weight": 0.9,
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
-                            "control_mode": 0,
+                            "control_mode": 1,
                             "processor_res": 512
                         },
                         {
@@ -129,10 +212,10 @@ class ControlNetImageQuery(Query):
                             "input_image": self.user_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
-                            "weight": 0.6,
+                            "weight": 0.9,
                             "guidance_start": 0,
                             "guidance_end": 0.5,
-                            "control_mode": 0,
+                            "control_mode": 1,
                             "processor_res": 512
                         },
                         {
@@ -156,7 +239,15 @@ class ControlNetImageQuery(Query):
         output_filepath = os.path.join(output_dir, self.output_filename)
         save_encoded_image(response.json()['images'][0], output_filepath)
 
-    def set_image_size(self, image_path):
+        # Print params
+        data.pop("init_images")
+        data["alwayson_scripts"]["controlnet"]["args"][0].pop("input_image")
+        data["alwayson_scripts"]["controlnet"]["args"][1].pop("input_image")
+        data["alwayson_scripts"]["controlnet"]["args"][2].pop("input_image")
+        data["alwayson_scripts"]["controlnet"]["args"][3].pop("input_image")
+        print(data)
+
+    def set_image_size_from_user_image(self, image_path):
         image = cv2.imread(image_path)
         height, width, channels = image.shape
         self.height = height
@@ -178,6 +269,12 @@ def save_encoded_image(b64_image: str, output_path: str):
 
 def set_deliberate():
     data = {"sd_model_checkpoint": "deliberate_v2.safetensors"}
+    options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
+    response = submit_post(options_url, data)
+    print(response)
+
+def set_xsarchitectural():
+    data = {"sd_model_checkpoint": "xsarchitectural_v11.ckpt"}
     options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
     print(response)
@@ -210,3 +307,29 @@ def change_image_size(input_path, output_path, target_size_kb=20):
 
     # Save the resized image to the output path
     resized_img.save(output_path)
+
+
+def get_max_possible_size(input_path, target_resolution=MAX_CONTROLNET_IMAGE_RESOLUTION):
+    # Load the image using Pillow
+    img = Image.open(input_path)
+
+    # Get the current dimensions of the image
+    width, height = img.size
+
+    # Check if either dimension is greater than target_resolution pixels
+    if width > target_resolution or height > target_resolution:
+        # Calculate the new dimensions while preserving the aspect ratio
+        if width > height:
+            new_width = target_resolution
+            new_height = int(height * (target_resolution / width))
+        else:
+            new_width = int(width * (target_resolution / height))
+            new_height = target_resolution
+
+        # Resize the image using the calculated dimensions
+        resized_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+        return new_width, new_height
+
+    # If no resizing was done, return the original dimensions
+    return width, height
