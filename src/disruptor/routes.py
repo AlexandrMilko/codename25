@@ -244,6 +244,7 @@ def applyStyle():
 @login_required
 def save_image():
     text = request.form['text']
+    print(text, "THE TEXT")
     if 'image' not in request.files:
         return jsonify({'error': 'No image part in the request'})
 
