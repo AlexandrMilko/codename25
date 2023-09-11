@@ -16,12 +16,12 @@
             <span class="image-text">Traditional</span>
             <img src="{{ url_for('static', filename='images/traditional.jpg') }}" alt="Traditional" /> <!-- change your image here -->
         </a>
-        <a href="{{ url_for('favourites', image_url=url_for('static', filename='images/industrial.jpg'), text=text+', Industrial') }}">
-            <span class="image-text">Industrial</span>
-            <img src="{{ url_for('static', filename='images/industrial.jpg') }}" alt="Industrial" /> <!-- change your image here -->
+        <a href="{{ url_for('favourites', image_url=url_for('static', filename='images/modern.jpg'), text=text+', Modern') }}">
+            <span class="image-text">Modern</span>
+            <img src="{{ url_for('static', filename='images/modern.jpg') }}" alt="Modern" /> <!-- change your image here -->
         </a>
-        <a href="{{ url_for('favourites', image_url=url_for('static', filename='images/scandinavian.jpg'), text=text+', Scandinavian') }}">
-            <span class="image-text">Scandinavian</span>
-            <img src="{{ url_for('static', filename='images/scandinavian.jpg') }}" alt="Scandinavian" /> <!-- change your image here -->
+        <a href="{{ url_for('favourites', image_url=url_for('static', filename='images/art_deco.jpg'), text=text+', Art Deco') }}">
+            <span class="image-text">Art Deco</span>
+            <img src="{{ url_for('static', filename='images/art_deco.jpg') }}" alt="Art Deco" /> <!-- change your image here -->
         </a>
 {% endblock options %}

@@ -28,7 +28,7 @@ body {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         grid-template-rows: repeat(2, 1fr);
-        gap: 10px; /* Adjust this value to set the gap between images */
+        gap: 0px; /* Adjust this value to set the gap between images */
         justify-content: center;
       }
 
@@ -39,15 +39,16 @@ body {
       }
 
       .image-picker a {
-        display: block;
-        position: relative;
-        margin: 5px;
-        overflow: hidden;
-        border: 2px solid transparent;
-        border-radius: 8px;
-        box-shadow: 0 0 6px rgba(0, 0, 0, 0.4); /* box shadow that for the image */
-        transform-origin: center center;
-        transition: transform 0.3s, border-color 0.3s; /* how fast image and its border will tansform (in our case increasing size) */
+          display: block;
+          position: relative;
+          overflow: hidden;
+          border: 2px solid transparent;
+          border-radius: 8px;
+          box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+          transform-origin: center center;
+          transition: transform 0.3s, border-color 0.3s;
+          box-sizing: border-box;
+          margin: 5px; /* Reset margin */
       }
 
       .image-picker a:hover {
@@ -59,14 +60,13 @@ body {
         width: 200px;
         height: 200px;
         object-fit: cover;
-        margin: 5px;
         cursor: pointer;
       }
 
       .image-picker-2x2 {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
+        gap: 15px;
         justify-items: center;
         align-items: center;
       }
@@ -75,8 +75,10 @@ body {
         width: 200px;
         height: 200px;
         object-fit: cover;
-        margin: 5px;
+        margin: 0px;
+        border-radius: 5px;
       }
+
 
 
       .image-picker a.clicked img {
@@ -140,8 +142,7 @@ body {
       /* designing the photo with text and text on it */
       .image_with_text {
         position: relative;
-        width: 425px;
-        height: 425px;
+        max-height: 400px;
         margin-right: 50px;
       }
 
@@ -197,6 +198,7 @@ body {
           font-size: 25px;
           font-weight: bold;
           text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+          z-index: 1; /* Ensure text is above the image */
     }
 
 
@@ -209,6 +211,63 @@ body {
     .current-image img {
       max-width: 100%;
       max-height: 400px;
-      border-radius: 20px;
+      border-radius: 5px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);/* shadow for the image */
     }
+
+    .favourites-picker-3x2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        justify-items: center;
+        align-items: center;
+    }
+
+    .favourites-picker-3x2 img {
+        width: 200px;
+        height: 200px;
+        object-fit: cover;
+        margin: 0px;
+        border-radius: 5px;
+      }
+
+/* Media query for screens with a maximum width of 768px (typical for phones) */
+    @media (max-width: 768px) {
+    .image-picker-2x2 {
+        height: 750px;
+        grid-template-columns: 1fr; /* Switch to a single column */
+    }
+
+    .image-picker a {
+        transform: scale(0.8); /* Reduce the size by 20% */
+        margin: 0px;
+    }
+
+    .image-text {
+        top: 50%; /* Center the text vertically */
+        font-size: 18px; /* Adjust the font size for smaller screens */
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6); /* Adjust the text shadow */
+    }
+    .current-image img{
+        max-height: 360px;
+    }
+    .image_with_text{
+        max-height: 360px;
+    }
+    .page{
+        min-width: 430px;
+    }
+    .image-picker-container {
+        margin-left: 250px;
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+    }
+    .first{
+        max-width: 200px;
+    }
+
+    .favourites-picker-3x2 {
+        height: 1000px;
+        grid-template-columns: 1fr; /* Switch to a single column */
+    }
+}

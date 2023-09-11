@@ -24,10 +24,11 @@ class TextQuery(Query):
     def __init__(self, text, output_filename):
         space, room, budget, style = text.split(", ")
         self.style = style
+        print(self.style, "STYLE")
 
         if self.style == "Modern":
             self.prompt = f"{room}, {space} space, {budget} budget, sleek, minimalistic, functional, open, neutral, tech-influenced style, elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
-        elif self.style == "Art-deco":
+        elif self.style == "Art Deco":
             self.prompt = f"{room}, {space} space, {budget} budget, opulent, glamorous, geometric, luxurious, vintage, ornate style, elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
         else:
             self.prompt = f"{room}, {space} space, {budget} budget, {style} style, elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
@@ -36,8 +37,10 @@ class TextQuery(Query):
         self.output_filename = output_filename
 
     def run(self):
-        if self.style in ("Modern", "Art-deco"):
+        if self.style in ("Modern", "Art Deco"):
             set_xsarchitectural()
+        else:
+            set_deliberate()
         data = {
             'prompt': self.prompt,
             "sampler_name": self.sampler_name,
@@ -71,6 +74,7 @@ class ImageQuery(Query):
         self.denoising_strength = denoising_strength
 
     def run(self):
+        set_deliberate()
         data = {
             'prompt': self.prompt,
             "sampler_name": self.sampler_name,
@@ -173,6 +177,7 @@ class ControlNetImageQuery(Query):
         #     }
         # }
 
+        set_deliberate()
         data = {
             "prompt": self.prompt,
             "sampler_name": self.sampler_name,
@@ -268,16 +273,16 @@ def save_encoded_image(b64_image: str, output_path: str):
         image_file.write(base64.b64decode(b64_image))
 
 def set_deliberate():
+    print("SET DELIBERATE")
     data = {"sd_model_checkpoint": "deliberate_v2.safetensors"}
     options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
-    print(response)
 
 def set_xsarchitectural():
+    print("SET xsarchitectural")
     data = {"sd_model_checkpoint": "xsarchitectural_v11.ckpt"}
     options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
-    print(response)
 
 def get_encoded_image(image_path):
     img = cv2.imread(image_path)

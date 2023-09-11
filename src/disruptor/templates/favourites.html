@@ -7,7 +7,7 @@
 <h1>What is your favourite?</h1>
 {% endblock header %}
 
-{% block options %}
+{% block options_fav %}
         <a href="{{ url_for('favourites', image_url=url_for('static', filename='images/fav0.jpg'), text=text, chosen_favourite=True) }}">
             <img src="{{ url_for('static', filename='images/fav0.jpg') }}" /> <!-- change your image here -->
         </a>
@@ -26,4 +26,4 @@
         <a href="{{ url_for('favourites', image_url=url_for('static', filename='images/fav5.jpg'), text=text, chosen_favourite=True) }}">
             <img src="{{ url_for('static', filename='images/fav5.jpg') }}" /> <!-- change your image here -->
         </a>
-{% endblock options %}
+{% endblock options_fav %}
