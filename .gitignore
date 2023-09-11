@@ -2,3 +2,6 @@
 venv2/
 venv/
 src/disruptor/__pycache__
+parse_seg/.idea/
+parse_seg/Objects/
+parse_seg/venv/
