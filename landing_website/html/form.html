@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Contact Form</title>
+    <link rel="stylesheet" href="../css/form.css" />
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"
+    ></script>
+    <script type="text/javascript">
+      (function () {
+        // https://dashboard.emailjs.com/admin/account
+        emailjs.init("Luj1i-dPnuPW2YEx4");
+      })();
+    </script>
+    <script type="text/javascript">
+      window.onload = function () {
+
+        const nameInput = document.getElementById("name");
+  const emailInput = document.getElementById("email");
+  const submitButton = document.querySelector(".form_button");
+
+  // Добавляем обработчики событий для полей "Name" и "Email"
+  nameInput.addEventListener("input", checkForm);
+  emailInput.addEventListener("input", checkForm);
+
+  // Функция для проверки заполнения полей и изменения стиля кнопки
+  function checkForm() {
+    const nameValue = nameInput.value.trim();
+    const emailValue = emailInput.value.trim();
+
+    // Если оба поля заполнены, делаем кнопку активной
+    if (nameValue !== "" && emailValue !== "") {
+      submitButton.disabled = false;
+      submitButton.style.backgroundColor = "#007bff";
+    } else {
+      // Если одно из полей пустое, делаем кнопку неактивной
+      submitButton.disabled = true;
+      submitButton.style.backgroundColor = "grey";
+    }
+  }
+          checkForm();
+
+        // Извлекаем параметр role из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get("role");
+
+        // Находим элемент <h1> и обновляем его текст в зависимости от значения role
+        const h1Element = document.querySelector("h1");
+        if (role === "Customer") {
+          h1Element.textContent = "Customer";
+        } else if (role === "Investor") {
+          h1Element.textContent = "Investor";
+        }
+        document
+          .getElementById("contact-form")
+          .addEventListener("submit", function (event) {
+            event.preventDefault();
+            // generate a five digit number for the contact_number variable
+            this.contact_number.value = (Math.random() * 100000) | 0;
+            this.role.value = h1Element.textContent;
+            // these IDs from the previous steps
+            emailjs.sendForm("service_8569tue", "template_ydjs158", this).then(
+              function () {
+                console.log("SUCCESS!");
+              },
+              function (error) {
+                console.log("FAILED...", error);
+              }
+            );
+          });
+
+// Выводим текст из элемента в консоль
+console.log(h1Element.textContent);
+
+      };
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <form class="form" id="contact-form">
+        <input type="hidden" name="contact_number">
+        <input type="hidden" name="role">
+        <h1 class="whoIsThat"></h1>
+        <div class="inputWrapper">
+          <div class="atericWrapper">
+            <label>Name</label>
+            <img class="asterisc" src="../img/asterisk.png" alt="" />
+          </div>
+
+          <input id="name" type="text" name="name" />
+        </div>
+        <div class="inputWrapper">
+          <label>Surname</label>
+          <input type="text" name="surname" />
+        </div>
+        <div class="inputWrapper">
+          <label>LinkedIn</label>
+          <input type="text" name="linkedin" />
+        </div>
+        <div class="inputWrapper">
+          <div class="atericWrapper">
+            <label>Email</label>
+            <img class="asterisc" src="../img/asterisk.png" alt="" />
+          </div>
+          <input id="email" type="email" name="email" />
+        </div>
+        <div class="inputWrapper">
+          <label>Phone</label>
+          <input type="number" name="phone" />
+        </div>
+        <div class="inputWrapper">
+          <label>Message</label>
+          <textarea name="message" id="" cols="30" rows="10"></textarea>
+        </div>
+        <button class="form_button">Submit</button>
+      </form>
+    </div>
+  </body>
+</html>
