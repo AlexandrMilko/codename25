@@ -9,7 +9,7 @@ from flask_login import (
     logout_user,
 )
 from disruptor.google_auth import *
-from disruptor.sdquery import set_deliberate, TextQuery, ImageQuery, ControlNetImageQuery
+from disruptor.sdquery import TextQuery, ImageQuery, ControlNetImageQuery
 import base64
 import json
 import uuid
@@ -196,14 +196,12 @@ def favourites():
     chosen_favourite = request.args.get('chosen_favourite')
     if chosen_favourite: # favourite page -> favourite page
         # Generate images from image + text
-        set_deliberate() # Set the correct model for better results
         generate_image(text, "current_image.jpg", image_url, denoising_strength=0.5)
         # Update the left-side image
         image_url = url_for('static', filename="images/current_image.jpg")
         generate_favourites(text, image_url)
     else:# If we chose go to favorites from style page
         # Generate option images from text
-        set_deliberate() # Set the correct model for better results
         generate_favourites(text)
     return render_template('favourites.html', title="Favourites", text=text, image_url=image_url, chosen_favourite=chosen_favourite)
 

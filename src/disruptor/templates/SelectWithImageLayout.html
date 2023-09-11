@@ -15,10 +15,19 @@
           <img src="{{ image_url }}"/><!-- change your image here (it is the image with text on it) -->
           <div class="text-overlay">{{ text }}</div>
         </div>
-        <div class="image-picker-2x2">
-          {% block options %}
-          {% endblock options %}
-        </div>
+        {% if request.endpoint == 'favourites' %}
+          <!-- Code specific to the 'favourites' route -->
+          <div class="image-picker-3x2">
+            {% block options_fav %}
+            {% endblock options_fav %}
+          </div>
+          {% else %}
+          <!-- Code for other routes -->
+          <div class="image-picker-2x2">
+            {% block options %}
+            {% endblock options %}
+          </div>
+    {% endif %}
       </div>
 <!--      In case we have already chose at least one favourite-->
       {% if chosen_favourite: %}
