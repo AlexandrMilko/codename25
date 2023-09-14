@@ -9,7 +9,7 @@ from flask_login import (
     logout_user,
 )
 from disruptor.google_auth import *
-from disruptor.sdquery import TextQuery, ImageQuery, ControlNetImageQuery
+from disruptor.sdquery import TextQuery, ImageQuery, ControlNetImageQuery, apply_style
 import base64
 import json
 import uuid
@@ -257,8 +257,7 @@ def save_image():
         file_path = "disruptor/static/images/" + filename
         file.save(file_path)
 
-        query = ControlNetImageQuery(text, filename, "applied.jpg")
-        query.run()
+        apply_style()
 
         # Return the URL of the saved image
         return jsonify({'url': url_for('static', filename=f'images/applied.jpg')})
