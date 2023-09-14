@@ -2,6 +2,9 @@ import json
 import base64
 from flask import url_for
 
+from disruptor import app
+from disruptor.preprocess_for_empty_space import parse_objects
+
 import os
 import requests
 
@@ -353,3 +356,8 @@ def run_preprocessor(preprocessor_name, image_path):
     output_dir = "disruptor/static/images/preprocessed"
     output_filepath = os.path.join(output_dir, "preprocessed.jpg")
     save_encoded_image(response.json()['images'][0], output_filepath)
+
+def apply_style():
+    style_image_path = "disruptor" + url_for('static', filename=f'images/current_image.jpg')
+    run_preprocessor("seg_ofade20k", style_image_path)
+    parse_objects()
