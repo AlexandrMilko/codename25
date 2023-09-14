@@ -338,3 +338,18 @@ def get_max_possible_size(input_path, target_resolution=MAX_CONTROLNET_IMAGE_RES
 
     # If no resizing was done, return the original dimensions
     return width, height
+
+def run_preprocessor(preprocessor_name, image_path):
+    input_image = get_encoded_image(image_path)
+    data = {
+        "controlnet_module": preprocessor_name,
+        "controlnet_input_images": [input_image],
+        "controlnet_processor_res": 512,
+        "controlnet_threshold_a": 64,
+        "controlnet_threshold_b": 64
+    }
+    preprocessor_url = 'http://127.0.0.1:7861/controlnet/detect'
+    response = submit_post(preprocessor_url, data)
+    output_dir = "disruptor/static/images/preprocessed"
+    output_filepath = os.path.join(output_dir, "preprocessed.jpg")
+    save_encoded_image(response.json()['images'][0], output_filepath)
