@@ -3,7 +3,7 @@ import base64
 from flask import url_for
 
 from disruptor import app
-from disruptor.preprocess_for_empty_space import parse_objects
+from disruptor.preprocess_for_empty_space import parse_objects, unite_groups
 
 import os
 import requests
@@ -11,6 +11,7 @@ import requests
 import cv2
 from PIL import Image
 import math
+import shutil
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 MAX_CONTROLNET_IMAGE_RESOLUTION = 600
@@ -357,7 +358,42 @@ def run_preprocessor(preprocessor_name, image_path):
     output_filepath = os.path.join(output_dir, "preprocessed.jpg")
     save_encoded_image(response.json()['images'][0], output_filepath)
 
-def apply_style():
-    style_image_path = "disruptor" + url_for('static', filename=f'images/current_image.jpg')
+def prep_bg_image(empty_space):
+    """
+        Moving our empty space image to background image folder in GracoNet
+    """
+    image = "disruptor" + url_for('static', filename=f'images/{empty_space}')
+    shutil.copyfile(image, "../GracoNet-Object-Placement/new_OPA/background/sheep/186413.jpg")
+
+def prep_fg_image(furniture_piece):
+    """
+        Moving our furniture picture and its map to foreground image folder in GracoNet
+    """
+    map = "disruptor" + url_for('static', filename=f'images/parsed_furniture/{furniture_piece}')
+    image = "disruptor" + url_for('static', filename=f'images/current_image.jpg')
+
+    shutil.copyfile(image, "../GracoNet-Object-Placement/new_OPA/foreground/sheep/64754.jpg")
+    shutil.copyfile(map, "../GracoNet-Object-Placement/new_OPA/foreground/sheep/mask_64754.jpg")
+
+def run_graconet():
+    """
+        Run graconet to place furniture
+    """
+    cwd = os.getcwd()
+    os.chdir("disruptor")
+    os.system("run_graconet_windows.sh")
+    os.chdir(cwd)
+
+def apply_style(empty_space, style="current_image.jpg"):
+    style_image_path = "disruptor" + url_for('static', filename=f'images/{style}')
     run_preprocessor("seg_ofade20k", style_image_path)
     parse_objects()
+
+    furniture_dir = "disruptor/static/images/parsed_furniture"
+    groups_dir = "disruptor/static/images/parsed_furniture"
+    unite_groups(furniture_dir, groups_dir, [["bed", "blanket;cover", "cushion", "pillow"]])
+
+    prep_bg_image(empty_space)
+    prep_fg_image("bed_blanket;cover_cushion_pillow.jpg")
+    run_graconet()
+
