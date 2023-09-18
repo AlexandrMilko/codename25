@@ -42,3 +42,37 @@ def parse_objects(input_image=default_input_image,
             # Save the resulting mask in the "Objects" directory with the color name as the filename
             mask_filename = os.path.join(save_dir, f'{color_name}.jpg')
             cv2.imwrite(mask_filename, bw_mask)
+
+def unite_groups(input_dir, output_dir, groups):
+    # Iterate through each group of masks
+    for group in groups:
+        # Initialize an empty mask for the group
+        group_mask = None
+
+        # Iterate through masks in the group
+        for object_name in group:
+            # Construct the file path for the mask
+            mask_file = os.path.join(input_dir, f"{object_name}.jpg")
+
+            # Check if the mask file exists
+            if not os.path.isfile(mask_file):
+                print(f"Mask file '{object_name}.jpg' not found.")
+                continue
+
+            # Load the mask as a grayscale image
+            mask = cv2.imread(mask_file, cv2.IMREAD_GRAYSCALE)
+
+            # If group_mask is None, initialize it with the first mask
+            if group_mask is None:
+                group_mask = mask
+            else:
+                # Unite the current mask with the group_mask using bitwise OR
+                group_mask = cv2.bitwise_or(group_mask, mask)
+
+        # Check if group_mask is empty before saving
+        if group_mask is not None and not np.all(group_mask == 0):
+            # Save the united mask for the group
+            output_file = os.path.join(output_dir, "_".join(group) + ".jpg")
+            cv2.imwrite(output_file, group_mask)
+        else:
+            print(f"No valid masks found for group: {group}")
