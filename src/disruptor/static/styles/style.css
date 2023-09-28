@@ -244,9 +244,14 @@ body {
         width: 500px;
     }
 
+    .first a {
+        width: 230px;
+        height: 230px;
+    }
+
     .image-picker a {
         transform: scale(0.8); /* Reduce the size by 20% */
-        margin: 0px;
+        margin: -12px;
     }
 
     .image-text {
