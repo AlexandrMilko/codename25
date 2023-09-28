@@ -266,10 +266,10 @@ body {
         max-height: 360px;
     }
     .page{
-        min-width: 430px;
+        min-width: 390px;
     }
     .image-picker-container {
-        margin-left: 250px;
+        margin-left: 180px;
         grid-template-columns: repeat(2, 1fr);
         grid-template-rows: repeat(3, 1fr);
     }
