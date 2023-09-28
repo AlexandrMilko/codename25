@@ -182,7 +182,7 @@ def generate_favourites(text, image_url=None, similar_image_number=2, different_
         # TODO check if DPM2 Karras parameter indeed works
         if image_url: # If we chose a favourite, we generate a new image from it
             if i > different_image_number - 1: # After we generated enough different images, we generate similar images
-                generate_image(text, f'fav{i}.jpg', image_url, denoising_strength=0.2)
+                generate_image(text, f'fav{i}.jpg', image_url, denoising_strength=0.55)
             else: # Generate significantly different images
                 generate_image(text, f'fav{i}.jpg', image_url, denoising_strength=0.9)
         else:
