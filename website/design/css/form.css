@@ -1,0 +1,172 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+
+.container {
+  background: linear-gradient(
+    to bottom,
+    rgba(151, 108, 241, 0.9),
+    rgba(3, 160, 134, 0.6)
+  );
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+.form {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: rgb(205, 205, 205);
+  width: 80%;
+  height: 90%;
+  border-radius: 20px;
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2), 0px -10px 20px rgba(0, 0, 0, 0.2);
+  padding: 50px;
+  font-family: 'Roboto', sans-serif;
+}
+.form_button {
+  margin-top: 15px;
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 40px;
+  transition: background-color 0.3s ease;
+  width: -webkit-fill-available;
+  border-radius: 10px;
+}
+
+.form_button:hover {
+  background-color: #0056b3;
+}
+
+
+.whoIsThat {
+  margin: 0px 0px;
+  font-size: 80px;
+}
+
+.inputWrapper{
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 170px;
+  justify-content: space-between;
+}
+
+.inputWrapper:last-of-type{
+  height: 300px;
+}
+textarea{
+  font-size: 30px;
+  padding: 20px;
+  outline: none;
+  border-radius: 20px;
+  height: 65%;
+
+}
+label {
+  color: black;
+  font-size: 40px;
+  font-weight: 400;
+}
+
+.form input {
+  background-color: transparent;
+  border: 2px solid #757474;
+  border-radius: 8px;
+  color: var(--text-color);
+  height: 100px;
+  transition: background-color 0.5s, box-shadow 0.5s;
+  border-radius: 20px;
+  font-size: 40px;
+  padding: 5px 30px;
+}
+
+.form input:focus {
+  background-color: rgba(137, 146, 245, 0.3);
+  box-shadow: 0 0 15px rgba(151, 108, 241, 0.9);
+  outline: none;
+  
+}
+
+.atericWrapper{
+  display: flex;
+  align-items: center;
+}
+
+.asterisc{
+  width: 40px;
+  height: 35px;
+}
+
+
+@media screen and (min-width: 768px) {
+  .form {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: rgb(205, 205, 205);
+    width: 60%;
+    height: 90%;
+    border-radius: 20px;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2), 0px -10px 20px rgba(0, 0, 0, 0.2);
+    padding: 30px;
+    font-family: 'Roboto', sans-serif;
+  }
+  .whoIsThat {
+    margin: 0px 0px;
+    font-size: 40px;
+  }
+  
+  .inputWrapper{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 75px;
+    justify-content: space-between;
+  }
+
+  textarea{
+    font-size: 15px;
+    padding: 20px;
+    outline: none;
+    border-radius: 20px;
+    height: 65%;
+  
+  }
+  label {
+    color: black;
+    font-size: 20px;
+    font-weight: 400;
+  }
+  .form input {
+    background-color: transparent;
+    border: 2px solid #757474;
+    border-radius: 8px;
+    color: var(--text-color);
+    height: 30px;
+    transition: background-color 0.5s, box-shadow 0.5s;
+    border-radius: 20px;
+    font-size: 20px;
+    padding: 5px 15px;
+  }
+  .asterisc{
+    width: 30px;
+    height: 25px;
+  }
+  .inputWrapper:last-of-type{
+    height: 200px;
+  }
+}
