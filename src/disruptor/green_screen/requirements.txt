@@ -1,0 +1,11 @@
+imageio==2.31.5
+imutils==0.5.4
+lazy_loader==0.3
+networkx==3.1
+numpy==1.26.0
+opencv-python==4.8.1.78
+packaging==23.2
+Pillow==10.0.1
+scikit-image==0.22.0
+scipy==1.11.3
+tifffile==2023.9.26

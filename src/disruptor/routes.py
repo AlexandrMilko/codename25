@@ -257,7 +257,7 @@ def save_image():
         file_path = "disruptor/static/images/" + filename
         file.save(file_path)
 
-        apply_style(filename)
+        apply_style(filename, text)
 
         # Return the URL of the saved image
         return jsonify({'url': url_for('static', filename=f'images/applied.jpg')})
