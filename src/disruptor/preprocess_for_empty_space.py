@@ -7,8 +7,7 @@ import os
 default_input_image = 'disruptor/static/images/current_image.jpg'
 default_segmented_image = 'disruptor/static/images/preprocessed/preprocessed.jpg'
 save_dir = 'disruptor/static/images/parsed_furniture'
-def parse_objects(input_image=default_input_image,
-                  segmented_image=default_segmented_image):
+def parse_objects(segmented_image):
     # Load the image
     image = cv2.imread(segmented_image)
 

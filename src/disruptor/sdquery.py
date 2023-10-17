@@ -121,66 +121,6 @@ class ControlNetImageQuery(Query):
         self.output_filename = output_filename
 
     def run(self):
-        # data = {
-        #     "prompt": self.prompt,
-        #     "sampler_name": self.sampler_name,
-        #     "negative_prompt": self.negative_prompt,
-        #     "init_images": [self.result_image_b64],
-        #     "batch_size": 1,
-        #     "steps": self.steps,
-        #     "cfg_scale": self.cfg_scale,
-        #     "denoising_strength": self.denoising_strength,
-        #     "width": self.width,
-        #     "height": self.height,
-        #     "seed": 123,
-        #     "alwayson_scripts": {
-        #         "controlnet": {
-        #             "args": [
-        #                 {
-        #                     "input_image": self.result_image_b64,
-        #                     "module": "seg_ofade20k",
-        #                     "model": "control_sd15_seg [fef5e48e]",
-        #                     "weight": 0.9,
-        #                     "guidance_start": 0.1,
-        #                     "guidance_end": 0.5,
-        #                     "control_mode": 0,
-        #                     "processor_res": 512
-        #                 },
-        #                 {
-        #                     "input_image": self.user_image_b64,
-        #                     "module": "softedge_hed",
-        #                     "model": "control_sd15_hed [fef5e48e]",
-        #                     "weight": 0.55,
-        #                     "guidance_start": 0.1,
-        #                     "guidance_end": 0.5,
-        #                     "control_mode": 0,
-        #                     "processor_res": 512
-        #                 },
-        #                 {
-        #                     "input_image": self.user_image_b64,
-        #                     "module": "seg_ofade20k",
-        #                     "model": "control_sd15_seg [fef5e48e]",
-        #                     "weight": 0.6,
-        #                     "guidance_start": 0,
-        #                     "guidance_end": 0.5,
-        #                     "control_mode": 0,
-        #                     "processor_res": 512
-        #                 },
-        #                 {
-        #                     "input_image": self.user_image_b64,
-        #                     "module": "depth_midas",
-        #                     "model": "control_sd15_depth [fef5e48e]",
-        #                     "weight": 0.4,
-        #                     "guidance_start": 0.1,
-        #                     "guidance_end": 0.5,
-        #                     "control_mode": 0,
-        #                     "processor_res": 512
-        #                 }
-        #             ]
-        #         }
-        #     }
-        # }
-
         set_deliberate()
         data = {
             "prompt": self.prompt,
@@ -255,6 +195,70 @@ class ControlNetImageQuery(Query):
         data["alwayson_scripts"]["controlnet"]["args"][2].pop("input_image")
         data["alwayson_scripts"]["controlnet"]["args"][3].pop("input_image")
         print(data)
+
+    def set_image_size_from_user_image(self, image_path):
+        image = cv2.imread(image_path)
+        height, width, channels = image.shape
+        self.height = height
+        self.width = width
+
+class GreenScreenImageQuery(Query):
+    """
+        Used for applying the predefined result image to a new space
+        (Premium Feature)
+    """
+    # TODO:
+    # automatic width, height
+    denoising_strength = 1
+    cfg_scale = 7
+    steps = 40
+    def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.jpg"):
+        # We will use result image to transform it into new space of user image
+        prerequisite_path = "disruptor" + url_for('static', filename=f'images/preprocessed/{prerequisite}')
+        self.prerequisite_image_b64 = get_encoded_image(prerequisite_path)
+        self.width, self.height = get_max_possible_size(prerequisite_path)
+
+        space, room, budget, style = text.split(", ")
+        self.prompt = f'interior design, equipped {room.lower()}, {style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
+        self.output_filename = output_filename
+
+    def run(self):
+        set_deliberate()
+        data = {
+            "prompt": self.prompt,
+            "sampler_name": self.sampler_name,
+            "negative_prompt": self.negative_prompt,
+            "init_images": [self.prerequisite_image_b64],
+            "batch_size": 1,
+            "steps": self.steps,
+            "cfg_scale": self.cfg_scale,
+            "denoising_strength": self.denoising_strength,
+            "width": self.width,
+            "height": self.height,
+            # "seed": 123, # TODO add seed, before testing
+            "alwayson_scripts": {
+                "controlnet": {
+                    "args": [
+                        {
+                            "input_image": self.prerequisite_image_b64,
+                            "module": "seg_ofade20k",
+                            "model": "control_sd15_seg [fef5e48e]",
+                            "weight": 1,
+                            "guidance_start": 0,
+                            "guidance_end": 1,
+                            "control_mode": 0,
+                            "processor_res": 512
+                        }
+                    ]
+                }
+            }
+        }
+
+        img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
+        response = submit_post(img2img_url, data)
+        output_dir = "disruptor\static\images"
+        output_filepath = os.path.join(output_dir, self.output_filename)
+        save_encoded_image(response.json()['images'][0], output_filepath)
 
     def set_image_size_from_user_image(self, image_path):
         image = cv2.imread(image_path)
@@ -344,6 +348,8 @@ def get_max_possible_size(input_path, target_resolution=MAX_CONTROLNET_IMAGE_RES
     return width, height
 
 def run_preprocessor(preprocessor_name, image_path):
+    print(os.getcwd())
+    print(image_path)
     input_image = get_encoded_image(image_path)
     data = {
         "controlnet_module": preprocessor_name,
@@ -384,16 +390,104 @@ def run_graconet():
     os.system("run_graconet_windows.sh")
     os.chdir(cwd)
 
-def apply_style(empty_space, style="current_image.jpg"):
-    style_image_path = "disruptor" + url_for('static', filename=f'images/{style}')
-    run_preprocessor("seg_ofade20k", style_image_path)
-    parse_objects()
+def remove_files(directory_path):
+    # Check if the directory exists
+    if os.path.exists(directory_path) and os.path.isdir(directory_path):
+        # List all files in the directory
+        files = os.listdir(directory_path)
 
-    furniture_dir = "disruptor/static/images/parsed_furniture"
-    groups_dir = "disruptor/static/images/parsed_furniture"
-    unite_groups(furniture_dir, groups_dir, [["bed", "blanket;cover", "cushion", "pillow"]])
+        # Loop through the files and remove them one by one
+        for file in files:
+            file_path = os.path.join(directory_path, file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            else:
+                print(f"{file_path} is not a file and won't be removed.")
+    else:
+        print(f"The directory {directory_path} does not exist.")
 
-    prep_bg_image(empty_space)
-    prep_fg_image("bed_blanket;cover_cushion_pillow.jpg")
-    run_graconet()
+def prepare_masks(directory_path="disruptor/static/images/parsed_furniture"):
+    # Remove ceiling, walls, to be left only with the objects
+    parts_to_remove = ["ceiling", "floor", "wall", "window", "door", "skyscraper", "road"]
 
+    # Check if the directory exists
+    if os.path.exists(directory_path) and os.path.isdir(directory_path):
+        # List all files in the directory
+        files = os.listdir(directory_path)
+
+        # Loop through the files and remove them one by one
+        for file in files:
+            file_path = os.path.join(directory_path, file)
+            for part in parts_to_remove:
+                if part in file:
+                    if os.path.isfile(file_path):
+                        os.remove(file_path)
+    else:
+        print(f"The directory {directory_path} does not exist.")
+
+def apply_style(empty_space, text):
+
+    # Prepare Input
+
+    es_path = "disruptor" + url_for('static', filename=f'images/{empty_space}')
+    # Resize
+    image = Image.open(es_path)
+    target_size = (767, 498)  # Set your desired width and height
+    resized_image = image.resize(target_size, Image.Resampling.LANCZOS)  # Use a resampling filter for better quality
+    resized_image.save(es_path)
+
+    run_preprocessor("seg_ofade20k", es_path)
+    segmented_path = "disruptor" + url_for('static', filename=f'images/preprocessed/preprocessed.jpg')
+
+    # Find the right empty space image
+    from disruptor.green_screen.find_similar.ssim import compare
+    import glob
+    import os
+
+    segmented_predefined = "disruptor/green_screen/find_similar/images/empty_space_segmented"
+    segmented_paths = glob.glob(os.path.join(segmented_predefined, '*.png'))
+    max_similarity = -1  # Initialize max_similarity to a value that's lower than any possible similarity score
+    max_similar_es = ""
+    for image_path in segmented_paths:
+        similarity = compare(segmented_path, image_path)
+        if similarity > max_similarity:
+            max_similarity = similarity
+            max_similar_es = image_path
+
+    # Find corresponding staged image
+    import re
+    max_similar_stage = str(re.search(r'\d+', os.path.basename(max_similar_es)).group()) + "_staged.jpg"
+    max_similar_stage_path = "disruptor/green_screen/find_similar/images/staged/" + max_similar_stage
+
+    # Parse furniture from the selected staged image
+
+    # Create masks
+    run_preprocessor("seg_ofade20k", max_similar_stage_path)
+    mask_dir = "disruptor/static/images/parsed_furniture"
+    # We update the directory, to get rid of the rubbish from the previous segmentations
+    remove_files(mask_dir)
+    parse_objects('disruptor/static/images/preprocessed/preprocessed.jpg')
+    prepare_masks()
+
+    # Create png foreground
+    from disruptor.green_screen.preprocess.create_pngs import create_fg, overlay
+    create_fg(mask_dir, max_similar_stage_path)
+    fg_path = "disruptor" + url_for('static', filename="images/preprocessed/foreground.png")
+    overlay(es_path, fg_path)
+
+    # Run SD to process it
+    query = GreenScreenImageQuery(text)
+    query.run()
+
+    # style="current_image.jpg"
+    # style_image_path = "disruptor" + url_for('static', filename=f'images/{style}')
+    # run_preprocessor("seg_ofade20k", style_image_path)
+    # parse_objects()
+    #
+    # furniture_dir = "disruptor/static/images/parsed_furniture"
+    # groups_dir = "disruptor/static/images/parsed_furniture"
+    # unite_groups(furniture_dir, groups_dir, [["bed", "blanket;cover", "cushion", "pillow"], ["table", "pot", "plant;flora;plant;life"]])
+    #
+    # prep_bg_image(empty_space)
+    # prep_fg_image("bed_blanket;cover_cushion_pillow.jpg")
+    # run_graconet()
