@@ -25,7 +25,7 @@ def home():
 
 @app.route("/register", methods=["GET", "POST"])
 #TODO: remove to be able to register
-@login_required
+# @login_required
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
@@ -48,11 +48,42 @@ def register():
                 email=form.email.data,
                 password=password_hash
             )
-        db.session.add(user)
-        db.session.commit()
-        flash(f"Account created for {form.username.data}!", 'success')
+        send_verification_email(user)
+        flash("An email has been sent with instructions to verify your account.", "info")
         return redirect(url_for('login'))
     return render_template('register.html', title="Register", form=form)
+
+def send_verification_email(user):
+    token = user.get_email_verification_token()
+    msg = Message(
+        "Codename25: Email Verification",
+                  sender='milkoaleksandr21@gmail.com',
+                  recipients=[user.email]
+                )
+    msg.body = f'''To verify your account, visit the following link:
+{url_for('verify_email', token=token, _external=True)}
+If you did not make this request, then simply ignore this email and no changes will be made.
+    '''
+    mail.send(msg)
+@app.route("/verify_email/<token>", methods=["GET", "POST"])
+def verify_email(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    user_data = User.verify_email_token(token)
+    if user_data is None:
+        flash('That is an expired or invalid token.', 'warning')
+        return redirect(url_for('home'))
+    else:
+        user = User(
+                id=user_data["user_id"],
+                username=user_data["username"],
+                email=user_data["email"],
+                password=user_data["password"]
+            )
+        db.session.add(user)
+        db.session.commit()
+        flash(f"Your account has been verified!", 'success')
+        return redirect(url_for('login'))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -76,7 +107,7 @@ def login():
 
 @app.route("/login-google")
 #TODO: remove to be able to register
-@login_required
+# @login_required
 def login_google():
     # Find out what URL to hit for Google login
     google_provider_cfg = get_google_provider_cfg()
@@ -274,7 +305,7 @@ def save_image():
 def send_reset_email(user):
     token = user.get_reset_token()
     msg = Message(
-        "Password Reset Request",
+        "Codename25: Password Reset Request",
                   sender='milkoaleksandr21@gmail.com',
                   recipients=[user.email]
                 )
@@ -300,7 +331,7 @@ def request_password_reset():
 def reset_password(token):
     if current_user.is_authenticated:
         return redirect(url_for('home'))
-    user = User.verify_token(token)
+    user = User.verify_reset_token(token)
     if user is None:
         flash('That is an expired or invalid token.', 'warning')
         return redirect(url_for('request_password_reset'))
