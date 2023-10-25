@@ -1,5 +1,6 @@
-from disruptor import db, login_manager
+from disruptor import db, login_manager, app
 from flask_login import UserMixin
+from itsdangerous import URLSafeTimedSerializer as Serializer
 
 @login_manager.user_loader
 def load_user(id):
@@ -12,6 +13,19 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), nullable=False, unique=True)
     #We set it to nullable true, because via Google authentication we do not need to specify the password. We dont have it
     password = db.Column(db.String(100), nullable=True)
+
+    def get_reset_token(self, expires_sec=1800):
+        s = Serializer(app.config["SECRET_KEY"])
+        return s.dumps({"user_id": self.id})
+
+    @staticmethod
+    def verify_token(token):
+        s = Serializer(app.config["SECRET_KEY"])
+        try:
+            user_id = s.loads(token)["user_id"]
+        except:
+            return None
+        return load_user(user_id)
 
     def __repr__(self):
         return f"User({self.id}, {self.username}, {self.email})"

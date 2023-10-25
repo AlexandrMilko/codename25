@@ -1,12 +1,13 @@
 from flask import redirect, render_template, url_for, flash, request, jsonify
-from disruptor.forms import RegistrationForm, LoginForm
-from disruptor import app, db
+from disruptor.forms import RegistrationForm, LoginForm, RequestPasswordResetForm, PasswordResetForm
+from disruptor import app, db, mail
 from flask_bcrypt import generate_password_hash, check_password_hash
 from disruptor.models import User, load_user
 from flask_login import (
     login_required,
     login_user,
     logout_user,
+    current_user
 )
 from disruptor.google_auth import *
 from disruptor.sdquery import TextQuery, ImageQuery, ControlNetImageQuery, apply_style
@@ -14,6 +15,7 @@ import base64
 import json
 import uuid
 from sqlalchemy.exc import IntegrityError
+from flask_mail import Message
 
 
 @app.route("/")
@@ -25,6 +27,8 @@ def home():
 #TODO: remove to be able to register
 @login_required
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
     form = RegistrationForm()
     if form.validate_on_submit():
         password_hash = generate_password_hash(form.password.data).decode("utf-8")
@@ -52,6 +56,8 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -264,3 +270,45 @@ def save_image():
         # return jsonify({'url': file_path})
 
     return jsonify({'error': 'Unknown error'})
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    msg = Message(
+        "Password Reset Request",
+                  sender='milkoaleksandr21@gmail.com',
+                  recipients=[user.email]
+                )
+    msg.body = f'''To reset your password, visit the following link:
+{url_for('reset_password', token=token, _external=True)}
+If you did not make this request, then simply ignore this email and no changes will be made.
+    '''
+    mail.send(msg)
+
+@app.route("/request_password_reset", methods=["GET", "POST"])
+def request_password_reset():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = RequestPasswordResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        send_reset_email(user)
+        flash("An email has been sent with instructions to reset your password.", "info")
+        return redirect(url_for('login'))
+    return render_template('request_password_reset.html', title="Reset Password", form=form)
+
+@app.route("/request_password_reset/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    user = User.verify_token(token)
+    if user is None:
+        flash('That is an expired or invalid token.', 'warning')
+        return redirect(url_for('request_password_reset'))
+    form = PasswordResetForm()
+    if form.validate_on_submit():
+        password_hash = generate_password_hash(form.password.data).decode("utf-8")
+        user.password = password_hash
+        db.session.commit()
+        flash(f"Password has been successfully updated!", 'success')
+        return redirect(url_for('login'))
+    return render_template('password_reset.html', title="Reset Password", form=form)
