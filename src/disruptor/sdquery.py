@@ -4,6 +4,7 @@ from flask import url_for
 
 from disruptor import app
 from disruptor.preprocess_for_empty_space import parse_objects, unite_groups
+from flask_login import current_user
 
 import os
 import requests
@@ -53,7 +54,7 @@ class TextQuery(Query):
         }
         txt2img_url = 'http://127.0.0.1:7861/sdapi/v1/txt2img'
         response = submit_post(txt2img_url, data)
-        output_dir = "disruptor/static/images"
+        output_dir = f"disruptor/static/images/{current_user.id}"
         output_filepath = os.path.join(output_dir, self.output_filename)
         save_encoded_image(response.json()['images'][0], output_filepath)
 class ImageQuery(Query):
@@ -90,7 +91,7 @@ class ImageQuery(Query):
         }
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
-        output_dir = "disruptor\static\images"
+        output_dir = f"disruptor/static/images/{current_user.id}"
         output_filepath = os.path.join(output_dir, self.output_filename)
         save_encoded_image(response.json()['images'][0], output_filepath)
 class ControlNetImageQuery(Query):
@@ -105,11 +106,11 @@ class ControlNetImageQuery(Query):
     steps = 40
     def __init__(self, text, user_filename, output_filename, result_filename="current_image.jpg"):
         # We will use result image to transform it into new space of user image
-        result_path = "disruptor" + url_for('static', filename=f'images/{result_filename}')
+        result_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{result_filename}')
         self.result_image_b64 = get_encoded_image(result_path)
 
         # This one will represent the space
-        user_path = "disruptor" + url_for('static', filename=f'images/{user_filename}')
+        user_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{user_filename}')
         # if os.path.getsize(user_path) > MAX_CONTROLNET_IMAGE_SIZE_KB * 1024:
         #     change_image_size(user_path, user_path, MAX_CONTROLNET_IMAGE_SIZE_KB)
         self.user_image_b64 = get_encoded_image(user_path)
@@ -184,17 +185,9 @@ class ControlNetImageQuery(Query):
 
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
-        output_dir = "disruptor\static\images"
+        output_dir = f"disruptor/static/images/{current_user.id}"
         output_filepath = os.path.join(output_dir, self.output_filename)
         save_encoded_image(response.json()['images'][0], output_filepath)
-
-        # Print params
-        data.pop("init_images")
-        data["alwayson_scripts"]["controlnet"]["args"][0].pop("input_image")
-        data["alwayson_scripts"]["controlnet"]["args"][1].pop("input_image")
-        data["alwayson_scripts"]["controlnet"]["args"][2].pop("input_image")
-        data["alwayson_scripts"]["controlnet"]["args"][3].pop("input_image")
-        print(data)
 
     def set_image_size_from_user_image(self, image_path):
         image = cv2.imread(image_path)
@@ -214,7 +207,7 @@ class GreenScreenImageQuery(Query):
     steps = 40
     def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.jpg"):
         # We will use result image to transform it into new space of user image
-        prerequisite_path = "disruptor" + url_for('static', filename=f'images/preprocessed/{prerequisite}')
+        prerequisite_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/{prerequisite}')
         self.prerequisite_image_b64 = get_encoded_image(prerequisite_path)
         self.width, self.height = get_max_possible_size(prerequisite_path)
 
@@ -256,7 +249,7 @@ class GreenScreenImageQuery(Query):
 
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
-        output_dir = "disruptor\static\images"
+        output_dir = f"disruptor/static/images/{current_user.id}"
         output_filepath = os.path.join(output_dir, self.output_filename)
         save_encoded_image(response.json()['images'][0], output_filepath)
 
@@ -360,7 +353,7 @@ def run_preprocessor(preprocessor_name, image_path):
     }
     preprocessor_url = 'http://127.0.0.1:7861/controlnet/detect'
     response = submit_post(preprocessor_url, data)
-    output_dir = "disruptor/static/images/preprocessed"
+    output_dir = f"disruptor/static/images/{current_user.id}/preprocessed"
     output_filepath = os.path.join(output_dir, "preprocessed.jpg")
     save_encoded_image(response.json()['images'][0], output_filepath)
 
@@ -368,15 +361,15 @@ def prep_bg_image(empty_space):
     """
         Moving our empty space image to background image folder in GracoNet
     """
-    image = "disruptor" + url_for('static', filename=f'images/{empty_space}')
+    image = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
     shutil.copyfile(image, "../GracoNet-Object-Placement/new_OPA/background/sheep/186413.jpg")
 
 def prep_fg_image(furniture_piece):
     """
         Moving our furniture picture and its map to foreground image folder in GracoNet
     """
-    map = "disruptor" + url_for('static', filename=f'images/parsed_furniture/{furniture_piece}')
-    image = "disruptor" + url_for('static', filename=f'images/current_image.jpg')
+    map = "disruptor" + url_for('static', filename=f'images/{current_user.id}/parsed_furniture/{furniture_piece}')
+    image = "disruptor" + url_for('static', filename=f'images/{current_user.id}/current_image.jpg')
 
     shutil.copyfile(image, "../GracoNet-Object-Placement/new_OPA/foreground/sheep/64754.jpg")
     shutil.copyfile(map, "../GracoNet-Object-Placement/new_OPA/foreground/sheep/mask_64754.jpg")
@@ -406,7 +399,7 @@ def remove_files(directory_path):
     else:
         print(f"The directory {directory_path} does not exist.")
 
-def prepare_masks(directory_path="disruptor/static/images/parsed_furniture"):
+def prepare_masks(directory_path=f"disruptor/static/images/{current_user.id}/parsed_furniture"):
     # Remove ceiling, walls, to be left only with the objects
     parts_to_remove = ["ceiling", "floor", "wall", "window", "door", "skyscraper", "road"]
 
@@ -429,7 +422,7 @@ def apply_style(empty_space, text):
 
     # Prepare Input
 
-    es_path = "disruptor" + url_for('static', filename=f'images/{empty_space}')
+    es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
     # Resize
     image = Image.open(es_path)
     target_size = (767, 498)  # Set your desired width and height
@@ -437,7 +430,7 @@ def apply_style(empty_space, text):
     resized_image.save(es_path)
 
     run_preprocessor("seg_ofade20k", es_path)
-    segmented_path = "disruptor" + url_for('static', filename=f'images/preprocessed/preprocessed.jpg')
+    segmented_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
 
     # Find the right empty space image
     from disruptor.green_screen.find_similar.ssim import compare
@@ -466,13 +459,13 @@ def apply_style(empty_space, text):
     mask_dir = "disruptor/static/images/parsed_furniture"
     # We update the directory, to get rid of the rubbish from the previous segmentations
     remove_files(mask_dir)
-    parse_objects('disruptor/static/images/preprocessed/preprocessed.jpg')
+    parse_objects(f'disruptor/static/images/{current_user.id}/preprocessed/preprocessed.jpg', current_user.id)
     prepare_masks()
 
     # Create png foreground
     from disruptor.green_screen.preprocess.create_pngs import create_fg, overlay
     create_fg(mask_dir, max_similar_stage_path)
-    fg_path = "disruptor" + url_for('static', filename="images/preprocessed/foreground.png")
+    fg_path = "disruptor" + url_for('static', filename=f"images/{current_user.id}/preprocessed/foreground.png")
     overlay(es_path, fg_path)
 
     # Run SD to process it
