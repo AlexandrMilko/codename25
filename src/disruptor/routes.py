@@ -14,6 +14,7 @@ from disruptor.sdquery import TextQuery, ImageQuery, ControlNetImageQuery, apply
 import base64
 import json
 import uuid
+import os
 from sqlalchemy.exc import IntegrityError
 from flask_mail import Message
 
@@ -177,7 +178,6 @@ def callback():
     )
 
     # Doesn't exist? Add it to the database.
-    #TODO make password nullable
     if not load_user(user.id):
         db.session.add(user)
         try:
@@ -235,7 +235,7 @@ def favourites():
         # Generate images from image + text
         generate_image(text, "current_image.jpg", image_url, denoising_strength=0.5)
         # Update the left-side image
-        image_url = url_for('static', filename="images/current_image.jpg")
+        image_url = url_for('static', filename=f"images/{current_user.id}/current_image.jpg")
         generate_favourites(text, image_url)
     else:# If we chose go to favorites from style page
         # Generate option images from text
@@ -260,8 +260,6 @@ def budget():
 def room():
     image_url = request.args.get("image_url")
     text = request.args.get("text")
-    print(image_url, "IMAGE_URL")
-    print(text, "TEXT")
     return render_template('room.html', title="Room", image_url=image_url, text=text)
 
 @app.route("/space")
@@ -290,14 +288,16 @@ def save_image():
     if file:
         # Save the uploaded image to the specified folder on the server
         filename = file.filename
-        print(url_for('static', filename=f'images/{filename}'))
-        file_path = "disruptor/static/images/" + filename
+        directory = f"disruptor/static/images/{current_user.id}/"
+        from disruptor.tools import create_directory_if_not_exists
+        create_directory_if_not_exists(directory)
+        file_path = directory + filename
         file.save(file_path)
 
         apply_style(filename, text)
 
         # Return the URL of the saved image
-        return jsonify({'url': url_for('static', filename=f'images/applied.jpg')})
+        return jsonify({'url': url_for('static', filename=f'images/{current_user.id}/applied.jpg')})
         # return jsonify({'url': file_path})
 
     return jsonify({'error': 'Unknown error'})

@@ -4,10 +4,7 @@ import pandas as pd
 import os
 
 #TODO change to url_for all directory references
-default_input_image = 'disruptor/static/images/current_image.jpg'
-default_segmented_image = 'disruptor/static/images/preprocessed/preprocessed.jpg'
-save_dir = 'disruptor/static/images/parsed_furniture'
-def parse_objects(segmented_image):
+def parse_objects(segmented_image, user_id):
     # Load the image
     image = cv2.imread(segmented_image)
 
@@ -39,6 +36,7 @@ def parse_objects(segmented_image):
         # Check if the mask contains white pixels
         if np.any(bw_mask == 255):
             # Save the resulting mask in the "Objects" directory with the color name as the filename
+            save_dir = f'disruptor/static/images/{user_id}/parsed_furniture'
             mask_filename = os.path.join(save_dir, f'{color_name}.jpg')
             cv2.imwrite(mask_filename, bw_mask)
 
