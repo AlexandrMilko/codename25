@@ -18,7 +18,6 @@ import os
 from sqlalchemy.exc import IntegrityError
 from flask_mail import Message
 
-
 @app.route("/")
 @app.route("/home")
 def home():
@@ -240,7 +239,8 @@ def favourites():
     else:# If we chose go to favorites from style page
         # Generate option images from text
         generate_favourites(text)
-    return render_template('favourites.html', title="Favourites", text=text, image_url=image_url, chosen_favourite=chosen_favourite)
+    image_paths = [f'images/{current_user.id}/fav{i}.jpg' for i in range(6)]
+    return render_template('favourites.html', title="Favourites", text=text, image_url=image_url, chosen_favourite=chosen_favourite, image_paths=image_paths)
 
 @app.route("/style")
 @login_required
