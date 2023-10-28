@@ -17,13 +17,13 @@
     <section class="page">
       <h1>This is your perfect design</h1>
       <div class="result-image">
-        <img src="{{ url_for('static', filename='images/current_image.jpg' )}}" alt="Result Image" />
+        <img src="{{ url_for('static', filename='images/' ~ current_user.id ~ '/current_image.jpg' )}}" alt="Result Image" />
         <!-- change to your image -->
       </div>
       <a
         class="download-button"
-        href="{{ url_for('static', filename='images/current_image.jpg' )}}"
-        download="{{ url_for('static', filename='images/current_image.jpg' )}}"
+        href="{{ url_for('static', filename='images/' ~ current_user.id ~ '/current_image.jpg' )}}"
+        download="{{ url_for('static', filename='images/' ~ current_user.id ~ '/current_image.jpg' )}}"
         >Download</a
       >
       <a class="upgrade-button" href="{{ url_for('applyStyle', text=text) }}">Upgrade</a>

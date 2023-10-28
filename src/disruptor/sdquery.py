@@ -14,6 +14,8 @@ from PIL import Image
 import math
 import shutil
 
+from disruptor.tools import create_directory_if_not_exists
+
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 MAX_CONTROLNET_IMAGE_RESOLUTION = 600
 
@@ -56,7 +58,14 @@ class TextQuery(Query):
         response = submit_post(txt2img_url, data)
         output_dir = f"disruptor/static/images/{current_user.id}"
         output_filepath = os.path.join(output_dir, self.output_filename)
-        save_encoded_image(response.json()['images'][0], output_filepath)
+
+        # If there was no such dir, we create it and try again
+        try:
+            save_encoded_image(response.json()['images'][0], output_filepath)
+        except FileNotFoundError as e:
+            create_directory_if_not_exists(output_dir)
+            save_encoded_image(response.json()['images'][0], output_filepath)
+
 class ImageQuery(Query):
     """
         Used for generating favourites
@@ -93,7 +102,13 @@ class ImageQuery(Query):
         response = submit_post(img2img_url, data)
         output_dir = f"disruptor/static/images/{current_user.id}"
         output_filepath = os.path.join(output_dir, self.output_filename)
-        save_encoded_image(response.json()['images'][0], output_filepath)
+
+        # If there was no such dir, we create it and try again
+        try:
+            save_encoded_image(response.json()['images'][0], output_filepath)
+        except FileNotFoundError as e:
+            create_directory_if_not_exists(output_dir)
+            save_encoded_image(response.json()['images'][0], output_filepath)
 class ControlNetImageQuery(Query):
     """
         Used for applying the predefined result image to a new space
@@ -187,7 +202,13 @@ class ControlNetImageQuery(Query):
         response = submit_post(img2img_url, data)
         output_dir = f"disruptor/static/images/{current_user.id}"
         output_filepath = os.path.join(output_dir, self.output_filename)
-        save_encoded_image(response.json()['images'][0], output_filepath)
+
+        # If there was no such dir, we create it and try again
+        try:
+            save_encoded_image(response.json()['images'][0], output_filepath)
+        except FileNotFoundError as e:
+            create_directory_if_not_exists(output_dir)
+            save_encoded_image(response.json()['images'][0], output_filepath)
 
     def set_image_size_from_user_image(self, image_path):
         image = cv2.imread(image_path)
@@ -251,7 +272,13 @@ class GreenScreenImageQuery(Query):
         response = submit_post(img2img_url, data)
         output_dir = f"disruptor/static/images/{current_user.id}"
         output_filepath = os.path.join(output_dir, self.output_filename)
-        save_encoded_image(response.json()['images'][0], output_filepath)
+
+        # If there was no such dir, we create it and try again
+        try:
+            save_encoded_image(response.json()['images'][0], output_filepath)
+        except FileNotFoundError as e:
+            create_directory_if_not_exists(output_dir)
+            save_encoded_image(response.json()['images'][0], output_filepath)
 
     def set_image_size_from_user_image(self, image_path):
         image = cv2.imread(image_path)
@@ -355,7 +382,13 @@ def run_preprocessor(preprocessor_name, image_path):
     response = submit_post(preprocessor_url, data)
     output_dir = f"disruptor/static/images/{current_user.id}/preprocessed"
     output_filepath = os.path.join(output_dir, "preprocessed.jpg")
-    save_encoded_image(response.json()['images'][0], output_filepath)
+
+    # If there was no such dir, we create it and try again
+    try:
+        save_encoded_image(response.json()['images'][0], output_filepath)
+    except FileNotFoundError as e:
+        create_directory_if_not_exists(output_dir)
+        save_encoded_image(response.json()['images'][0], output_filepath)
 
 def prep_bg_image(empty_space):
     """
@@ -399,7 +432,8 @@ def remove_files(directory_path):
     else:
         print(f"The directory {directory_path} does not exist.")
 
-def prepare_masks(directory_path=f"disruptor/static/images/{current_user.id}/parsed_furniture"):
+def prepare_masks(current_user):
+    directory_path = f"disruptor/static/images/{current_user.id}/parsed_furniture"
     # Remove ceiling, walls, to be left only with the objects
     parts_to_remove = ["ceiling", "floor", "wall", "window", "door", "skyscraper", "road"]
 
@@ -421,8 +455,9 @@ def prepare_masks(directory_path=f"disruptor/static/images/{current_user.id}/par
 def apply_style(empty_space, text):
 
     # Prepare Input
-
+    import os
     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
+    create_directory_if_not_exists(os.path.dirname(es_path))
     # Resize
     image = Image.open(es_path)
     target_size = (767, 498)  # Set your desired width and height
@@ -435,7 +470,6 @@ def apply_style(empty_space, text):
     # Find the right empty space image
     from disruptor.green_screen.find_similar.ssim import compare
     import glob
-    import os
 
     segmented_predefined = "disruptor/green_screen/find_similar/images/empty_space_segmented"
     segmented_paths = glob.glob(os.path.join(segmented_predefined, '*.png'))
@@ -456,17 +490,19 @@ def apply_style(empty_space, text):
 
     # Create masks
     run_preprocessor("seg_ofade20k", max_similar_stage_path)
-    mask_dir = "disruptor/static/images/parsed_furniture"
+    mask_dir = f"disruptor/static/images/{current_user.id}/parsed_furniture"
+    create_directory_if_not_exists(mask_dir)
     # We update the directory, to get rid of the rubbish from the previous segmentations
     remove_files(mask_dir)
     parse_objects(f'disruptor/static/images/{current_user.id}/preprocessed/preprocessed.jpg', current_user.id)
-    prepare_masks()
+    prepare_masks(current_user)
 
     # Create png foreground
     from disruptor.green_screen.preprocess.create_pngs import create_fg, overlay
-    create_fg(mask_dir, max_similar_stage_path)
+    create_fg(mask_dir, max_similar_stage_path, current_user.id)
     fg_path = "disruptor" + url_for('static', filename=f"images/{current_user.id}/preprocessed/foreground.png")
-    overlay(es_path, fg_path)
+    create_directory_if_not_exists(os.path.dirname(fg_path))
+    overlay(es_path, fg_path, current_user.id)
 
     # Run SD to process it
     query = GreenScreenImageQuery(text)

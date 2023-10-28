@@ -1,7 +1,7 @@
 from PIL import Image
 import os
 
-def create_fg(mask_dir, staged_img_path):
+def create_fg(mask_dir, staged_img_path, current_user_id):
     # Open the main image
     image = Image.open(staged_img_path)
 
@@ -27,12 +27,12 @@ def create_fg(mask_dir, staged_img_path):
         mask.close()
 
     # Save the result as a single PNG image
-    result.save("disruptor/static/images/preprocessed/foreground.png")
+    result.save(f"disruptor/static/images/{current_user_id}/preprocessed/foreground.png")
 
     # Close the main image
     image.close()
 
-def overlay(es_image, fg_image):
+def overlay(es_image, fg_image, current_user_id):
     import PIL
 
     # Open the JPG and PNG images
@@ -50,7 +50,7 @@ def overlay(es_image, fg_image):
     jpg_image = jpg_image.convert("RGB")
 
     # Save the resulting image
-    jpg_image.save('disruptor/static/images/preprocessed/prerequisite.jpg')
+    jpg_image.save(f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.jpg')
 
     # Close the images
     jpg_image.close()
