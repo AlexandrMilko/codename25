@@ -30,8 +30,8 @@ class TextQuery(Query):
     steps = 20
     def __init__(self, text, output_filename):
         space, room, budget, style = text.split(", ")
+        # We will use it to determine the model
         self.style = style
-        print(self.style, "STYLE")
 
         if self.style == "Modern":
             self.prompt = f"{room}, {space} space, {budget} budget, sleek, minimalistic, functional, open, neutral, tech-influenced style, elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
@@ -81,14 +81,17 @@ class ImageQuery(Query):
             input_image_b64 = base64.b64encode(image_bytes).decode('utf-8')
         self.init_images = [input_image_b64]
 
-        space, room, budget, style = text.split(", ")
-        self.prompt = f"{room}, {space} space, {budget} budget, {style} style, elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
+        space, room, budget, self.style = text.split(", ")
+        self.prompt = f"{room}, {space} space, {budget} budget, {self.style} style, elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
         # self.prompt = text + ", elegant, neat, clean, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed"
         self.output_filename = output_filename
         self.denoising_strength = denoising_strength
 
     def run(self):
-        set_deliberate()
+        if self.style in ("Modern", "Art Deco"):
+            set_xsarchitectural()
+        else:
+            set_deliberate()
         data = {
             'prompt': self.prompt,
             "sampler_name": self.sampler_name,
@@ -132,12 +135,15 @@ class ControlNetImageQuery(Query):
         self.width, self.height = get_max_possible_size(user_path)
         # self.set_image_size_from_user_image(user_path)
 
-        space, room, budget, style = text.split(", ")
-        self.prompt = f'interior design, equipped {room.lower()}, {style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
+        space, room, budget, self.style = text.split(", ")
+        self.prompt = f'interior design, equipped {room.lower()}, {self.style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
         self.output_filename = output_filename
 
     def run(self):
-        set_deliberate()
+        if self.style in ("Modern", "Art Deco"):
+            set_xsarchitectural()
+        else:
+            set_deliberate()
         data = {
             "prompt": self.prompt,
             "sampler_name": self.sampler_name,
@@ -232,12 +238,15 @@ class GreenScreenImageQuery(Query):
         self.prerequisite_image_b64 = get_encoded_image(prerequisite_path)
         self.width, self.height = get_max_possible_size(prerequisite_path)
 
-        space, room, budget, style = text.split(", ")
-        self.prompt = f'interior design, equipped {room.lower()}, {style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
+        space, room, budget, self.style = text.split(", ")
+        self.prompt = f'interior design, equipped {room.lower()}, {self.style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
         self.output_filename = output_filename
 
     def run(self):
-        set_deliberate()
+        if self.style in ("Modern", "Art Deco"):
+            set_xsarchitectural()
+        else:
+            set_deliberate()
         data = {
             "prompt": self.prompt,
             "sampler_name": self.sampler_name,
