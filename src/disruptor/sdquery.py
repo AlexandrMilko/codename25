@@ -466,34 +466,43 @@ def apply_style(empty_space, text):
     # Prepare Input
     import os
     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
+    es_path_resized = "disruptor" + url_for('static', filename=f'images/{current_user.id}/resized_{empty_space}')
     create_directory_if_not_exists(os.path.dirname(es_path))
-    # Resize
-    image = Image.open(es_path)
-    target_size = (767, 498)  # Set your desired width and height
-    resized_image = image.resize(target_size, Image.Resampling.LANCZOS)  # Use a resampling filter for better quality
-    resized_image.save(es_path)
-
-    run_preprocessor("seg_ofade20k", es_path)
-    segmented_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
 
     # Find the right empty space image
     from disruptor.green_screen.find_similar.ssim import compare
     import glob
 
-    segmented_predefined = "disruptor/green_screen/find_similar/images/empty_space_segmented"
-    segmented_paths = glob.glob(os.path.join(segmented_predefined, '*.png'))
+    room_directory_name = text.split(", ")[1].lower().replace(" ", "_")
+    segmented_predefined = f"disruptor/green_screen/find_similar/dataset/{room_directory_name}/es_segmented"
+    segmented_paths = glob.glob(os.path.join(segmented_predefined, '*.jpg'))
     max_similarity = -1  # Initialize max_similarity to a value that's lower than any possible similarity score
     max_similar_es = ""
-    for image_path in segmented_paths:
-        similarity = compare(segmented_path, image_path)
+    for dataset_image_path in segmented_paths:
+
+        # We have to make the images the same size before comparing
+        # Resize
+        es_image = Image.open(es_path)
+        dataset_image = Image.open(dataset_image_path)
+        target_size = dataset_image.size  # Set your desired width and height
+        resized_image = es_image.resize(target_size,
+                                     Image.Resampling.LANCZOS)  # Use a resampling filter for better quality
+        resized_image.save(es_path_resized)
+
+        # Prepare segmented resized image for comparison
+        run_preprocessor("seg_ofade20k", es_path_resized)
+        segmented_path = "disruptor" + url_for('static',
+                                               filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
+
+        similarity = compare(segmented_path, dataset_image_path)
         if similarity > max_similarity:
             max_similarity = similarity
-            max_similar_es = image_path
+            max_similar_es = dataset_image_path
 
     # Find corresponding staged image
     import re
-    max_similar_stage = str(re.search(r'\d+', os.path.basename(max_similar_es)).group()) + "_staged.jpg"
-    max_similar_stage_path = "disruptor/green_screen/find_similar/images/staged/" + max_similar_stage
+    max_similar_stage = str(re.search(r'\d+', os.path.basename(max_similar_es)).group()) + "After.jpg"
+    max_similar_stage_path = f"disruptor/green_screen/find_similar/dataset/{room_directory_name}/original/" + max_similar_stage
 
     # Parse furniture from the selected staged image
 
