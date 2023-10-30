@@ -377,8 +377,6 @@ def get_max_possible_size(input_path, target_resolution=MAX_CONTROLNET_IMAGE_RES
     return width, height
 
 def run_preprocessor(preprocessor_name, image_path):
-    print(os.getcwd())
-    print(image_path)
     input_image = get_encoded_image(image_path)
     data = {
         "controlnet_module": preprocessor_name,
@@ -495,6 +493,7 @@ def apply_style(empty_space, text):
                                                filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
 
         similarity = compare(segmented_path, dataset_image_path)
+        print(dataset_image_path, similarity)
         if similarity > max_similarity:
             max_similarity = similarity
             max_similar_es = dataset_image_path
