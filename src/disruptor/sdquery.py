@@ -14,7 +14,7 @@ from PIL import Image
 import math
 import shutil
 
-from disruptor.tools import create_directory_if_not_exists
+from disruptor.tools import create_directory_if_not_exists, min_max_scale
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 MAX_CONTROLNET_IMAGE_RESOLUTION = 600
@@ -468,14 +468,19 @@ def apply_style(empty_space, text):
     create_directory_if_not_exists(os.path.dirname(es_path))
 
     # Find the right empty space image
-    from disruptor.green_screen.find_similar.ssim import compare
+    from disruptor.green_screen.find_similar.ssim import compare_iou
+    from disruptor.green_screen.find_similar.ssim import compare_vanishing_point
     import glob
 
     room_directory_name = text.split(", ")[1].lower().replace(" ", "_")
     segmented_predefined = f"disruptor/green_screen/find_similar/dataset/{room_directory_name}/es_segmented"
     segmented_paths = glob.glob(os.path.join(segmented_predefined, '*.jpg'))
-    max_similarity = -1  # Initialize max_similarity to a value that's lower than any possible similarity score
-    max_similar_es = ""
+    es_number_to_select = 10
+    max_similar_iou_es = dict()
+
+    i = 0
+    comparison_times = len(segmented_paths)
+    # Compare by Intersection over Union
     for dataset_image_path in segmented_paths:
 
         # We have to make the images the same size before comparing
@@ -492,16 +497,79 @@ def apply_style(empty_space, text):
         segmented_path = "disruptor" + url_for('static',
                                                filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
 
-        similarity = compare(segmented_path, dataset_image_path)
-        print(dataset_image_path, similarity)
-        if similarity > max_similarity:
-            max_similarity = similarity
-            max_similar_es = dataset_image_path
+        iou_similarity = compare_iou(segmented_path, dataset_image_path)
+        i += 1
+        print(dataset_image_path, iou_similarity, str(i) + "/" + str(comparison_times))
 
+        #Add to the top similar
+        if len(max_similar_iou_es) < es_number_to_select:
+            max_similar_iou_es[dataset_image_path] = iou_similarity
+        else:
+            min_key = min(max_similar_iou_es, key=lambda k: max_similar_iou_es[k])
+            if max_similar_iou_es[min_key] < iou_similarity:
+                max_similar_iou_es[dataset_image_path] = iou_similarity
+                max_similar_iou_es.pop(min_key)
+
+        es_image.close()
+        dataset_image.close()
+        resized_image.close()
+
+    # Calculate relative iou similarity
+
+    min_val = min(max_similar_iou_es.values())
+    max_val = max(max_similar_iou_es.values())
+    # Perform min-max scaling and map to the range [0, 1]
+    max_similar_iou_es = {key: min_max_scale(value, min_val, max_val) for key, value in max_similar_iou_es.items()}
+
+    print(max_similar_iou_es)
+
+    # We calculate vanishing point for the top
+    max_similar_vp_es = dict()
+    for dataset_image_path in max_similar_iou_es.keys():
+        # Resize
+        es_image = Image.open(es_path)
+        dataset_image = Image.open(dataset_image_path)
+        target_size = dataset_image.size  # Set your desired width and height
+        resized_image = es_image.resize(target_size,
+                                        Image.Resampling.LANCZOS)  # Use a resampling filter for better quality
+        resized_image.save(es_path_resized)
+        # Prepare segmented resized image for comparison
+        run_preprocessor("seg_ofade20k", es_path_resized)
+        segmented_path = "disruptor" + url_for('static',
+                                               filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
+        try:
+            vp_distance = compare_vanishing_point(segmented_path, dataset_image_path)
+            print(os.path.basename(segmented_path), os.path.basename(dataset_image_path), vp_distance)
+        except:
+            continue
+        finally:
+            if vp_distance != None:
+                max_similar_vp_es[dataset_image_path] = vp_distance
+
+            es_image.close()
+            dataset_image.close()
+            resized_image.close()
+
+    # We standardize values
+    min_val = min(max_similar_vp_es.values())
+    max_val = max(max_similar_vp_es.values())
+    max_similar_vp_es = {key: min_max_scale(value, min_val, max_val) for key, value in max_similar_vp_es.items()}
+
+    # Calculate overall similarity score (the more the better)
+    # score = iou / vp_distance
+    scores = dict()
+    for dataset_image_path in max_similar_vp_es.keys():
+        iou = max_similar_iou_es[dataset_image_path]
+        vp_distance = max_similar_vp_es[dataset_image_path]
+        scores[dataset_image_path] = iou - vp_distance
+
+    best_fit = max(scores, key=lambda k: scores[k])
+    print(scores)
     # Find corresponding staged image
     import re
-    max_similar_stage = str(re.search(r'\d+', os.path.basename(max_similar_es)).group()) + "After.jpg"
+    max_similar_stage = str(re.search(r'\d+', os.path.basename(best_fit)).group()) + "After.jpg"
     max_similar_stage_path = f"disruptor/green_screen/find_similar/dataset/{room_directory_name}/original/" + max_similar_stage
+    print("Max similar: ", max_similar_stage_path)
 
     # Parse furniture from the selected staged image
 
