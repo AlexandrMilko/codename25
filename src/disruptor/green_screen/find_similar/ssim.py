@@ -45,10 +45,10 @@ def round_contours(cv2_image):
 	# Draw the red border around the largest contour
 	final_result_with_border = cv2.drawContours(cv2_image.copy(), [largest_contour], -1, color=(0, 0, 255), thickness=2)
 	# Show results
-	cv2.imshow('final_result_with_border', final_result_with_border)
+	# cv2.imshow('final_result_with_border', final_result_with_border)
 
 	# show results
-	cv2.imshow('mask', mask)
+	# cv2.imshow('mask', mask)
 
 	# Define color mapping
 	color_mapping = {
@@ -61,7 +61,7 @@ def round_contours(cv2_image):
 	for key, value in color_mapping.items():
 		bgr_image[final_result == key] = value
 
-	cv2.imshow("bgr.jpg", bgr_image)
+	# cv2.imshow("bgr.jpg", bgr_image)
 	cv2.waitKey(0)
 	cv2.destroyAllWindows()
 	return bgr_image
@@ -82,6 +82,78 @@ def mask_everything_except(colors, image, color_error=1):
 	# cv2.imshow("OutputImageMasked", masked_image)
 	# cv2.waitKey(0)
 	return masked_image
+
+def point_lies_on_lines(point, line1, line2, error=15):
+	x, y = point
+	x1, y1, x2, y2 = line1
+	x3, y3, x4, y4 = line2
+	if (min(x1, x2) - error) <= x <= (max(x1, x2) + error) and (min(y1, y2) - error) <= y <= (
+			max(y1, y2) + error) \
+			and (min(x3, x4) - error) <= x <= (max(x3, x4) + error) and (
+			min(y3, y4) - error) <= y <= (max(y3, y4) + error):
+		return True
+	else:
+		return False
+
+def are_lines_intersecting(line1, line2):
+	img = np.zeros((1024, 1024, 3), dtype=np.uint8)  # Create a black image
+	x1, y1, x2, y2 = line1[:4]
+	x3, y3, x4, y4 = line2[:4]
+
+	# Draw the lines
+	cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Line 1 in green
+	cv2.line(img, (x3, y3), (x4, y4), (0, 0, 255), 2)  # Line 2 in red
+
+	# Check if the lines are not parallel
+	det = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+	if det == 0:
+		return False  # Lines are parallel
+
+	# Calculate intersection point
+	intersection_x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / det
+	intersection_y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / det
+
+	cv2.circle(img, (int(intersection_x), int(intersection_y)), 5, (255, 255, 255), -1)  # Intersection point in white
+
+	# Show the image
+	# cv2.imshow('Lines and Intersection', img)
+	cv2.waitKey(0)
+	cv2.destroyAllWindows()
+
+	# Check if intersection point is within the line segments
+	return point_lies_on_lines([intersection_x, intersection_y], [x1, y1, x2, y2], [x3, y3, x4, y4])
+
+def remove_edges(lines): # Remove lines which connect 2 other lines.
+	lines_without_edges = lines.copy()
+	for line in lines:
+		connecting_counter = 0
+		for compare_line in lines:
+			if(line != compare_line):
+				# print(are_lines_intersecting(line, compare_line), " INTERSECTING: ", line, compare_line)
+				if are_lines_intersecting(line, compare_line):
+					connecting_counter += 1
+				if connecting_counter >= 2: # It is not going to be bigger than 2, but just in case.
+					lines_without_edges.remove(line)
+					break
+	print(len(lines), len(lines_without_edges), "LENGTHS", sep="\n")
+	return lines_without_edges
+
+
+def identify_room_type(lines):
+	# 1. Corner - when we have only 2 walls present in image, resulting in a corner.
+	# 2. Vanishing Point room - when we are able to calculate vanishing point for a room. It has to have more than 2 lines.
+	# Some line will be connecting other lines and we have to ignore it to calculate vanishing point.
+	# (3. 2 Lines - it comes as a result of removing horizontal line,
+	# which connects the rest of lines from the image in FilterLines function. But I changed REJECT_DEGREE_TH to 0, to preserve all lines.
+	# So we will never encounter such type of room. Writing it here just in case.)
+	if len(lines) == 2:
+		if are_lines_intersecting(lines[0], lines[1]):
+			return "corner"
+		else:
+			return "vanishing point" # it is actually the third type, but we can compare "2 lines" and "vanishing point".
+		# "2 Lines" is a specific case of "vanishing point"
+	return "vanishing point"
+
 def compare_vanishing_point(first_path, second_path):
 	first_image = cv2.imread(first_path)
 	second_image = cv2.imread(second_path)
@@ -102,16 +174,23 @@ def compare_vanishing_point(first_path, second_path):
 	if not all((first_lines, second_lines)):
 		raise Exception("No Lines were detected on some of the images.")
 
+	first_room_type = identify_room_type(first_lines)
+	second_room_type = identify_room_type(second_lines)
+	if first_room_type != second_room_type:
+		raise Exception("Rooms have different types: ", first_room_type, " and ", second_room_type)
+
+	first_lines = remove_edges(first_lines)
+	second_lines = remove_edges(second_lines)
+
 	# Get vanishing point
 	first_vanishing_point = GetVanishingPoint(first_lines)
 	second_vanishing_point = GetVanishingPoint(second_lines)
 
 	# Checking if vanishing point found
 	if not all((first_vanishing_point, second_vanishing_point)):
-		print(
+		raise Exception(
 			"Vanishing Point not found. Possible reason is that not enough lines are found in the image for determination of vanishing point."
 		)
-		return None
 
 	# Drawing lines and vanishing point
 	for Line in first_lines:
