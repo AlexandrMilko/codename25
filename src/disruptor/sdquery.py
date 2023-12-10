@@ -234,15 +234,18 @@ class GreenScreenImageQuery(Query):
     steps = 40
     def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.jpg"):
         # We will use result image to transform it into new space of user image
-        prerequisite_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/{prerequisite}')
-        self.prerequisite_image_b64 = get_encoded_image(prerequisite_path)
-        self.width, self.height = get_max_possible_size(prerequisite_path)
+        self.prerequisite_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/{prerequisite}')
+        self.prerequisite_image_b64 = get_encoded_image(self.prerequisite_path)
+        self.width, self.height = get_max_possible_size(self.prerequisite_path)
 
         space, room, budget, self.style = text.split(", ")
         self.prompt = f'interior design, equipped {room.lower()}, {self.style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
         self.output_filename = output_filename
 
     def run(self):
+        # We run segmentation for our prerequisite image to see if segmentation was done correctly
+        run_preprocessor("seg_ofade20k", self.prerequisite_path, "seg_prerequisite.jpg")
+
         if self.style in ("Modern", "Art Deco"):
             set_xsarchitectural()
         else:
@@ -376,7 +379,7 @@ def get_max_possible_size(input_path, target_resolution=MAX_CONTROLNET_IMAGE_RES
     # If no resizing was done, return the original dimensions
     return width, height
 
-def run_preprocessor(preprocessor_name, image_path):
+def run_preprocessor(preprocessor_name, image_path, filename="preprocessed.jpg"):
     input_image = get_encoded_image(image_path)
     data = {
         "controlnet_module": preprocessor_name,
@@ -388,7 +391,7 @@ def run_preprocessor(preprocessor_name, image_path):
     preprocessor_url = 'http://127.0.0.1:7861/controlnet/detect'
     response = submit_post(preprocessor_url, data)
     output_dir = f"disruptor/static/images/{current_user.id}/preprocessed"
-    output_filepath = os.path.join(output_dir, "preprocessed.jpg")
+    output_filepath = os.path.join(output_dir, filename)
 
     # If there was no such dir, we create it and try again
     try:
@@ -537,13 +540,15 @@ def apply_style(empty_space, text):
         run_preprocessor("seg_ofade20k", es_path_resized)
         segmented_path = "disruptor" + url_for('static',
                                                filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
+        vp_distance = None
         try:
             vp_distance = compare_vanishing_point(segmented_path, dataset_image_path)
             print(os.path.basename(segmented_path), os.path.basename(dataset_image_path), vp_distance)
-        except:
+        except Exception as e:
+            print(e)
             continue
         finally:
-            if vp_distance != None:
+            if vp_distance is not None:
                 max_similar_vp_es[dataset_image_path] = vp_distance
 
             es_image.close()
