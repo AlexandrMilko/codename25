@@ -445,7 +445,8 @@ def remove_files(directory_path):
 def prepare_masks(current_user):
     directory_path = f"disruptor/static/images/{current_user.id}/parsed_furniture"
     # Remove ceiling, walls, to be left only with the objects
-    parts_to_remove = ["ceiling", "floor", "wall", "window", "door", "skyscraper", "road"]
+    parts_to_remove = ["ceiling", "floor", "wall", "window", "door", "skyscraper", "road",
+                       "painting", "curtain", "rail", "stairway", "shelf", "cabinet", "fireplace"]
 
     # Check if the directory exists
     if os.path.exists(directory_path) and os.path.isdir(directory_path):
