@@ -229,9 +229,9 @@ class GreenScreenImageQuery(Query):
     """
     # TODO:
     # automatic width, height
-    denoising_strength = 1
+    denoising_strength = 0.75
     cfg_scale = 7
-    steps = 40
+    steps = 20
     def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.jpg"):
         # We will use result image to transform it into new space of user image
         self.prerequisite_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/{prerequisite}')
@@ -239,7 +239,7 @@ class GreenScreenImageQuery(Query):
         self.width, self.height = get_max_possible_size(self.prerequisite_path)
 
         space, room, budget, self.style = text.split(", ")
-        self.prompt = f'interior design, equipped {room.lower()}, {self.style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
+        self.prompt = f'interior design, {room.lower()}, {self.style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
         self.output_filename = output_filename
 
     def run(self):
@@ -253,7 +253,7 @@ class GreenScreenImageQuery(Query):
         data = {
             "prompt": self.prompt,
             "sampler_name": self.sampler_name,
-            "negative_prompt": self.negative_prompt,
+            # "negative_prompt": self.negative_prompt,
             "init_images": [self.prerequisite_image_b64],
             "batch_size": 1,
             "steps": self.steps,
