@@ -541,7 +541,7 @@ def apply_style(empty_space, text):
 
     # Find the right empty space image
     from disruptor.green_screen.find_similar.ssim import compare_iou
-    from disruptor.green_screen.find_similar.ssim import compare_vanishing_point
+    from disruptor.green_screen.find_similar.ssim import compare_vanishing_point, compare_vanishing_point_by_XiaohuLu
     import glob
 
     room_directory_name = text.split(", ")[1].lower().replace(" ", "_")
@@ -611,8 +611,13 @@ def apply_style(empty_space, text):
                                                filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
         vp_distance = None
         try:
-            vp_distance = compare_vanishing_point(segmented_path, dataset_image_path)
-            print(os.path.basename(segmented_path), os.path.basename(dataset_image_path), vp_distance)
+            import re
+            # Get the room type directory
+            room_directory = os.path.dirname(os.path.dirname(dataset_image_path))
+            corresponding_original_image = str(re.search(r'\d+', os.path.basename(dataset_image_path)).group()) + "Before.jpg"
+            dataset_corresponding_original_path = os.path.join(room_directory, "original/" + corresponding_original_image)
+            vp_distance = compare_vanishing_point_by_XiaohuLu(es_path_resized, dataset_corresponding_original_path)
+            print(os.path.basename(es_path_resized), os.path.basename(dataset_corresponding_original_path), vp_distance)
         except Exception as e:
             print(e)
             continue

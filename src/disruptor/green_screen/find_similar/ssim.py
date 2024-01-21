@@ -154,6 +154,7 @@ def identify_room_type(lines):
 		# "2 Lines" is a specific case of "vanishing point"
 	return "vanishing point"
 
+# This is my function. I used it before I found XiaohuLuVPDetection. Very smart guys.
 def compare_vanishing_point(first_path, second_path):
 	first_image = cv2.imread(first_path)
 	second_image = cv2.imread(second_path)
@@ -207,6 +208,74 @@ def compare_vanishing_point(first_path, second_path):
 	cv2.waitKey(0)
 	cv2.destroyAllWindows()
 	return manhattan_distance(first_vanishing_point, second_vanishing_point)
+
+def compare_vanishing_point_by_XiaohuLu(first_path, second_path):
+	first_vanishing_point = calculate_vanishing_point_by_XiaohuLu(first_path)
+	second_vanishing_point = calculate_vanishing_point_by_XiaohuLu(second_path)
+	return manhattan_distance(first_vanishing_point, second_vanishing_point)
+
+def calculate_vanishing_point_by_XiaohuLu(img_path):
+	from lu_vp_detect import VPDetection
+	length_thresh = 60
+	principal_point = None
+	focal_length = 500
+	seed = 1337
+
+	vpd = VPDetection(length_thresh, principal_point, focal_length, seed)
+	vps = vpd.find_vps(img_path)
+
+	# Load the original image
+	image = cv2.imread(img_path)
+	height, width, _ = image.shape
+
+	# Create a larger canvas (4 times bigger). We do it to show Vanishing point that is out of image boundaries
+	canvas = np.zeros((height * 2, width * 2, 3), dtype=np.uint8)
+
+	# Calculate the offset for placing the image in the center of the canvas
+	offset_y = int((canvas.shape[0] - height) / 2)
+	offset_x = int((canvas.shape[1] - width) / 2)
+
+	# Place the image on the canvas
+	canvas[offset_y:offset_y + height, offset_x:offset_x + width] = image
+
+	# Scale and adjust the vanishing points coordinates
+	adjusted_vps = vpd.vps_2D
+	adjusted_vps[:, 0] += offset_x  # Adjust x-coordinate
+	adjusted_vps[:, 1] += offset_y  # Adjust y-coordinate
+
+	# Draw the vanishing points on the canvas
+	for vp_2D in adjusted_vps:
+		vp_2D = np.round(vp_2D).astype(int)
+		cv2.circle(canvas, (vp_2D[0], vp_2D[1]), 5, (0, 255, 0), -1)
+
+	# Display the canvas with vanishing points
+	cv2.imshow('Canvas with Vanishing Points', canvas)
+	cv2.waitKey(0)
+	cv2.destroyAllWindows()
+
+	# print(vps)  # 3D vanishing points
+	print(vpd.vps_2D)  # 2D vanishing points
+
+	# Create debug image
+	vpd.create_debug_VP_image(show_image=True)
+
+	return get_min_abs_sum_list(vpd.vps_2D)
+
+# We use it to find vanishing point with the minimum value, because the minimum one is more likely to be the real one
+def get_min_abs_sum_list(list_2d):
+	data = np.array(list_2d)
+
+	# Calculate the absolute sum along the specified axis (axis=1 for row-wise sum)
+	absolute_sums = np.sum(np.abs(data), axis=1)
+
+	# Find the index of the minimum absolute sum
+	min_index = np.argmin(absolute_sums)
+
+	# Get the list with the smallest absolute sum
+	min_abs_sum_list = data[min_index]
+
+	return min_abs_sum_list
+
 
 def compare_iou(first_path, second_path):
 	# Open the image using PIL
