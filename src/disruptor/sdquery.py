@@ -3,7 +3,7 @@ import base64
 from flask import url_for
 
 from disruptor import app
-from disruptor.preprocess_for_empty_space import parse_objects, unite_groups
+from disruptor.preprocess_for_empty_space import parse_objects, unite_groups, unite_masks
 from flask_login import current_user
 
 import os
@@ -229,13 +229,15 @@ class GreenScreenImageQuery(Query):
     """
     # TODO:
     # automatic width, height
-    denoising_strength = 0.75
+    denoising_strength = 1
     cfg_scale = 7
     steps = 20
-    def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.jpg"):
+    def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.jpg", inpainting_mask="inpainting_mask.png"):
         # We will use result image to transform it into new space of user image
         self.prerequisite_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/{prerequisite}')
+        self.inpainting_mask_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/{inpainting_mask}')
         self.prerequisite_image_b64 = get_encoded_image(self.prerequisite_path)
+        self.inpainting_mask_image_b64 = get_encoded_image(self.inpainting_mask_path)
         self.width, self.height = get_max_possible_size(self.prerequisite_path)
 
         space, room, budget, self.style = text.split(", ")
@@ -250,11 +252,67 @@ class GreenScreenImageQuery(Query):
             set_xsarchitectural()
         else:
             set_deliberate()
+
+        self.staged_image_b64 = self.stage()
+        self.design()
+    def stage(self):
+        self.denoising_strength = 1
+        self.steps = 20
+        data = {
+            # "prompt": self.prompt,
+            "prompt": "",
+            "sampler_name": self.sampler_name,
+            # "negative_prompt": self.negative_prompt,
+            "init_images": [self.prerequisite_image_b64],
+            "batch_size": 1,
+            "steps": self.steps,
+            "cfg_scale": self.cfg_scale,
+            "denoising_strength": self.denoising_strength,
+            "width": self.width,
+            "height": self.height,
+            # "seed": 123, # TODO add seed, before testing
+            "mask": self.inpainting_mask_image_b64,
+            "mask_blur": 10,
+            "alwayson_scripts": {
+                "controlnet": {
+                    "args": [
+                        {
+                            "input_image": self.prerequisite_image_b64,
+                            "module": "seg_ofade20k",
+                            "model": "control_sd15_seg [fef5e48e]",
+                            "weight": 1,
+                            "guidance_start": 0,
+                            "guidance_end": 1,
+                            "control_mode": 0,
+                            "processor_res": 512
+                        }
+                    ]
+                }
+            }
+        }
+
+        img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
+        response = submit_post(img2img_url, data)
+        output_dir = f"disruptor/static/images/{current_user.id}/preprocessed"
+        output_filepath = os.path.join(output_dir, 'staged.jpg')
+
+        # If there was no such dir, we create it and try again
+        try:
+            save_encoded_image(response.json()['images'][0], output_filepath)
+        except FileNotFoundError as e:
+            create_directory_if_not_exists(output_dir)
+            save_encoded_image(response.json()['images'][0], output_filepath)
+
+        return response.json()['images'][0]
+
+    def design(self):
+        self.denoising_strength = 0.75
+        self.steps = 30
         data = {
             "prompt": self.prompt,
             "sampler_name": self.sampler_name,
             # "negative_prompt": self.negative_prompt,
-            "init_images": [self.prerequisite_image_b64],
+            "init_images": [self.staged_image_b64],
             "batch_size": 1,
             "steps": self.steps,
             "cfg_scale": self.cfg_scale,
@@ -266,9 +324,19 @@ class GreenScreenImageQuery(Query):
                 "controlnet": {
                     "args": [
                         {
-                            "input_image": self.prerequisite_image_b64,
+                            "input_image": self.staged_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
+                            "weight": 1,
+                            "guidance_start": 0,
+                            "guidance_end": 1,
+                            "control_mode": 0,
+                            "processor_res": 512
+                        },
+                        {
+                            "input_image": self.staged_image_b64,
+                            "module": "depth_midas",
+                            "model": "control_sd15_depth [fef5e48e]",
                             "weight": 1,
                             "guidance_start": 0,
                             "guidance_end": 1,
@@ -446,7 +514,7 @@ def prepare_masks(current_user):
     directory_path = f"disruptor/static/images/{current_user.id}/parsed_furniture"
     # Remove ceiling, walls, to be left only with the objects
     parts_to_remove = ["ceiling", "floor", "wall", "window", "door", "skyscraper", "road",
-                       "painting", "curtain", "rail", "stairway", "shelf", "cabinet", "fireplace"]
+                       "painting", "curtain", "rail", "stairway", "shelf", "cabinet", "fireplace", "mirror", ]
 
     # Check if the directory exists
     if os.path.exists(directory_path) and os.path.isdir(directory_path):
@@ -571,6 +639,9 @@ def apply_style(empty_space, text):
 
     best_fit = max(scores, key=lambda k: scores[k])
     print(scores)
+    #
+    # best_fit = "44"
+    # room_directory_name = "living_room"
     # Find corresponding staged image
     import re
     max_similar_stage = str(re.search(r'\d+', os.path.basename(best_fit)).group()) + "After.jpg"
@@ -595,9 +666,24 @@ def apply_style(empty_space, text):
     create_directory_if_not_exists(os.path.dirname(fg_path))
     overlay(es_path, fg_path, current_user.id)
 
+    # Create a mask for inpainting
+    mask_path = f'disruptor/static/images/{current_user.id}/preprocessed/inpainting_mask.png'
+    unite_masks(mask_dir, mask_path)
+    mask_img = Image.open(mask_path)
+    prerequisite_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/prerequisite.jpg')
+    prerequisite_img = Image.open(prerequisite_path)
+    mask_img = mask_img.resize(prerequisite_img.size, Image.Resampling.LANCZOS)
+    mask_img.save(mask_path)
+
+    # Make edges smoother
+    from disruptor.preprocess_for_empty_space import perform_dilation
+    perform_dilation(mask_path, mask_path, 16)
+
     # Run SD to process it
     query = GreenScreenImageQuery(text)
     query.run()
+
+    #TODO close all images after opening
 
     # style="current_image.jpg"
     # style_image_path = "disruptor" + url_for('static', filename=f'images/{style}')
