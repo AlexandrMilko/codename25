@@ -73,3 +73,46 @@ def unite_groups(input_dir, output_dir, groups):
             cv2.imwrite(output_file, group_mask)
         else:
             print(f"No valid masks found for group: {group}")
+
+def unite_masks(input_dir, output_filepath):
+    # Iterate through each group of masks
+    # Initialize an empty mask for the group
+    mask_union = None
+
+    # Iterate through masks in the group
+    for mask_filename in os.listdir(input_dir):
+        mask_path = os.path.join(input_dir, mask_filename)
+        # Check if the mask file exists
+        if not os.path.isfile(mask_path):
+            print(f"{mask_filename} is not a file. Skipping..")
+            continue
+
+        # Load the mask as a grayscale image
+        mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+
+        # If group_mask is None, initialize it with the first mask
+        if mask_union is None:
+            mask_union = mask
+        else:
+            # Unite the current mask with the group_mask using bitwise OR
+            mask_union = cv2.bitwise_or(mask_union, mask)
+
+    # Check if group_mask is empty before saving
+    if mask_union is not None and not np.all(mask_union == 0):
+        # Save the united mask for the group
+        cv2.imwrite(output_filepath, mask_union)
+    else:
+        print(f"No valid masks found for: {input_dir}")
+
+def perform_dilation(input_image_path, output_image_path, kernel_size):
+    # Read the input image
+    image = cv2.imread(input_image_path, cv2.IMREAD_GRAYSCALE)
+
+    # Define a kernel for dilation
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+
+    # Perform dilation
+    dilated_image = cv2.dilate(image, kernel, iterations=1)
+
+    # Save the result
+    cv2.imwrite(output_image_path, dilated_image)
