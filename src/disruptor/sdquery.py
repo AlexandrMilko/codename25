@@ -611,6 +611,7 @@ def apply_style(empty_space, text):
                                                filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
         vp_distance = None
         try:
+            # TODO Use Room.get_trio
             import re
             # Get the room type directory
             room_directory = os.path.dirname(os.path.dirname(dataset_image_path))
