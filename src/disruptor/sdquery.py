@@ -3,6 +3,7 @@ import base64
 from flask import url_for
 
 from disruptor import app
+from disruptor.staging_ml import Room
 from disruptor.preprocess_for_empty_space import parse_objects, unite_groups, unite_masks
 from flask_login import current_user
 
@@ -537,6 +538,10 @@ def apply_style(empty_space, text):
     import os
     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
     es_path_resized = "disruptor" + url_for('static', filename=f'images/{current_user.id}/resized_{empty_space}')
+
+    run_preprocessor("seg_ofade20k", es_path_resized)
+    room_obj = Room(es_path_resized, True) # Just for testing
+
     create_directory_if_not_exists(os.path.dirname(es_path))
 
     # Find the right empty space image
@@ -601,6 +606,7 @@ def apply_style(empty_space, text):
         # Resize
         es_image = Image.open(es_path)
         dataset_image = Image.open(dataset_image_path)
+        room_obj = Room(dataset_image_path, False) # For testing
         target_size = dataset_image.size  # Set your desired width and height
         resized_image = es_image.resize(target_size,
                                         Image.Resampling.LANCZOS)  # Use a resampling filter for better quality
