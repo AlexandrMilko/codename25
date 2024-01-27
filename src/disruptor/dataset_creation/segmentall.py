@@ -26,7 +26,7 @@ def get_encoded_image(image_path):
     retval, bytes = cv2.imencode('.png', img)
     return base64.b64encode(bytes).decode('utf-8')
 
-def run_preprocessor(preprocessor_name, image_path):
+def run_preprocessor(preprocessor_name, image_path): # TODO rename, i am not using it outside dataset creation. But there is another one with such name
     print(os.getcwd())
     print(image_path)
     input_image = get_encoded_image(image_path)
