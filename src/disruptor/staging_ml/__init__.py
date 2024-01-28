@@ -5,6 +5,7 @@ from disruptor import app
 from flask_login import current_user
 from flask import url_for
 
+
 # TODO Use it for the ML input, with Pipelines too.
 # from sklearn.base import BaseEstimator, TransformerMixin
 #
@@ -19,6 +20,7 @@ class Room:
     window_color = (230, 230, 230)
     door_color = (51, 255, 8)
     floor_color = (50, 50, 80)
+
     def __init__(self, image_path, is_users_es=False, segmented_users_before=None):
         # If it is not user's uploaded empty space image, we will assign a Before/After to it, to make a pair.
         if not is_users_es:
@@ -58,7 +60,7 @@ class Room:
             "segmented_before": None,
             "before": None,
             "after": None
-            }
+        }
         import re
         # Get the room type directory
         room_directory = os.path.dirname(os.path.dirname(image_path))
@@ -70,3 +72,38 @@ class Room:
         trio["after"] = os.path.join(room_directory, "original/" + image_number + "After.jpg")
 
         return trio
+
+    @property
+    def windows_number(self):
+        return len(self.window_centers)
+
+    @property
+    def doors_number(self):
+        return len(self.door_centers)
+
+    def get_features_values(self):
+        # We sort them so that the furthest objects are compared with the furthest and the closest with the closest
+        features = [self.vanishing_point, *sorted(self.window_centers), *sorted(self.door_centers)]
+        return features
+
+    def measure_similarity(self, other):
+        from sklearn.metrics.pairwise import cosine_similarity
+        import numpy as np
+        if (self.windows_number == other.windows_number) and (self.doors_number == other.doors_number):
+            print(self.get_features_values())
+            print(other.get_features_values())
+            print()
+            features_first = np.array(self.get_features_values())
+            features_second = np.array(other.get_features_values())
+            # print(features_first)
+            # print(features_second)
+            # print()
+            first_flattened = np.reshape(features_first, (1, -1))
+            second_flattened = np.reshape(features_second, (1, -1))
+            # print(first_flattened)
+            # print(second_flattened)
+            # print()
+            similarity_matrix = cosine_similarity(first_flattened, second_flattened)
+            return similarity_matrix[0][0]
+        else:
+            return 0
