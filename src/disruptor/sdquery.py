@@ -539,8 +539,8 @@ def apply_style(empty_space, text):
     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
     es_path_resized = "disruptor" + url_for('static', filename=f'images/{current_user.id}/resized_{empty_space}')
 
-    run_preprocessor("seg_ofade20k", es_path_resized)
-    room_obj = Room(es_path_resized, True) # Just for testing
+    run_preprocessor("seg_ofade20k", es_path)
+    user_empty_room = Room(es_path, True) # Just for testing
 
     create_directory_if_not_exists(os.path.dirname(es_path))
 
@@ -590,6 +590,10 @@ def apply_style(empty_space, text):
         es_image.close()
         dataset_image.close()
         resized_image.close()
+        #
+        # # Just for testing
+        # if i == 20:
+        #     break
 
     # Calculate relative iou similarity
 
@@ -602,11 +606,14 @@ def apply_style(empty_space, text):
 
     # We calculate vanishing point for the top
     max_similar_vp_es = dict()
+
+    max_similar_with_cos = None
+    max_similar_score_with_cos = 0
+
     for dataset_image_path in max_similar_iou_es.keys():
         # Resize
         es_image = Image.open(es_path)
         dataset_image = Image.open(dataset_image_path)
-        room_obj = Room(dataset_image_path, False) # For testing
         target_size = dataset_image.size  # Set your desired width and height
         resized_image = es_image.resize(target_size,
                                         Image.Resampling.LANCZOS)  # Use a resampling filter for better quality
@@ -624,6 +631,13 @@ def apply_style(empty_space, text):
             corresponding_original_image = str(re.search(r'\d+', os.path.basename(dataset_image_path)).group()) + "Before.jpg"
             dataset_corresponding_original_path = os.path.join(room_directory, "original/" + corresponding_original_image)
             vp_distance = compare_vanishing_point_by_XiaohuLu(es_path_resized, dataset_corresponding_original_path)
+
+            room_obj = Room(dataset_image_path, False)  # For testing
+            cos_score = room_obj.measure_similarity(user_empty_room)
+            if cos_score > max_similar_score_with_cos:
+                max_similar_score_with_cos = cos_score
+                max_similar_with_cos = dataset_corresponding_original_path
+
             print(os.path.basename(es_path_resized), os.path.basename(dataset_corresponding_original_path), vp_distance)
         except Exception as e:
             print(e)
@@ -659,6 +673,7 @@ def apply_style(empty_space, text):
     max_similar_stage = str(re.search(r'\d+', os.path.basename(best_fit)).group()) + "After.jpg"
     max_similar_stage_path = f"disruptor/green_screen/find_similar/dataset/{room_directory_name}/original/" + max_similar_stage
     print("Max similar: ", max_similar_stage_path)
+    print("Max similar(COS): ", max_similar_with_cos)
 
     # Parse furniture from the selected staged image
 

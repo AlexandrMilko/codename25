@@ -266,12 +266,12 @@ def calculate_vanishing_point_by_XiaohuLu(img_path):
     cv2.destroyAllWindows()
 
     # print(vps)  # 3D vanishing points
-    print(vpd.vps_2D)  # 2D vanishing points
+    # print(vpd.vps_2D)  # 2D vanishing points
 
     # Create debug image
     # vpd.create_debug_VP_image(show_image=True)
 
-    return get_min_abs_sum_list(vpd.vps_2D)
+    return tuple(map(int, get_min_abs_sum_list(vpd.vps_2D)))
 
 
 # We use it to find vanishing point with the minimum value, because the minimum one is more likely to be the real one
@@ -290,8 +290,7 @@ def get_min_abs_sum_list(list_2d):
     return min_abs_sum_list
 
 
-def find_object_centers(image_path, object_color_rgb, min_area=50,
-                        debug=False):  # We use it to identify positions of different object in segmented image
+def find_object_centers(image_path, object_color_rgb, min_area=50, max_distance=250, debug=False):
     # Read the image
     segmented_image = cv2.imread(image_path)
 
@@ -303,23 +302,49 @@ def find_object_centers(image_path, object_color_rgb, min_area=50,
 
     # Extract object centers from the contours
     object_centers = []
+
+    def calculate_center(contour):
+        M = cv2.moments(contour)
+        if M["m00"] != 0:
+            center_x = int(M["m10"] / M["m00"])
+            center_y = int(M["m01"] / M["m00"])
+            return center_x, center_y
+        return None
+
     for contour in contours:
         area = cv2.contourArea(contour)
 
         # Check if the area is greater than the specified threshold
         if area > min_area:
-            # Calculate the center of the contour
-            M = cv2.moments(contour)
-            if M["m00"] != 0:
-                center_x = int(M["m10"] / M["m00"])
-                center_y = int(M["m01"] / M["m00"])
-                object_centers.append((center_x, center_y))
+            center = calculate_center(contour)
+
+            if center:
+                # Check if the contour is close to any existing center
+                merge = False
+                for i, existing_center in enumerate(object_centers):
+                    distance = np.linalg.norm(np.array(existing_center) - np.array(center))
+                    if distance < max_distance:
+                        merge = True
+
+                        # Merge centers by updating the existing center
+                        object_centers[i] = np.mean(np.array([existing_center, center]), axis=0).astype(int)
+                        break
+
+                if not merge:
+                    object_centers.append(center)
+
+    # Convert everything to set (because sometimes we use np.array for easy calculation of distance in line 325:
+    #   distance = np.linalg.norm(np.array(existing_center) - np.array(center))
+    for i in range(len(object_centers)):
+        if isinstance(object_centers[i], np.ndarray):
+            print(tuple(object_centers[i].flatten()))
+            object_centers[i] = tuple(object_centers[i].flatten())
 
     if debug:
         # Create a debug image with object centers marked
         debug_image = segmented_image.copy()
         for center in object_centers:
-            cv2.circle(debug_image, center, 5, (0, 0, 255), -1)  # Mark the center with a red circle
+            cv2.circle(debug_image, tuple(center), 5, (0, 0, 255), -1)  # Mark the center with a red circle
 
         # Show the debug image
         cv2.imshow("Debug Image", debug_image)
@@ -327,6 +352,43 @@ def find_object_centers(image_path, object_color_rgb, min_area=50,
         cv2.destroyAllWindows()
 
     return object_centers
+# def find_object_centers(image_path, object_color_rgb, min_area=50,
+#                         debug=False):  # We use it to identify positions of different object in segmented image
+#     # Read the image
+#     segmented_image = cv2.imread(image_path)
+#
+#     # Create a binary mask for the objects
+#     mask = cv2.inRange(segmented_image, object_color_rgb, object_color_rgb)
+#
+#     # Find contours in the binary mask
+#     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#
+#     # Extract object centers from the contours
+#     object_centers = []
+#     for contour in contours:
+#         area = cv2.contourArea(contour)
+#
+#         # Check if the area is greater than the specified threshold
+#         if area > min_area:
+#             # Calculate the center of the contour
+#             M = cv2.moments(contour)
+#             if M["m00"] != 0:
+#                 center_x = int(M["m10"] / M["m00"])
+#                 center_y = int(M["m01"] / M["m00"])
+#                 object_centers.append((center_x, center_y))
+#
+#     if debug:
+#         # Create a debug image with object centers marked
+#         debug_image = segmented_image.copy()
+#         for center in object_centers:
+#             cv2.circle(debug_image, center, 5, (0, 0, 255), -1)  # Mark the center with a red circle
+#
+#         # Show the debug image
+#         cv2.imshow("Debug Image", debug_image)
+#         cv2.waitKey(0)
+#         cv2.destroyAllWindows()
+#
+#     return object_centers
 
 
 def compare_iou(first_path, second_path):
