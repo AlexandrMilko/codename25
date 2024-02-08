@@ -533,152 +533,34 @@ def prepare_masks(current_user):
         print(f"The directory {directory_path} does not exist.")
 
 def apply_style(empty_space, text):
-
-    # Prepare Input
     import os
     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
-    es_path_resized = "disruptor" + url_for('static', filename=f'images/{current_user.id}/resized_{empty_space}')
 
     run_preprocessor("seg_ofade20k", es_path)
     user_empty_room = Room(es_path, True) # Just for testing
 
-    create_directory_if_not_exists(os.path.dirname(es_path))
-
-    # Find the right empty space image
-    from disruptor.green_screen.find_similar.ssim import compare_iou
-    from disruptor.green_screen.find_similar.ssim import compare_vanishing_point, compare_vanishing_point_by_XiaohuLu
     import glob
-
     room_directory_name = text.split(", ")[1].lower().replace(" ", "_")
-    segmented_predefined = f"disruptor/green_screen/find_similar/dataset/{room_directory_name}/es_segmented"
-    segmented_paths = glob.glob(os.path.join(segmented_predefined, '*.jpg'))
-    es_number_to_select = 10
-    max_similar_iou_es = dict()
-
+    dataset_originals = f"disruptor/green_screen/find_similar/dataset/{room_directory_name}/original"
+    dataset_paths = glob.glob(os.path.join(dataset_originals, '*.jpg'))
+    max_score = 0
     i = 0
-    comparison_times = len(segmented_paths)
-    # Compare by Intersection over Union
-    for dataset_image_path in segmented_paths:
-
-        # We have to make the images the same size before comparing
-        # Resize
-        es_image = Image.open(es_path)
-        dataset_image = Image.open(dataset_image_path)
-        target_size = dataset_image.size  # Set your desired width and height
-        resized_image = es_image.resize(target_size,
-                                     Image.Resampling.LANCZOS)  # Use a resampling filter for better quality
-        resized_image.save(es_path_resized)
-
-        # Prepare segmented resized image for comparison
-        run_preprocessor("seg_ofade20k", es_path_resized)
-        segmented_path = "disruptor" + url_for('static',
-                                               filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
-
-        iou_similarity = compare_iou(segmented_path, dataset_image_path)
+    paths_count = len(dataset_paths)
+    for dataset_img in dataset_paths:
+        dataset_room = Room(dataset_img, False)  # For testing
+        score = dataset_room.measure_similarity(user_empty_room)
+        if score > max_score:
+            max_score = score
+            max_similar = Room.get_trio(dataset_img)["after"]
+            print(os.path.basename(max_similar), max_score, str(i) + "/" + str(paths_count))
         i += 1
-        print(dataset_image_path, iou_similarity, str(i) + "/" + str(comparison_times))
 
-        #Add to the top similar
-        if len(max_similar_iou_es) < es_number_to_select:
-            max_similar_iou_es[dataset_image_path] = iou_similarity
-        else:
-            min_key = min(max_similar_iou_es, key=lambda k: max_similar_iou_es[k])
-            if max_similar_iou_es[min_key] < iou_similarity:
-                max_similar_iou_es[dataset_image_path] = iou_similarity
-                max_similar_iou_es.pop(min_key)
-
-        es_image.close()
-        dataset_image.close()
-        resized_image.close()
-        #
-        # # Just for testing
-        # if i == 20:
-        #     break
-
-    # Calculate relative iou similarity
-
-    min_val = min(max_similar_iou_es.values())
-    max_val = max(max_similar_iou_es.values())
-    # Perform min-max scaling and map to the range [0, 1]
-    max_similar_iou_es = {key: min_max_scale(value, min_val, max_val) for key, value in max_similar_iou_es.items()}
-
-    print(max_similar_iou_es)
-
-    # We calculate vanishing point for the top
-    max_similar_vp_es = dict()
-
-    max_similar_with_cos = None
-    max_similar_score_with_cos = 0
-
-    for dataset_image_path in max_similar_iou_es.keys():
-        # Resize
-        es_image = Image.open(es_path)
-        dataset_image = Image.open(dataset_image_path)
-        target_size = dataset_image.size  # Set your desired width and height
-        resized_image = es_image.resize(target_size,
-                                        Image.Resampling.LANCZOS)  # Use a resampling filter for better quality
-        resized_image.save(es_path_resized)
-        # Prepare segmented resized image for comparison
-        run_preprocessor("seg_ofade20k", es_path_resized)
-        segmented_path = "disruptor" + url_for('static',
-                                               filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
-        vp_distance = None
-        try:
-            # TODO Use Room.get_trio
-            import re
-            # Get the room type directory
-            room_directory = os.path.dirname(os.path.dirname(dataset_image_path))
-            corresponding_original_image = str(re.search(r'\d+', os.path.basename(dataset_image_path)).group()) + "Before.jpg"
-            dataset_corresponding_original_path = os.path.join(room_directory, "original/" + corresponding_original_image)
-            vp_distance = compare_vanishing_point_by_XiaohuLu(es_path_resized, dataset_corresponding_original_path)
-
-            room_obj = Room(dataset_image_path, False)  # For testing
-            cos_score = room_obj.measure_similarity(user_empty_room)
-            if cos_score > max_similar_score_with_cos:
-                max_similar_score_with_cos = cos_score
-                max_similar_with_cos = dataset_corresponding_original_path
-
-            print(os.path.basename(es_path_resized), os.path.basename(dataset_corresponding_original_path), vp_distance)
-        except Exception as e:
-            print(e)
-            continue
-        finally:
-            if vp_distance is not None:
-                max_similar_vp_es[dataset_image_path] = vp_distance
-
-            es_image.close()
-            dataset_image.close()
-            resized_image.close()
-
-    # We standardize values
-    min_val = min(max_similar_vp_es.values())
-    max_val = max(max_similar_vp_es.values())
-    max_similar_vp_es = {key: min_max_scale(value, min_val, max_val) for key, value in max_similar_vp_es.items()}
-
-    # Calculate overall similarity score (the more the better)
-    # score = iou / vp_distance
-    scores = dict()
-    for dataset_image_path in max_similar_vp_es.keys():
-        iou = max_similar_iou_es[dataset_image_path]
-        vp_distance = max_similar_vp_es[dataset_image_path]
-        scores[dataset_image_path] = iou - vp_distance
-
-    best_fit = max(scores, key=lambda k: scores[k])
-    print(scores)
-    #
-    # best_fit = "44"
-    # room_directory_name = "living_room"
-    # Find corresponding staged image
-    import re
-    max_similar_stage = str(re.search(r'\d+', os.path.basename(best_fit)).group()) + "After.jpg"
-    max_similar_stage_path = f"disruptor/green_screen/find_similar/dataset/{room_directory_name}/original/" + max_similar_stage
-    print("Max similar: ", max_similar_stage_path)
-    print("Max similar(COS): ", max_similar_with_cos)
+    print("Max similar(COS similarity):", os.path.basename(max_similar), max_score)
 
     # Parse furniture from the selected staged image
 
     # Create masks
-    run_preprocessor("seg_ofade20k", max_similar_stage_path)
+    run_preprocessor("seg_ofade20k", max_similar)
     mask_dir = f"disruptor/static/images/{current_user.id}/parsed_furniture"
     create_directory_if_not_exists(mask_dir)
     # We update the directory, to get rid of the rubbish from the previous segmentations
@@ -688,7 +570,7 @@ def apply_style(empty_space, text):
 
     # Create png foreground
     from disruptor.green_screen.preprocess.create_pngs import create_fg, overlay
-    create_fg(mask_dir, max_similar_stage_path, current_user.id)
+    create_fg(mask_dir, max_similar, current_user.id)
     fg_path = "disruptor" + url_for('static', filename=f"images/{current_user.id}/preprocessed/foreground.png")
     create_directory_if_not_exists(os.path.dirname(fg_path))
     overlay(es_path, fg_path, current_user.id)
@@ -710,17 +592,195 @@ def apply_style(empty_space, text):
     query = GreenScreenImageQuery(text)
     query.run()
 
-    #TODO close all images after opening
-
-    # style="current_image.jpg"
-    # style_image_path = "disruptor" + url_for('static', filename=f'images/{style}')
-    # run_preprocessor("seg_ofade20k", style_image_path)
-    # parse_objects()
-    #
-    # furniture_dir = "disruptor/static/images/parsed_furniture"
-    # groups_dir = "disruptor/static/images/parsed_furniture"
-    # unite_groups(furniture_dir, groups_dir, [["bed", "blanket;cover", "cushion", "pillow"], ["table", "pot", "plant;flora;plant;life"]])
-    #
-    # prep_bg_image(empty_space)
-    # prep_fg_image("bed_blanket;cover_cushion_pillow.jpg")
-    # run_graconet()
+# def apply_style(empty_space, text):
+#
+#     # Prepare Input
+#     import os
+#     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
+#     es_path_resized = "disruptor" + url_for('static', filename=f'images/{current_user.id}/resized_{empty_space}')
+#
+#     run_preprocessor("seg_ofade20k", es_path)
+#     user_empty_room = Room(es_path, True) # Just for testing
+#
+#     create_directory_if_not_exists(os.path.dirname(es_path))
+#
+#     # Find the right empty space image
+#     from disruptor.green_screen.find_similar.ssim import compare_iou
+#     from disruptor.green_screen.find_similar.ssim import compare_vanishing_point, compare_vanishing_point_by_XiaohuLu
+#     import glob
+#
+#     room_directory_name = text.split(", ")[1].lower().replace(" ", "_")
+#     segmented_predefined = f"disruptor/green_screen/find_similar/dataset/{room_directory_name}/es_segmented"
+#     segmented_paths = glob.glob(os.path.join(segmented_predefined, '*.jpg'))
+#     es_number_to_select = 10
+#     max_similar_iou_es = dict()
+#
+#     i = 0
+#     comparison_times = len(segmented_paths)
+#     # Compare by Intersection over Union
+#     for dataset_image_path in segmented_paths:
+#
+#         # We have to make the images the same size before comparing
+#         # Resize
+#         es_image = Image.open(es_path)
+#         dataset_image = Image.open(dataset_image_path)
+#         target_size = dataset_image.size  # Set your desired width and height
+#         resized_image = es_image.resize(target_size,
+#                                      Image.Resampling.LANCZOS)  # Use a resampling filter for better quality
+#         resized_image.save(es_path_resized)
+#
+#         # Prepare segmented resized image for comparison
+#         run_preprocessor("seg_ofade20k", es_path_resized)
+#         segmented_path = "disruptor" + url_for('static',
+#                                                filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
+#
+#         iou_similarity = compare_iou(segmented_path, dataset_image_path)
+#         i += 1
+#         print(dataset_image_path, iou_similarity, str(i) + "/" + str(comparison_times))
+#
+#         #Add to the top similar
+#         if len(max_similar_iou_es) < es_number_to_select:
+#             max_similar_iou_es[dataset_image_path] = iou_similarity
+#         else:
+#             min_key = min(max_similar_iou_es, key=lambda k: max_similar_iou_es[k])
+#             if max_similar_iou_es[min_key] < iou_similarity:
+#                 max_similar_iou_es[dataset_image_path] = iou_similarity
+#                 max_similar_iou_es.pop(min_key)
+#
+#         es_image.close()
+#         dataset_image.close()
+#         resized_image.close()
+#         #
+#         # # Just for testing
+#         # if i == 20:
+#         #     break
+#
+#     # Calculate relative iou similarity
+#
+#     min_val = min(max_similar_iou_es.values())
+#     max_val = max(max_similar_iou_es.values())
+#     # Perform min-max scaling and map to the range [0, 1]
+#     max_similar_iou_es = {key: min_max_scale(value, min_val, max_val) for key, value in max_similar_iou_es.items()}
+#
+#     print(max_similar_iou_es)
+#
+#     # We calculate vanishing point for the top
+#     max_similar_vp_es = dict()
+#
+#     max_similar_with_cos = None
+#     max_similar_score_with_cos = 0
+#
+#     for dataset_image_path in max_similar_iou_es.keys():
+#         # Resize
+#         es_image = Image.open(es_path)
+#         dataset_image = Image.open(dataset_image_path)
+#         target_size = dataset_image.size  # Set your desired width and height
+#         resized_image = es_image.resize(target_size,
+#                                         Image.Resampling.LANCZOS)  # Use a resampling filter for better quality
+#         resized_image.save(es_path_resized)
+#         # Prepare segmented resized image for comparison
+#         run_preprocessor("seg_ofade20k", es_path_resized)
+#         segmented_path = "disruptor" + url_for('static',
+#                                                filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
+#         vp_distance = None
+#         try:
+#             # TODO Use Room.get_trio
+#             import re
+#             # Get the room type directory
+#             room_directory = os.path.dirname(os.path.dirname(dataset_image_path))
+#             corresponding_original_image = str(re.search(r'\d+', os.path.basename(dataset_image_path)).group()) + "Before.jpg"
+#             dataset_corresponding_original_path = os.path.join(room_directory, "original/" + corresponding_original_image)
+#             vp_distance = compare_vanishing_point_by_XiaohuLu(es_path_resized, dataset_corresponding_original_path)
+#
+#             room_obj = Room(dataset_image_path, False)  # For testing
+#             cos_score = room_obj.measure_similarity(user_empty_room)
+#             if cos_score > max_similar_score_with_cos:
+#                 max_similar_score_with_cos = cos_score
+#                 max_similar_with_cos = dataset_corresponding_original_path
+#
+#             print(os.path.basename(es_path_resized), os.path.basename(dataset_corresponding_original_path), vp_distance)
+#         except Exception as e:
+#             print(e)
+#             continue
+#         finally:
+#             if vp_distance is not None:
+#                 max_similar_vp_es[dataset_image_path] = vp_distance
+#
+#             es_image.close()
+#             dataset_image.close()
+#             resized_image.close()
+#
+#     # We standardize values
+#     min_val = min(max_similar_vp_es.values())
+#     max_val = max(max_similar_vp_es.values())
+#     max_similar_vp_es = {key: min_max_scale(value, min_val, max_val) for key, value in max_similar_vp_es.items()}
+#
+#     # Calculate overall similarity score (the more the better)
+#     # score = iou / vp_distance
+#     scores = dict()
+#     for dataset_image_path in max_similar_vp_es.keys():
+#         iou = max_similar_iou_es[dataset_image_path]
+#         vp_distance = max_similar_vp_es[dataset_image_path]
+#         scores[dataset_image_path] = iou - vp_distance
+#
+#     best_fit = max(scores, key=lambda k: scores[k])
+#     print(scores)
+#     #
+#     # best_fit = "44"
+#     # room_directory_name = "living_room"
+#     # Find corresponding staged image
+#     import re
+#     max_similar_stage = str(re.search(r'\d+', os.path.basename(best_fit)).group()) + "After.jpg"
+#     max_similar_stage_path = f"disruptor/green_screen/find_similar/dataset/{room_directory_name}/original/" + max_similar_stage
+#     print("Max similar: ", max_similar_stage_path)
+#     print("Max similar(COS): ", max_similar_with_cos)
+#
+#     # Parse furniture from the selected staged image
+#
+#     # Create masks
+#     run_preprocessor("seg_ofade20k", max_similar_stage_path)
+#     mask_dir = f"disruptor/static/images/{current_user.id}/parsed_furniture"
+#     create_directory_if_not_exists(mask_dir)
+#     # We update the directory, to get rid of the rubbish from the previous segmentations
+#     remove_files(mask_dir)
+#     parse_objects(f'disruptor/static/images/{current_user.id}/preprocessed/preprocessed.jpg', current_user.id)
+#     prepare_masks(current_user)
+#
+#     # Create png foreground
+#     from disruptor.green_screen.preprocess.create_pngs import create_fg, overlay
+#     create_fg(mask_dir, max_similar_stage_path, current_user.id)
+#     fg_path = "disruptor" + url_for('static', filename=f"images/{current_user.id}/preprocessed/foreground.png")
+#     create_directory_if_not_exists(os.path.dirname(fg_path))
+#     overlay(es_path, fg_path, current_user.id)
+#
+#     # Create a mask for inpainting
+#     mask_path = f'disruptor/static/images/{current_user.id}/preprocessed/inpainting_mask.png'
+#     unite_masks(mask_dir, mask_path)
+#     mask_img = Image.open(mask_path)
+#     prerequisite_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/prerequisite.jpg')
+#     prerequisite_img = Image.open(prerequisite_path)
+#     mask_img = mask_img.resize(prerequisite_img.size, Image.Resampling.LANCZOS)
+#     mask_img.save(mask_path)
+#
+#     # Make edges smoother
+#     from disruptor.preprocess_for_empty_space import perform_dilation
+#     perform_dilation(mask_path, mask_path, 16)
+#
+#     # Run SD to process it
+#     query = GreenScreenImageQuery(text)
+#     query.run()
+#
+#     #TODO close all images after opening
+#
+#     # style="current_image.jpg"
+#     # style_image_path = "disruptor" + url_for('static', filename=f'images/{style}')
+#     # run_preprocessor("seg_ofade20k", style_image_path)
+#     # parse_objects()
+#     #
+#     # furniture_dir = "disruptor/static/images/parsed_furniture"
+#     # groups_dir = "disruptor/static/images/parsed_furniture"
+#     # unite_groups(furniture_dir, groups_dir, [["bed", "blanket;cover", "cushion", "pillow"], ["table", "pot", "plant;flora;plant;life"]])
+#     #
+#     # prep_bg_image(empty_space)
+#     # prep_fg_image("bed_blanket;cover_cushion_pillow.jpg")
+#     # run_graconet()
