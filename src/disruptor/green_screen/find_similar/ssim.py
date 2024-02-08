@@ -10,7 +10,7 @@ from disruptor.green_screen.find_similar.VanishingPoint.main import manhattan_di
 from skimage.metrics import structural_similarity as compare_ssim
 import argparse
 import cv2
-from PIL import Image
+from PIL import Image, ImageDraw
 import numpy as np
 
 
@@ -72,7 +72,7 @@ def round_contours(cv2_image):
     return bgr_image
 
 
-def mask_everything_except(colors, image, color_error=1):
+def fill_with_white_except(colors, image, color_error=1):
     # COLORS is a list np.arrays of colors in BGR format [[B1,G1,R1], [B2,G2,R2], ...]
     # image - cv2 image
     masked_image = image
@@ -87,6 +87,7 @@ def mask_everything_except(colors, image, color_error=1):
     # Showing the final image
     # cv2.imshow("OutputImageMasked", masked_image)
     # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
     return masked_image
 
 
@@ -172,8 +173,8 @@ def compare_vanishing_point(first_path, second_path):
     # # Fill everything with black except for floor, to calculate vanishing point only based on floor
     # # Define the color you want to preserve, BGR format
     floor_color = np.array([50, 50, 80])
-    filled_first_image = mask_everything_except([floor_color], first_image)
-    filled_second_image = mask_everything_except([floor_color], second_image)
+    filled_first_image = fill_with_white_except([floor_color], first_image)
+    filled_second_image = fill_with_white_except([floor_color], second_image)
 
     # Round the contours of floor to decrease noise
     round_filled_first_image = round_contours(filled_first_image)
@@ -220,6 +221,7 @@ def compare_vanishing_point(first_path, second_path):
     return manhattan_distance(first_vanishing_point, second_vanishing_point)
 
 
+# It is deprecated, use Room.get_vanishing_point_distance instead
 def compare_vanishing_point_by_XiaohuLu(first_path, second_path):
     first_vanishing_point = calculate_vanishing_point_by_XiaohuLu(first_path)
     second_vanishing_point = calculate_vanishing_point_by_XiaohuLu(second_path)
@@ -337,7 +339,7 @@ def find_object_centers(image_path, object_color_rgb, min_area=50, max_distance=
     #   distance = np.linalg.norm(np.array(existing_center) - np.array(center))
     for i in range(len(object_centers)):
         if isinstance(object_centers[i], np.ndarray):
-            print(tuple(object_centers[i].flatten()))
+            # print(tuple(object_centers[i].flatten()))
             object_centers[i] = tuple(object_centers[i].flatten())
 
     if debug:
@@ -391,32 +393,68 @@ def find_object_centers(image_path, object_color_rgb, min_area=50, max_distance=
 #     return object_centers
 
 
-def compare_iou(first_path, second_path):
-    # Open the image using PIL
-    first_image = Image.open(first_path)
-    second_image = Image.open(second_path)
+def scale_to_height(image, target_height):
+    """Scale cv2 image to a target height while preserving aspect ratio."""
+    height, width = image.shape[:2]
+    ratio = target_height / height
+    new_width = int(width * ratio)
+    new_height = int(height * ratio)
+    return cv2.resize(image, (new_width, new_height))
+def calculate_mean_size(size1, size2):
+    return int(size1[0] + size2[0] / 2), int(size1[1] + size2[1] / 2)
 
-    floor_color = np.array([50, 50, 80])
-    window_color = np.array([230, 230, 230])
-    door_color = np.array([51, 255, 8])
-    colors = [floor_color, window_color, door_color]
-    masked_first_image = convert_to_pil(mask_everything_except(colors, convert_to_cv2(first_image)))
-    masked_second_image = convert_to_pil(mask_everything_except(colors, convert_to_cv2(second_image)))
+def haveSimilarColor(pixel1: tuple, pixel2: tuple, tolerance=5):
+    if (abs(pixel1[0] - pixel2[0]) <= tolerance
+            and abs(pixel1[1] - pixel2[1]) <= tolerance
+            and abs(pixel1[2] - pixel2[2]) <= tolerance):
+        return True
+    return False
 
-    # Convert the image to a NumPy array
-    first_array = np.array(masked_first_image)
-    second_array = np.array(masked_second_image)
+def count_union_pixels_with_color(image1, image2, color):
+    """Count the union of pixels with a specific color in two images."""
+    width, height = image1.size
+    pixels1 = image1.load()
+    pixels2 = image2.load()
+    count = 0
+    for y in range(height):
+        for x in range(width):
+            if haveSimilarColor(pixels1[x, y], color) or haveSimilarColor(pixels2[x, y], color):
+                count += 1
+    return count
 
-    # Calculate the intersection (common area)
-    intersection = first_array & second_array
+def calculate_iou_for_color(image1, image2, bgr_color):
+    # We set tolerance, because we lose some info about colors. Most likely,
+    # because we work with jpg images
+    if image1.size != image2.size:
+        raise ValueError("Images must have the same dimensions.")
 
-    # Calculate the union (combined area)
-    union = first_array | second_array
+    width, height = image1.size
+    total_pixels = count_union_pixels_with_color(image1, image2, bgr_color)
+    if total_pixels == 0:
+        proportion = 1
+        return proportion
+    # debug_image = Image.new("RGB", (width, height), "black")
+    # draw = ImageDraw.Draw(debug_image)
+    matching_pixels = 0
 
-    # Calculate IoU
-    iou = float(intersection.sum()) / float(union.sum())
+    # colors = image1.getcolors(image1.width * image1.height)
+    # # Extract unique colors
+    # unique_colors = [color[1] for color in colors]
+    # print(unique_colors, "UNIQUE COLORS FIRST IMAGE")
 
-    return iou
+    for y in range(height):
+        for x in range(width):
+            pixel1 = image1.getpixel((x, y))
+            pixel2 = image2.getpixel((x, y))
+            if haveSimilarColor(pixel1, bgr_color) and haveSimilarColor(pixel2, bgr_color):
+                matching_pixels += 1
+                # draw.point((x, y), fill="white")
+            # elif haveSimilarColor(pixel1, bgr_color) or haveSimilarColor(pixel2, bgr_color):
+            #     draw.point((x, y), fill="red")
+
+    # debug_image.show(str(bgr_color))
+    proportion = round(matching_pixels / total_pixels, ndigits=3)
+    return proportion
 
 
 # TODO rename to ssim comparison

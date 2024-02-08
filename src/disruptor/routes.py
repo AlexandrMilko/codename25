@@ -343,3 +343,9 @@ def reset_password(token):
         flash(f"Password has been successfully updated!", 'success')
         return redirect(url_for('login'))
     return render_template('password_reset.html', title="Reset Password", form=form)
+
+@app.route("/test", methods=["GET"])
+def test():
+    from disruptor.staging_ml import Room
+    df = Room.get_paired_dataframe(r"C:\Users\Sasha\Desktop\Projects\codename25\src\disruptor\green_screen\find_similar\dataset\bedroom\es_segmented")
+    return redirect(url_for('home'))
