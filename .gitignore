@@ -6,6 +6,7 @@ parse_seg/.idea/
 parse_seg/Objects/
 parse_seg/venv/
 src/disruptor/dataset_creation/other/
+src/disruptor/staging_ml/__pycache__/
 src/disruptor/green_screen/find_similar/__pycache__/
 src/disruptor/green_screen/find_similar/VanishingPoint/__pycache__/
 premium_feature_roadmap.rtf
