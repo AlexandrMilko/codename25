@@ -17,7 +17,6 @@ from disruptor import app
 from flask_login import current_user
 from flask import url_for
 import re
-import msvcrt
 
 # TODO Use it for the ML input, with Pipelines too.
 # from sklearn.base import BaseEstimator, TransformerMixin
@@ -216,9 +215,11 @@ class Room:
         rooms_numbers = [Room.get_room_number(fname) for fname in os.listdir(seg_directory)]
         pairs = get_all_pairs(rooms_numbers)
         dataset_name = "bedroom_dataset.csv"
+        i = 0
         for pair in pairs:
             n1, n2 = pair
             if Room.is_rooms_entry_saved(dataset_name, n1, n2):
+                i += 1
                 continue
             room1 = Room(seg_directory + "\\" + str(n1)+"Before.jpg")
             room2 = Room(seg_directory + "\\" + str(n2)+"Before.jpg")
@@ -227,7 +228,9 @@ class Room:
             doors_iou = room1.compare_iou(room2, [Room.door_color[::-1]])
             are_similar = Room.ask_if_rooms_similar(room1, room2)
             row = [n1, n2, vp_dist, windows_iou, doors_iou, are_similar]
+            i += 1
             print(row)
+            print(f"Pair number: {i}/{len(pairs)}")
             print()
             df = pd.concat([pd.DataFrame(data=[row], columns=df.columns), df], ignore_index=True)
             df.to_csv(dataset_name)
