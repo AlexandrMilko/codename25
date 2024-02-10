@@ -186,9 +186,8 @@ class Room:
         canvas[:img2.shape[0], img1.shape[1]:] = img2
 
         cv2.imshow("Rooms Comparison", canvas)
-        cv2.waitKey(0)
         print("Are these images similar? (Y/N): ", end='', flush=True)
-        user_input = msvcrt.getch().decode().upper()
+        user_input = chr(cv2.waitKey(0) & 0xFF)
         cv2.destroyAllWindows()
         return user_input
 
