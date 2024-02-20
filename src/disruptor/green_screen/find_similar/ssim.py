@@ -220,52 +220,52 @@ def compare_vanishing_point(first_path, second_path):
     cv2.destroyAllWindows()
     return manhattan_distance(first_vanishing_point, second_vanishing_point)
 
-
-# It is deprecated, use Room.get_vanishing_point_distance instead
-def compare_vanishing_point_by_XiaohuLu(first_path, second_path):
-    first_vanishing_point = calculate_vanishing_point_by_XiaohuLu(first_path)
-    second_vanishing_point = calculate_vanishing_point_by_XiaohuLu(second_path)
-    return manhattan_distance(first_vanishing_point, second_vanishing_point)
-
-
-def calculate_vanishing_point_by_XiaohuLu(img_path):
+def calculate_vanishing_points_by_XiaohuLu(img_path, length_thresh, focal_length):
     from lu_vp_detect import VPDetection
-    length_thresh = 60
     principal_point = None
-    focal_length = 500
     seed = 1337
 
     vpd = VPDetection(length_thresh, principal_point, focal_length, seed)
     vps = vpd.find_vps(img_path)
 
     # Load the original image
-    image = cv2.imread(img_path)
-    height, width, _ = image.shape
+    # image = cv2.imread(img_path)
+    # height, width, _ = image.shape
 
     # Create a larger canvas (4 times bigger). We do it to show Vanishing point that is out of image boundaries
-    canvas = np.zeros((height * 2, width * 2, 3), dtype=np.uint8)
+    # canvas = np.zeros((height * 2, width * 2, 3), dtype=np.uint8)
 
     # Calculate the offset for placing the image in the center of the canvas
-    offset_y = int((canvas.shape[0] - height) / 2)
-    offset_x = int((canvas.shape[1] - width) / 2)
+    # offset_y = int((canvas.shape[0] - height) / 2)
+    # offset_x = int((canvas.shape[1] - width) / 2)
 
     # Place the image on the canvas
-    canvas[offset_y:offset_y + height, offset_x:offset_x + width] = image
+    # canvas[offset_y:offset_y + height, offset_x:offset_x + width] = image
 
     # Scale and adjust the vanishing points coordinates
-    adjusted_vps = vpd.vps_2D
-    adjusted_vps[:, 0] += offset_x  # Adjust x-coordinate
-    adjusted_vps[:, 1] += offset_y  # Adjust y-coordinate
-
-    # Draw the vanishing points on the canvas
-    for vp_2D in adjusted_vps:
-        vp_2D = np.round(vp_2D).astype(int)
-        cv2.circle(canvas, (vp_2D[0], vp_2D[1]), 5, (0, 255, 0), -1)
+    # adjusted_vps = vpd.vps_2D
+    # adjusted_vps[:, 0] += offset_x  # Adjust x-coordinate
+    # adjusted_vps[:, 1] += offset_y  # Adjust y-coordinate
+    #
+    # # Draw the vanishing points on the canvas
+    # for vp_2D in adjusted_vps:
+    #     print(np.round(vp_2D).astype(int), " VP")
+    #     vp_2D = np.round(vp_2D).astype(int)
+    #     cv2.circle(canvas, (vp_2D[0], vp_2D[1]), 5, (0, 255, 0), -1)
+    # cv2.circle(canvas, (offset_x, offset_y), 100, (0, 0, 230), -1)
+    #
+    # # Find the vanishing point with the minimum absolute sum
+    # min_abs_sum_vp = adjusted_vps[np.argmin(np.abs(adjusted_vps).sum(axis=1))]
+    # print(min_abs_sum_vp, " VP CHOSEN")
+    #
+    # # Draw the vanishing point with the minimum absolute sum on the canvas
+    # min_abs_sum_vp = np.round(min_abs_sum_vp).astype(int)
+    # cv2.circle(canvas, (min_abs_sum_vp[0], min_abs_sum_vp[1]), 10, (128, 128, 0), -1)
 
     # Display the canvas with vanishing points
     # cv2.imshow('Canvas with Vanishing Points', canvas)
     # cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
 
     # print(vps)  # 3D vanishing points
     # print(vpd.vps_2D)  # 2D vanishing points
@@ -273,7 +273,8 @@ def calculate_vanishing_point_by_XiaohuLu(img_path):
     # Create debug image
     # vpd.create_debug_VP_image(show_image=True)
 
-    return tuple(map(int, get_min_abs_sum_list(vpd.vps_2D)))
+    # return tuple(map(int, get_min_abs_sum_list(vpd.vps_2D)))
+    return vpd.vps_2D
 
 
 # We use it to find vanishing point with the minimum value, because the minimum one is more likely to be the real one
@@ -354,43 +355,61 @@ def find_object_centers(image_path, object_color_rgb, min_area=50, max_distance=
         cv2.destroyAllWindows()
 
     return object_centers
-# def find_object_centers(image_path, object_color_rgb, min_area=50,
-#                         debug=False):  # We use it to identify positions of different object in segmented image
-#     # Read the image
-#     segmented_image = cv2.imread(image_path)
-#
-#     # Create a binary mask for the objects
-#     mask = cv2.inRange(segmented_image, object_color_rgb, object_color_rgb)
-#
-#     # Find contours in the binary mask
-#     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-#
-#     # Extract object centers from the contours
-#     object_centers = []
-#     for contour in contours:
-#         area = cv2.contourArea(contour)
-#
-#         # Check if the area is greater than the specified threshold
-#         if area > min_area:
-#             # Calculate the center of the contour
-#             M = cv2.moments(contour)
-#             if M["m00"] != 0:
-#                 center_x = int(M["m10"] / M["m00"])
-#                 center_y = int(M["m01"] / M["m00"])
-#                 object_centers.append((center_x, center_y))
-#
-#     if debug:
-#         # Create a debug image with object centers marked
-#         debug_image = segmented_image.copy()
-#         for center in object_centers:
-#             cv2.circle(debug_image, center, 5, (0, 0, 255), -1)  # Mark the center with a red circle
-#
-#         # Show the debug image
-#         cv2.imshow("Debug Image", debug_image)
-#         cv2.waitKey(0)
-#         cv2.destroyAllWindows()
-#
-#     return object_centers
+
+def find_largest_segment(label_array):
+    unique_classes, counts = np.unique(label_array, return_counts=True)
+    # Find the class with the maximum count, excluding class 0
+    max_count_class = unique_classes[np.argmax(counts[1:])] + 1
+    indices = np.where(label_array == max_count_class)
+    centroid = np.mean(indices, axis=1) [::-1] # We convert it to format: y,x -> x,y
+    return max_count_class, centroid
+
+def find_biggest_wall_center(image_path):
+    # We separate the walls from each other from a segmented image
+    from scipy import ndimage
+    from skimage.feature import peak_local_max
+    # import matplotlib.pyplot as plt
+    from skimage.segmentation import watershed
+
+    # Read the image
+    image = cv2.imread(image_path)
+
+    # Define the color range to filter
+    lower_color = np.array([110, 110, 110]) # Wall colors
+    upper_color = np.array([130, 130, 130])
+
+    # Mask the image to extract pixels within the specified color range
+    image = cv2.inRange(image, lower_color, upper_color)
+
+    distance = ndimage.distance_transform_edt(image)
+    coords = peak_local_max(distance, footprint=np.ones((3, 3)), labels=image)
+    mask = np.zeros(distance.shape, dtype=bool)
+    mask[tuple(coords.T)] = True
+    markers, _ = ndimage.label(mask)
+    labels = watershed(-distance, markers, mask=image)
+
+    # fig, axes = plt.subplots(ncols=3, figsize=(9, 3), sharex=True, sharey=True)
+    # ax = axes.ravel()
+    #
+    # ax[0].imshow(image, cmap=plt.cm.gray)
+    # ax[0].set_title('Overlapping objects')
+    # ax[1].imshow(-distance, cmap=plt.cm.gray)
+    # ax[1].set_title('Distances')
+    # ax[2].imshow(labels, cmap=plt.cm.nipy_spectral)
+    # ax[2].set_title('Separated objects')
+
+    # for a in ax:
+    #     a.set_axis_off()
+
+    # print(labels)
+
+    largest_label, centroid = find_largest_segment(labels)
+    # print("Largest segmented object label:", largest_label)
+    # print("Centroid:", centroid)
+
+    # fig.tight_layout()
+    # plt.show()
+    return centroid
 
 
 def scale_to_height(image, target_height):
@@ -422,39 +441,69 @@ def count_union_pixels_with_color(image1, image2, color):
                 count += 1
     return count
 
-def calculate_iou_for_color(image1, image2, bgr_color):
-    # We set tolerance, because we lose some info about colors. Most likely,
-    # because we work with jpg images
-    if image1.size != image2.size:
+# def calculate_iou_for_color(image1, image2, bgr_color):
+#     # We set tolerance, because we lose some info about colors. Most likely,
+#     # because we work with jpg images
+#     if image1.size != image2.size:
+#         raise ValueError("Images must have the same dimensions.")
+#
+#     width, height = image1.size
+#     total_pixels = count_union_pixels_with_color(image1, image2, bgr_color)
+#     if total_pixels == 0:
+#         proportion = 1
+#         return proportion
+#     # debug_image = Image.new("RGB", (width, height), "black")
+#     # draw = ImageDraw.Draw(debug_image)
+#     matching_pixels = 0
+#
+#     # colors = image1.getcolors(image1.width * image1.height)
+#     # # Extract unique colors
+#     # unique_colors = [color[1] for color in colors]
+#     # print(unique_colors, "UNIQUE COLORS FIRST IMAGE")
+#
+#     for y in range(height):
+#         for x in range(width):
+#             pixel1 = image1.getpixel((x, y))
+#             pixel2 = image2.getpixel((x, y))
+#             if haveSimilarColor(pixel1, bgr_color) and haveSimilarColor(pixel2, bgr_color):
+#                 matching_pixels += 1
+#                 # draw.point((x, y), fill="white")
+#             # elif haveSimilarColor(pixel1, bgr_color) or haveSimilarColor(pixel2, bgr_color):
+#             #     draw.point((x, y), fill="red")
+#
+#     # debug_image.show(str(bgr_color))
+#     proportion = round(matching_pixels / total_pixels, ndigits=3)
+#     return proportion
+
+def calculate_iou_for_colors(image1, image2, rgb_colors, tolerance=5):
+    arr1 = np.array(image1)
+    arr2 = np.array(image2)
+
+    # Ensure images have the same dimensions
+    if arr1.shape != arr2.shape:
         raise ValueError("Images must have the same dimensions.")
 
-    width, height = image1.size
-    total_pixels = count_union_pixels_with_color(image1, image2, bgr_color)
-    if total_pixels == 0:
-        proportion = 1
-        return proportion
-    # debug_image = Image.new("RGB", (width, height), "black")
-    # draw = ImageDraw.Draw(debug_image)
-    matching_pixels = 0
+    # Convert BGR color to numpy array for comparison
+    color_arrays = [np.array(color) for color in rgb_colors]
 
-    # colors = image1.getcolors(image1.width * image1.height)
-    # # Extract unique colors
-    # unique_colors = [color[1] for color in colors]
-    # print(unique_colors, "UNIQUE COLORS FIRST IMAGE")
+    # Count the number of pixels with the specified colors in each image
+    mask1 = np.any([np.all(np.abs(arr1 - color_array) <= tolerance, axis=-1) for color_array in color_arrays], axis=0)
+    mask2 = np.any([np.all(np.abs(arr2 - color_array) <= tolerance, axis=-1) for color_array in color_arrays], axis=0)
 
-    for y in range(height):
-        for x in range(width):
-            pixel1 = image1.getpixel((x, y))
-            pixel2 = image2.getpixel((x, y))
-            if haveSimilarColor(pixel1, bgr_color) and haveSimilarColor(pixel2, bgr_color):
-                matching_pixels += 1
-                # draw.point((x, y), fill="white")
-            # elif haveSimilarColor(pixel1, bgr_color) or haveSimilarColor(pixel2, bgr_color):
-            #     draw.point((x, y), fill="red")
+    # Calculate the intersection and union of the two masks
+    intersection = np.logical_and(mask1, mask2)
+    union = np.logical_or(mask1, mask2)
 
-    # debug_image.show(str(bgr_color))
-    proportion = round(matching_pixels / total_pixels, ndigits=3)
-    return proportion
+    # cv2.imshow("Intersection Mask", intersection.astype(np.uint8) * 255)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+    # Calculate the proportion of intersection over union
+    if np.sum(union) != 0:
+        iou = np.sum(intersection) / np.sum(union)
+        return round(iou, ndigits=3)
+    else:
+        return 0
 
 
 # TODO rename to ssim comparison

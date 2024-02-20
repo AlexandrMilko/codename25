@@ -1,3 +1,4 @@
+import pandas as pd
 from flask import redirect, render_template, url_for, flash, request, jsonify
 from disruptor.forms import RegistrationForm, LoginForm, RequestPasswordResetForm, PasswordResetForm
 from disruptor import app, db, mail
@@ -346,6 +347,24 @@ def reset_password(token):
 
 @app.route("/test", methods=["GET"])
 def test():
-    from disruptor.staging_ml import Room
-    df = Room.get_paired_dataframe(r"C:\Users\Sasha\Desktop\Projects\codename25\src\disruptor\green_screen\find_similar\dataset\bedroom\es_segmented")
+    from disruptor.staging_ml import Room, AttributesAdder
+    segmented_dir = r"C:\Users\Sasha\Desktop\Projects\codename25\src\disruptor\green_screen\find_similar\dataset\bedroom\es_segmented"
+    # df = Room.create_paired_dataframe(segmented_dir)
+    # Room.save_stratified_dataset("bedroom_dataset.csv")
+    # Room.visualize_dataset("train.csv")
+    # Room.visualize_all_vanishing_points(segmented_dir, "right")
+    # Room.visualize_pairs(segmented_dir, "train.csv", "right")
+    # Room.visualize_box_plots("train.csv")
+    # Room.train()
+    # Room.test()
+    # Room.perform_cross_val_score("train.csv", "clf.pkl")
+    # Room.draw_roc_curve("train.csv", "clf.pkl")
+    # Room.draw_precision_recall_vs_threshold("train.csv", "clf.pkl")
+    # Room.clear_datasets()
+
+    attradd = AttributesAdder(segmented_directory=segmented_dir, update_vp=False, update_iou=False, update_wall_center=True)
+    df = attradd.fit_transform(pd.read_csv("train.csv"))
+    df.to_csv("train.csv", index=False)
+
+    # Room.find_best_ml_parameters()
     return redirect(url_for('home'))
