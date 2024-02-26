@@ -14,7 +14,8 @@ from disruptor.green_screen.find_similar.ssim import (calculate_vanishing_points
                                                       fill_with_white_except,
                                                       convert_to_cv2,
                                                       scale_to_height,
-                                                      find_biggest_wall_center)
+                                                      find_biggest_wall_center,
+                                                      find_biggest_wall_area)
 from disruptor.green_screen.find_similar.VanishingPoint.main import manhattan_distance
 from disruptor import app
 from flask_login import current_user
@@ -23,25 +24,34 @@ import re
 
 from sklearn.base import BaseEstimator, TransformerMixin
 
+
 class AttributesAdder(BaseEstimator, TransformerMixin):
     # training_attributes = ["Windows Doors IOU", "Floor IOU", "Windows IOU", "Doors IOU", "VPD Right", "VPD Left", "VPD Vertical", "Biggest Wall Center Distance"]
-    training_attributes = ["Windows Doors IOU", "VPD Left", "Biggest Wall Center Distance"]
-    def __init__(self, segmented_directory=None, update_vp=False, update_iou=False, update_wall_center=False, length_thresh=60, focal_length=500):
+    training_attributes = ["Windows Doors IOU", "VPD Left", "VPD Right", "Biggest Wall Center Distance"]
+    # training_attributes = ["VPD Right", "VPD Left", "VPD Vertical", "Windows IOU", "Doors IOU", "Floor IOU",
+    #                        "Windows Doors IOU", "Biggest Wall Center Distance", "Biggest Wall Center Area Diff"]
+
+    def __init__(self, segmented_directory=None, update_vp=False, update_iou=False, update_wall_center=False,
+                 length_thresh=60, focal_length=500):
         self.segmented_directory = segmented_directory
         self.update_vp = update_vp
         self.update_iou = update_iou
         self.update_wall_center = update_wall_center
         self.length_thresh = length_thresh
         self.focal_length = focal_length
+
     def fit(self, X, y=None):
         return self
+
     def transform(self, X):
         print(self.length_thresh, self.focal_length, " LENGTH THRESH and FOCAL LENGTH")
         if self.segmented_directory:
             for index, row in X.iterrows():
                 print(f"{index}/{len(X)} rooms processed by AttributesAdder")
-                room1 = Room(self.segmented_directory + "\\" + str(row["No1"]) + "Before.jpg", length_thresh=self.length_thresh, focal_length=self.focal_length)
-                room2 = Room(self.segmented_directory + "\\" + str(row["No2"]) + "Before.jpg", length_thresh=self.length_thresh, focal_length=self.focal_length)
+                room1 = Room(self.segmented_directory + "\\" + str(row["No1"]) + "Before.jpg",
+                             length_thresh=self.length_thresh, focal_length=self.focal_length)
+                room2 = Room(self.segmented_directory + "\\" + str(row["No2"]) + "Before.jpg",
+                             length_thresh=self.length_thresh, focal_length=self.focal_length)
                 print("Are {}, {} rooms similar?".format(row["No1"], row["No2"]), row["AreSimilar"])
                 if self.update_vp:
                     vp_dist = room1.get_vanishing_points_distances(room2)
@@ -59,17 +69,23 @@ class AttributesAdder(BaseEstimator, TransformerMixin):
                     X.at[index, 'Windows Doors IOU'] = windows_doors_iou
                 if self.update_wall_center:
                     wall_center_dist = room1.get_biggest_walls_distance(room2)
+                    # biggest_walls_area_difference = room1.get_biggest_walls_area_difference(room2)
                     X.at[index, 'Biggest Wall Center Distance'] = wall_center_dist
+                    # X.at[index, 'Biggest Wall Center Area Diff'] = biggest_walls_area_difference
 
         return X
+
 
 class DataframeSelector(BaseEstimator, TransformerMixin):
     def __init__(self, attribute_names):
         self.attribute_names = attribute_names
+
     def fit(self, X, y=None):
         return self
+
     def transform(self, X):
         return X[self.attribute_names].values
+
 
 pair_index = 0
 
@@ -101,7 +117,8 @@ class Room:
             self.focal_length = focal_length
             # TODO make it calculate these values even with user_empty_space image
             # TODO replace all the hardcode using this class in sdquery.apply_style function
-            self.vanishing_points = calculate_vanishing_points_by_XiaohuLu(self.before, self.length_thresh, self.focal_length)
+            self.vanishing_points = calculate_vanishing_points_by_XiaohuLu(self.before, self.length_thresh,
+                                                                           self.focal_length)
             self.window_centers = sorted(find_object_centers(self.segmented_before, Room.window_color, debug=False))
             self.door_centers = sorted(find_object_centers(self.segmented_before, Room.door_color, debug=False))
         else:
@@ -115,15 +132,16 @@ class Room:
             # Maybe I will change architecture in the future, when I refactor the code
             self.before = image_path
             if segmented_users_before is not None:
-                self.tmp_segmented_before = segmented_users_before
+                self.segmented_before = segmented_users_before
             else:
-                self.tmp_segmented_before = "disruptor" + url_for('static',
-                                                                  filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
+                self.segmented_before = "disruptor" + url_for('static',
+                                                              filename=f'images/{current_user.id}/preprocessed/preprocessed.jpg')
             self.length_thresh = length_thresh
             self.focal_length = focal_length
-            self.vanishing_points = calculate_vanishing_points_by_XiaohuLu(self.before, self.length_thresh, self.focal_length)
-            self.window_centers = sorted(find_object_centers(self.tmp_segmented_before, Room.window_color, debug=False))
-            self.door_centers = sorted(find_object_centers(self.tmp_segmented_before, Room.door_color, debug=False))
+            self.vanishing_points = calculate_vanishing_points_by_XiaohuLu(self.before, self.length_thresh,
+                                                                           self.focal_length)
+            self.window_centers = sorted(find_object_centers(self.segmented_before, Room.window_color, debug=False))
+            self.door_centers = sorted(find_object_centers(self.segmented_before, Room.door_color, debug=False))
 
     @staticmethod
     def get_trio(image_path):
@@ -164,18 +182,55 @@ class Room:
         features = [*self.vanishing_points, *self.window_centers, *self.door_centers]
         return features
 
+    # def measure_similarity(self, other):
+    #     from sklearn.metrics.pairwise import cosine_similarity
+    #     import numpy as np
+    #     if (self.windows_number == other.windows_number) and (self.doors_number == other.doors_number):
+    #         features_first = np.array(self.get_features_values())
+    #         features_second = np.array(other.get_features_values())
+    #         first_flattened = np.reshape(features_first, (1, -1))
+    #         second_flattened = np.reshape(features_second, (1, -1))
+    #         similarity_matrix = cosine_similarity(first_flattened, second_flattened)
+    #         return similarity_matrix[0][0]
+    #     else:
+    #         return 0
     def measure_similarity(self, other):
-        from sklearn.metrics.pairwise import cosine_similarity
-        import numpy as np
-        if (self.windows_number == other.windows_number) and (self.doors_number == other.doors_number):
-            features_first = np.array(self.get_features_values())
-            features_second = np.array(other.get_features_values())
-            first_flattened = np.reshape(features_first, (1, -1))
-            second_flattened = np.reshape(features_second, (1, -1))
-            similarity_matrix = cosine_similarity(first_flattened, second_flattened)
-            return similarity_matrix[0][0]
-        else:
-            return 0
+        from sklearn.pipeline import Pipeline
+        pair_df = pd.DataFrame(columns=['No1', 'No2'])
+        pair = dict()
+        pair['No1'] = Room.get_room_number(self.before)
+        pair['No2'] = Room.get_room_number(other.before)
+        # TODO change path, along with your dataset and clf.pkl
+        with open('scaler.pkl', 'rb') as f:
+            scaler = pickle.load(f)
+        pipeline = Pipeline([
+            ('selector', DataframeSelector(AttributesAdder.training_attributes)),
+            ('scaler', scaler)
+        ])
+        print("Started")
+        vp_dist = self.get_vanishing_points_distances(other)
+        pair['VPD Right'] = vp_dist[0]
+        pair['VPD Left'] = vp_dist[1]
+        pair['VPD Vertical'] = vp_dist[2]
+        windows_iou = self.compare_iou(other, [Room.window_color[::-1]])
+        doors_iou = self.compare_iou(other, [Room.door_color[::-1]])
+        floor_iou = self.compare_iou(other, [Room.floor_color[::-1]])
+        windows_doors_iou = self.compare_iou(other, [Room.door_color[::-1], Room.window_color[::-1]])
+        pair['Windows IOU'] = windows_iou
+        pair['Doors IOU'] = doors_iou
+        pair['Floor IOU'] = floor_iou
+        pair['Windows Doors IOU'] = windows_doors_iou
+        wall_center_dist = self.get_biggest_walls_distance(other)
+        pair['Biggest Wall Center Distance'] = wall_center_dist
+
+        pair_df = pd.concat([pair_df, pd.DataFrame([pair])], ignore_index=True)
+        pair_prepared = pipeline.transform(pair_df)
+        model_path = 'clf.pkl'
+        with open(model_path, 'rb') as f:
+            clf = pickle.load(f)
+            score = clf.decision_function(pair_prepared)
+            print(pair["No1"], pair["No2"], score)
+            return score
 
     def get_biggest_walls_distance(self, other):
         width1, height1 = self.image_size
@@ -189,6 +244,18 @@ class Room:
         scaled_pos_second = (x2 * (mean_width / width2), y2 * (mean_height / height2))
 
         return int(manhattan_distance(scaled_pos_first, scaled_pos_second))
+
+    def get_biggest_walls_area_difference(self, other):
+        width1, height1 = self.image_size
+        width2, height2 = other.image_size
+
+        mean_width, mean_height = calculate_mean_size(self.image_size, other.image_size)
+        area1 = find_biggest_wall_area(self.segmented_before)
+        area2 = find_biggest_wall_area(other.segmented_before)
+
+        scaled_area1 = area1 * (mean_width / width1) * (mean_height / height1)
+        scaled_area2 = area2 * (mean_width / width2) * (mean_height / height2)
+        return abs(scaled_area1 - scaled_area2)
 
     def get_vanishing_points_distances(self, other):
         # Since images can have different sizes, we find their mean scale and then rescale the vanishing points and only then calculate the distance
@@ -208,6 +275,24 @@ class Room:
         scaled_vp_left_second = (vp2_x2 * (mean_width / width2), vp2_y2 * (mean_height / height2))
         scaled_vp_vertical_second = (vp2_x3 * (mean_width / width2), vp2_y3 * (mean_height / height2))
 
+        mean_vp_right = ((scaled_vp_right_first[0] + scaled_vp_right_second[0]) // 2,
+                         (scaled_vp_right_first[1] + scaled_vp_right_second[1]) // 2
+                         )
+        mean_vp_left = ((scaled_vp_left_first[0] + scaled_vp_left_second[0]) // 2,
+                        (scaled_vp_left_first[1] + scaled_vp_left_second[1]) // 2
+                        )
+        mean_vp_vertical = ((scaled_vp_vertical_first[0] + scaled_vp_vertical_second[0]) // 2,
+                            (scaled_vp_vertical_first[1] + scaled_vp_vertical_second[1]) // 2
+                            )
+        mean_dist_right = int(manhattan_distance(mean_vp_right, [0, 0]))
+        mean_dist_left = int(manhattan_distance(mean_vp_left, [0, 0]))
+        mean_dist_vertical = int(manhattan_distance(mean_vp_vertical, [0, 0]))
+
+        right_relative_dist = int(manhattan_distance(scaled_vp_right_first, scaled_vp_right_second)) / mean_dist_right
+        left_relative_dist = int(manhattan_distance(scaled_vp_left_first, scaled_vp_left_second)) / mean_dist_left
+        vertical_relative_dist = int(
+            manhattan_distance(scaled_vp_vertical_first, scaled_vp_vertical_second)) / mean_dist_vertical
+
         # DEBUG
         # Room.show_pair_and_vp(self, other, scaled_vp_right_first, scaled_vp_right_second, "Right VP comparison")
         # Room.show_pair_and_vp(self, other, scaled_vp_left_first, scaled_vp_left_second, "Left VP comparison")
@@ -218,9 +303,10 @@ class Room:
         #         cosine_similarity([scaled_vp_left_first], [scaled_vp_left_second])[0][0],
         #         cosine_similarity([scaled_vp_vertical_first], [scaled_vp_vertical_second])[0][0]]
 
-        return [int(manhattan_distance(scaled_vp_right_first, scaled_vp_right_second)),
-                int(manhattan_distance(scaled_vp_left_first, scaled_vp_left_second)),
-                int(manhattan_distance(scaled_vp_vertical_first, scaled_vp_vertical_second))]
+        # return [int(manhattan_distance(scaled_vp_right_first, scaled_vp_right_second)),
+        #         int(manhattan_distance(scaled_vp_left_first, scaled_vp_left_second)),
+        #         int(manhattan_distance(scaled_vp_vertical_first, scaled_vp_vertical_second))]
+        return right_relative_dist, left_relative_dist, vertical_relative_dist
 
     def compare_iou(self, other,
                     rgb_colors=None):  # WARNING, specify RGB colors, because we work with PIL, and it uses RGB
@@ -441,7 +527,7 @@ class Room:
         strat_test_set.to_csv("test.csv", index=False)
 
     @staticmethod
-    def visualize_dataset(dataset_path):
+    def visualize_dataset(dataset_path, model_path='clf.pkl'):
         df = pd.read_csv(dataset_path)
 
         import matplotlib.pyplot as plt
@@ -469,7 +555,7 @@ class Room:
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(df["VPD Left"], df["VPD Right"], df["Doors IOU"],
+        ax.scatter(df["VPD Left"], df["VPD Right"], df["Windows Doors IOU"],
                    c=df['Color'], marker='o', alpha=0.1)
 
         # for index, row in df.iterrows():
@@ -483,8 +569,8 @@ class Room:
 
         # Set labels and title
         ax.set_xlabel('VPD Left')
-        ax.set_ylabel('VPD Vertical')
-        ax.set_zlabel('Windows IOU')
+        ax.set_ylabel('VPD Right')
+        ax.set_zlabel('Windows Doors IOU')
         ax.set_title('3D Visualization of DataFrame')
 
         # CORRELATION
@@ -495,18 +581,83 @@ class Room:
         df.drop(columns=['Color'], inplace=True)
         corr_matrix = df.corr()
         print(corr_matrix['Label'].sort_values(ascending=False))
-        print(corr_matrix['Biggest Wall Center Distance'].sort_values(ascending=False))
 
         # SCATTER MATRIX
         from pandas.plotting import scatter_matrix
 
-        attributes = ["VPD Right",
-                      "VPD Left",
-                      "VPD Vertical",
-                      "Windows IOU", "Doors IOU", "Floor IOU", "Windows Doors IOU", "Label"]
+        attributes = [*AttributesAdder.training_attributes, "Label"]
         scatter_matrix(df[attributes], figsize=(12, 8))
 
         plt.show()
+
+    @staticmethod
+    def visualize_polynomial_features(dataset_path, degree=2):
+        from sklearn.pipeline import Pipeline
+        from sklearn.preprocessing import StandardScaler, LabelEncoder
+        df = pd.read_csv(dataset_path)
+        for i in range(len(AttributesAdder.training_attributes)):
+            pipeline = Pipeline([
+                ('selector', DataframeSelector([AttributesAdder.training_attributes[i]])),
+                ('scaler', StandardScaler())
+            ])
+            X1D = pipeline.fit_transform(df)
+            X2D = np.c_[X1D, X1D ** degree]
+            label_encoder = LabelEncoder()
+            y = label_encoder.fit_transform(df["AreSimilar"])
+
+            # VISUALIZE ATTRIBUTE
+            import matplotlib.pyplot as plt
+            plt.figure(figsize=(10, 3))
+
+            plt.subplot(121)
+            plt.grid(True, which='both')
+            plt.axhline(y=0, color='k')
+            plt.plot(X1D[:, 0][y == 0], np.zeros(486), "bs")
+            plt.plot(X1D[:, 0][y == 1], np.zeros(322), "g^")
+            plt.xlabel(r"$d_1$" + AttributesAdder.training_attributes[i], fontsize=20)
+
+            plt.subplot(122)
+            plt.grid(True, which='both')
+            plt.axhline(y=0, color='k')
+            plt.axvline(x=0, color='k')
+            plt.plot(X2D[:, 0][y == 0], X2D[:, 1][y == 0], "bs")
+            plt.plot(X2D[:, 0][y == 1], X2D[:, 1][y == 1], "g^")
+            plt.xlabel(r"$d_1$" + AttributesAdder.training_attributes[i], fontsize=20)
+            plt.ylabel(r"$d_2$" + AttributesAdder.training_attributes[i], fontsize=20, rotation=0)
+
+            plt.subplots_adjust(right=1)
+
+            plt.show()
+
+    @staticmethod
+    def plot_predictions(dataset_path, model_path="clf.pkl"):
+        with open(model_path, 'rb') as f:
+            import matplotlib.pyplot as plt
+            clf = pickle.load(f)
+            X, y = Room.prepare_dataset(dataset_path)
+            x0min, x0max = X[:, 0].min(), X[:, 0].max()
+            x1min, x1max = X[:, 1].min(), X[:, 1].max()
+            x2min, x2max = X[:, 2].min(), X[:, 2].max()
+            x3min, x3max = X[:, 3].min(), X[:, 3].max()
+            steps = 8
+            x0s = np.linspace(x0min, x0max, steps)
+            x1s = np.linspace(x1min, x1max, steps)
+            x2s = np.linspace(x2min, x2max, steps)
+            x3s = np.linspace(x3min, x3max, steps)
+
+            x0, x1, x2, x3 = np.meshgrid(x0s, x1s, x2s, x3s)
+
+            X = np.c_[x0.ravel(), x1.ravel(), x2.ravel(), x3.ravel()]
+
+            y_pred = clf.predict(X)
+            y_pred = y_pred.reshape(x0.shape)
+
+            y_decision = clf.decision_function(X)
+            y_decision = y_decision.reshape(x0.shape)
+
+            plt.contourf(x0[:, :, 0, 0], x1[:, :, 0, 0], y_pred[:, :, 0, 0], cmap=plt.cm.brg, alpha=0.2)
+            plt.contourf(x0[:, :, 0, 0], x1[:, :, 0, 0], y_decision[:, :, 0, 0], cmap=plt.cm.brg, alpha=0.1)
+            plt.show()
 
     @staticmethod
     def visualize_all_vanishing_points(seg_directory, vp_type):
@@ -687,6 +838,8 @@ class Room:
             ('scaler', StandardScaler())
         ])
         data = pipeline.fit_transform(df)
+        with open('scaler.pkl', 'wb') as f:
+            pickle.dump(pipeline.named_steps['scaler'], f)
 
         label_encoder = LabelEncoder()
         labels = label_encoder.fit_transform(df["AreSimilar"])
@@ -698,7 +851,9 @@ class Room:
         training_data, training_labels = Room.prepare_dataset(dataset_path)
 
         from sklearn.svm import SVC
-        clf = SVC(kernel='linear', C=1.0)
+        # C = 1000, coef0 = 4, degree = 2, kernel = 'poly'
+        # C = 0.1, gamma = 1, kernel = 'rbf'
+        clf = SVC(C=1, gamma=0.001, kernel='rbf')
         clf.fit(training_data, training_labels)
 
         with open(model_path, 'wb') as f:
@@ -715,22 +870,29 @@ class Room:
     @staticmethod
     def find_best_ml_parameters(dataset_path="train.csv"):
         from sklearn.model_selection import GridSearchCV
-        param_grid = [{"attr_adder__length_thresh": [20, 60, 90],
-                       "attr_adder__focal_length": [100, 1150, 1300, 1450, 1600, 1750, 1900, 2150, 2300, 2450, 2600, 2750, 2900],
-                       # "clf__C": [0.1, 1, 10, 100],
-                       "clf__C": [10],
-                       # "clf__kernel": ['linear', 'poly', 'rbf', 'sigmoid', 'precomputed']
-                       "clf__kernel": ['poly']
-                       }]
+        # param_grid = [{"attr_adder__length_thresh": [20, 60, 90],
+        #                "attr_adder__focal_length": [100, 1150, 1300, 1450, 1600, 1750, 1900, 2150, 2300, 2450, 2600,
+        #                                             2750, 2900],
+        #                "clf__C": [0.1, 1, 10, 100],
+        #                "clf__kernel": ['poly', 'rbf']
+        #                }]
+        param_grid = [{
+            "clf__C": [0.001, 0.1, 1, 10, 100],
+            "clf__gamma": [0.001, 0.1, 1, 5],
+            "clf__kernel": ['rbf']
+        }]
+        # param_grid = [{
+        #     "clf__C": [0.1, 1, 10, 100, 500, 1000, 750],
+        #     "clf__degree": [None, 2, 3],
+        #     "clf__coef0": [1, 2, 3, 4, 5],
+        #     "clf__kernel": ['poly']
+        # }]
 
         from sklearn.pipeline import Pipeline
         from sklearn.preprocessing import StandardScaler
         from sklearn.svm import SVC
         pipeline = Pipeline([
-            ('attr_adder', AttributesAdder(
-                segmented_directory=r"C:\Users\Sasha\Desktop\Projects\codename25\src\disruptor\green_screen\find_similar\dataset\bedroom\es_segmented",
-             update_vp=True, update_iou=False
-            )),
+            ('attr_adder', AttributesAdder()),
             ('selector', DataframeSelector(AttributesAdder.training_attributes)),
             ('scaler', StandardScaler()),
             ('clf', SVC())
@@ -739,7 +901,7 @@ class Room:
         data = pipeline.named_steps['attr_adder'].fit_transform(pd.read_csv(dataset_path))
         _, labels = Room.prepare_dataset(dataset_path)
 
-        grid_search = GridSearchCV(pipeline, param_grid, scoring='roc_auc', cv=3)
+        grid_search = GridSearchCV(pipeline, param_grid, scoring='precision', cv=3)
         grid_search.fit(data, labels)
 
         cv_results = grid_search.cv_results_
@@ -747,7 +909,7 @@ class Room:
 
         for mean_score, params in zip(cv_results["mean_test_score"], cv_results["params"]):
             print("Mean Score:", mean_score, "Parameters:", params)
-            i+=1
+            i += 1
         print(i, " CV RESULTS LENGTH")
 
         print(grid_search.best_estimator_)

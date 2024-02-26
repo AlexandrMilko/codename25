@@ -411,6 +411,39 @@ def find_biggest_wall_center(image_path):
     # plt.show()
     return centroid
 
+def find_biggest_wall_area(image_path):
+    # We separate the walls from each other from a segmented image
+    from scipy import ndimage
+    from skimage.feature import peak_local_max
+    # import matplotlib.pyplot as plt
+    from skimage.segmentation import watershed
+
+    # Read the image
+    image = cv2.imread(image_path)
+
+    # Define the color range to filter
+    lower_color = np.array([110, 110, 110]) # Wall colors
+    upper_color = np.array([130, 130, 130])
+
+    # Mask the image to extract pixels within the specified color range
+    image = cv2.inRange(image, lower_color, upper_color)
+
+    distance = ndimage.distance_transform_edt(image)
+    coords = peak_local_max(distance, footprint=np.ones((3, 3)), labels=image)
+    mask = np.zeros(distance.shape, dtype=bool)
+    mask[tuple(coords.T)] = True
+    markers, _ = ndimage.label(mask)
+    labels = watershed(-distance, markers, mask=image)
+
+    # Find the size of each segment
+    segment_sizes = ndimage.sum(np.ones_like(labels), labels, range(labels.max() + 1))
+
+    # Find the largest labeled segment
+    largest_label = np.argmax(segment_sizes[1:]) + 1  # Skip background label
+    largest_area = segment_sizes[largest_label]
+
+    return largest_area
+
 
 def scale_to_height(image, target_height):
     """Scale cv2 image to a target height while preserving aspect ratio."""

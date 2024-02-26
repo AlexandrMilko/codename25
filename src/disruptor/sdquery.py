@@ -99,7 +99,6 @@ class ImageQuery(Query):
             "init_images": self.init_images,
             "cfg_scale": self.cfg_scale,
             "denoising_strength": self.denoising_strength,
-            "negative_prompt": self.denoising_strength,
             "steps": self.steps
         }
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
@@ -148,7 +147,7 @@ class ControlNetImageQuery(Query):
         data = {
             "prompt": self.prompt,
             "sampler_name": self.sampler_name,
-            "negative_prompt": self.negative_prompt,
+            # "negative_prompt": self.negative_prompt,
             "init_images": [self.result_image_b64],
             "batch_size": 1,
             "steps": self.steps,
@@ -535,27 +534,28 @@ def prepare_masks(current_user):
 def apply_style(empty_space, text):
     import os
     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
-
     run_preprocessor("seg_ofade20k", es_path)
-    user_empty_room = Room(es_path, True) # Just for testing
+    user_empty_room = Room(es_path, True)
 
     import glob
     room_directory_name = text.split(", ")[1].lower().replace(" ", "_")
     dataset_originals = f"disruptor/green_screen/find_similar/dataset/{room_directory_name}/original"
     dataset_paths = glob.glob(os.path.join(dataset_originals, '*.jpg'))
-    max_score = 0
+    max_score = None
     i = 0
     paths_count = len(dataset_paths)
     for dataset_img in dataset_paths:
-        dataset_room = Room(dataset_img, False)  # For testing
+        dataset_room = Room(dataset_img, False)
         score = dataset_room.measure_similarity(user_empty_room)
-        if score > max_score:
+        if max_score is None:
+            max_score = score
+        elif score > max_score:
             max_score = score
             max_similar = Room.get_trio(dataset_img)["after"]
             print(os.path.basename(max_similar), max_score, str(i) + "/" + str(paths_count))
         i += 1
 
-    print("Max similar(COS similarity):", os.path.basename(max_similar), max_score)
+    print("Max similar:", os.path.basename(max_similar), max_score)
 
     # Parse furniture from the selected staged image
 
@@ -591,6 +591,66 @@ def apply_style(empty_space, text):
     # Run SD to process it
     query = GreenScreenImageQuery(text)
     query.run()
+
+# def apply_style(empty_space, text):
+#     import os
+#     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
+#
+#     run_preprocessor("seg_ofade20k", es_path)
+#     user_empty_room = Room(es_path, True) # Just for testing
+#
+#     import glob
+#     room_directory_name = text.split(", ")[1].lower().replace(" ", "_")
+#     dataset_originals = f"disruptor/green_screen/find_similar/dataset/{room_directory_name}/original"
+#     dataset_paths = glob.glob(os.path.join(dataset_originals, '*.jpg'))
+#     max_score = 0
+#     i = 0
+#     paths_count = len(dataset_paths)
+#     for dataset_img in dataset_paths:
+#         dataset_room = Room(dataset_img, False)  # For testing
+#         score = dataset_room.measure_similarity(user_empty_room)
+#         if score > max_score:
+#             max_score = score
+#             max_similar = Room.get_trio(dataset_img)["after"]
+#             print(os.path.basename(max_similar), max_score, str(i) + "/" + str(paths_count))
+#         i += 1
+#
+#     print("Max similar(COS similarity):", os.path.basename(max_similar), max_score)
+#
+#     # Parse furniture from the selected staged image
+#
+#     # Create masks
+#     run_preprocessor("seg_ofade20k", max_similar)
+#     mask_dir = f"disruptor/static/images/{current_user.id}/parsed_furniture"
+#     create_directory_if_not_exists(mask_dir)
+#     # We update the directory, to get rid of the rubbish from the previous segmentations
+#     remove_files(mask_dir)
+#     parse_objects(f'disruptor/static/images/{current_user.id}/preprocessed/preprocessed.jpg', current_user.id)
+#     prepare_masks(current_user)
+#
+#     # Create png foreground
+#     from disruptor.green_screen.preprocess.create_pngs import create_fg, overlay
+#     create_fg(mask_dir, max_similar, current_user.id)
+#     fg_path = "disruptor" + url_for('static', filename=f"images/{current_user.id}/preprocessed/foreground.png")
+#     create_directory_if_not_exists(os.path.dirname(fg_path))
+#     overlay(es_path, fg_path, current_user.id)
+#
+#     # Create a mask for inpainting
+#     mask_path = f'disruptor/static/images/{current_user.id}/preprocessed/inpainting_mask.png'
+#     unite_masks(mask_dir, mask_path)
+#     mask_img = Image.open(mask_path)
+#     prerequisite_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/prerequisite.jpg')
+#     prerequisite_img = Image.open(prerequisite_path)
+#     mask_img = mask_img.resize(prerequisite_img.size, Image.Resampling.LANCZOS)
+#     mask_img.save(mask_path)
+#
+#     # Make edges smoother
+#     from disruptor.preprocess_for_empty_space import perform_dilation
+#     perform_dilation(mask_path, mask_path, 16)
+#
+#     # Run SD to process it
+#     query = GreenScreenImageQuery(text)
+#     query.run()
 
 # def apply_style(empty_space, text):
 #
