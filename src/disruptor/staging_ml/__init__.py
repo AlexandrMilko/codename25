@@ -27,7 +27,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 class AttributesAdder(BaseEstimator, TransformerMixin):
     # training_attributes = ["Windows Doors IOU", "Floor IOU", "Windows IOU", "Doors IOU", "VPD Right", "VPD Left", "VPD Vertical", "Biggest Wall Center Distance"]
-    training_attributes = ["Windows Doors IOU", "VPD Left", "VPD Right", "Biggest Wall Center Distance"]
+    training_attributes = ["Windows Doors IOU", "VPD Left", "VPD Right", "Floor IOU"]
     # training_attributes = ["VPD Right", "VPD Left", "VPD Vertical", "Windows IOU", "Doors IOU", "Floor IOU",
     #                        "Windows Doors IOU", "Biggest Wall Center Distance", "Biggest Wall Center Area Diff"]
 
@@ -47,12 +47,12 @@ class AttributesAdder(BaseEstimator, TransformerMixin):
         print(self.length_thresh, self.focal_length, " LENGTH THRESH and FOCAL LENGTH")
         if self.segmented_directory:
             for index, row in X.iterrows():
-                print(f"{index}/{len(X)} rooms processed by AttributesAdder")
+                # print(f"{index}/{len(X)} rooms processed by AttributesAdder")
                 room1 = Room(self.segmented_directory + "\\" + str(row["No1"]) + "Before.jpg",
                              length_thresh=self.length_thresh, focal_length=self.focal_length)
                 room2 = Room(self.segmented_directory + "\\" + str(row["No2"]) + "Before.jpg",
                              length_thresh=self.length_thresh, focal_length=self.focal_length)
-                print("Are {}, {} rooms similar?".format(row["No1"], row["No2"]), row["AreSimilar"])
+                # print("Are {}, {} rooms similar?".format(row["No1"], row["No2"]), row["AreSimilar"])
                 if self.update_vp:
                     vp_dist = room1.get_vanishing_points_distances(room2)
                     X.at[index, 'VPD Right'] = vp_dist[0]
@@ -853,8 +853,29 @@ class Room:
         from sklearn.svm import SVC
         # C = 1000, coef0 = 4, degree = 2, kernel = 'poly'
         # C = 0.1, gamma = 1, kernel = 'rbf'
-        clf = SVC(C=1, gamma=0.001, kernel='rbf')
+        # C = 1, gamma = 0.001, kernel = 'rbf'
+        # C=0.1, coef0=1, degree=2, kernel='poly' # This one
+        # C = 0.975, coef0 = 1, degree = 2, kernel = 'poly'
+        # C = 0.43, coef0 = 1, degree = 2, kernel = 'poly'
+
+        # C=0.05, coef0=3, kernel='poly'
+        clf = SVC(C=0.05, coef0=3, kernel='poly')
         clf.fit(training_data, training_labels)
+
+        with open(model_path, 'wb') as f:
+            pickle.dump(clf, f)
+
+    @staticmethod
+    def train_dt(dataset_path="train.csv", model_path="clf.pkl"):
+        training_data, training_labels = Room.prepare_dataset(dataset_path)
+
+        from sklearn.tree import DecisionTreeClassifier, export_graphviz
+        clf = DecisionTreeClassifier(max_depth=2)
+        clf.fit(training_data, training_labels)
+        export_graphviz(
+            clf,
+            out_file="tree.dot"
+        )
 
         with open(model_path, 'wb') as f:
             pickle.dump(clf, f)
@@ -870,29 +891,43 @@ class Room:
     @staticmethod
     def find_best_ml_parameters(dataset_path="train.csv"):
         from sklearn.model_selection import GridSearchCV
-        # param_grid = [{"attr_adder__length_thresh": [20, 60, 90],
-        #                "attr_adder__focal_length": [100, 1150, 1300, 1450, 1600, 1750, 1900, 2150, 2300, 2450, 2600,
-        #                                             2750, 2900],
-        #                "clf__C": [0.1, 1, 10, 100],
-        #                "clf__kernel": ['poly', 'rbf']
-        #                }]
-        param_grid = [{
-            "clf__C": [0.001, 0.1, 1, 10, 100],
-            "clf__gamma": [0.001, 0.1, 1, 5],
-            "clf__kernel": ['rbf']
-        }]
+        param_grid = [{"attr_adder__length_thresh": [60],
+                       "attr_adder__focal_length": [100, 500, 1150, 1300, 1450, 1600, 1750, 1900, 2150, 2300, 2450, 2600,
+                                                    2750, 2900],
+                       "clf__C": [0.05],
+                       "clf__degree": [2],
+                       "clf__coef0": [3],
+                       "clf__kernel": ['poly']
+                       }]
+        # param_grid = [{
+        #     "clf__C": [50, 75, 100, 125, 150, 175, 200],
+        #     "clf__gamma": [0.75, 0.9, 1, 1.1, 1.2, 1.3],
+        #     "clf__kernel": ['rbf']
+        # }]
         # param_grid = [{
         #     "clf__C": [0.1, 1, 10, 100, 500, 1000, 750],
         #     "clf__degree": [None, 2, 3],
         #     "clf__coef0": [1, 2, 3, 4, 5],
         #     "clf__kernel": ['poly']
         # }]
+        # param_grid = [{
+        #     "clf__C": [i/200 for i in range(0, 201)],
+        #     "clf__degree": [None, 2, 3],
+        #     "clf__coef0": [1, 2, 3],
+        #     "clf__kernel": ['poly']
+        # }]
+
+        # param_grid = [{
+        #     "clf__max_depth": [2, 3, 4, 5, 6, 7, 8]
+        # }]
 
         from sklearn.pipeline import Pipeline
         from sklearn.preprocessing import StandardScaler
         from sklearn.svm import SVC
+        from sklearn.tree import DecisionTreeClassifier
+        segmented_dir = r"C:\Users\Sasha\Desktop\Projects\codename25\src\disruptor\green_screen\find_similar\dataset\bedroom\es_segmented"
         pipeline = Pipeline([
-            ('attr_adder', AttributesAdder()),
+            ('attr_adder', AttributesAdder(segmented_directory=segmented_dir, update_vp=True)),
             ('selector', DataframeSelector(AttributesAdder.training_attributes)),
             ('scaler', StandardScaler()),
             ('clf', SVC())
@@ -901,7 +936,7 @@ class Room:
         data = pipeline.named_steps['attr_adder'].fit_transform(pd.read_csv(dataset_path))
         _, labels = Room.prepare_dataset(dataset_path)
 
-        grid_search = GridSearchCV(pipeline, param_grid, scoring='precision', cv=3)
+        grid_search = GridSearchCV(pipeline, param_grid, scoring='f1', cv=3)
         grid_search.fit(data, labels)
 
         cv_results = grid_search.cv_results_

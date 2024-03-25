@@ -20,15 +20,19 @@ from disruptor.tools import create_directory_if_not_exists, min_max_scale
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 MAX_CONTROLNET_IMAGE_RESOLUTION = 600
 
+
 class Query:
     negative_prompt = "ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish, text"
     sampler_name = "DPM2 Karras"
+
+
 class TextQuery(Query):
     """
         Used for generating favourites for the first time,
         after the user chose the options they like
     """
     steps = 20
+
     def __init__(self, text, output_filename):
         space, room, budget, style = text.split(", ")
         # We will use it to determine the model
@@ -67,6 +71,7 @@ class TextQuery(Query):
             create_directory_if_not_exists(output_dir)
             save_encoded_image(response.json()['images'][0], output_filepath)
 
+
 class ImageQuery(Query):
     """
         Used for generating favourites
@@ -74,6 +79,7 @@ class ImageQuery(Query):
     """
     cfg_scale = 7.5
     steps = 20
+
     def __init__(self, text, image_url, output_filename, denoising_strength):
         # Setting up the input image
         image_path = "disruptor" + image_url
@@ -112,6 +118,8 @@ class ImageQuery(Query):
         except FileNotFoundError as e:
             create_directory_if_not_exists(output_dir)
             save_encoded_image(response.json()['images'][0], output_filepath)
+
+
 class ControlNetImageQuery(Query):
     """
         Used for applying the predefined result image to a new space
@@ -122,6 +130,7 @@ class ControlNetImageQuery(Query):
     denoising_strength = 1
     cfg_scale = 7
     steps = 40
+
     def __init__(self, text, user_filename, output_filename, result_filename="current_image.jpg"):
         # We will use result image to transform it into new space of user image
         result_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{result_filename}')
@@ -222,6 +231,7 @@ class ControlNetImageQuery(Query):
         self.height = height
         self.width = width
 
+
 class GreenScreenImageQuery(Query):
     """
         Used for applying the predefined result image to a new space
@@ -232,16 +242,21 @@ class GreenScreenImageQuery(Query):
     denoising_strength = 1
     cfg_scale = 7
     steps = 20
-    def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.jpg", inpainting_mask="inpainting_mask.png"):
+
+    def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.jpg",
+                 inpainting_mask="inpainting_mask.png"):
         # We will use result image to transform it into new space of user image
-        self.prerequisite_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/{prerequisite}')
-        self.inpainting_mask_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/{inpainting_mask}')
+        self.prerequisite_path = "disruptor" + url_for('static',
+                                                       filename=f'images/{current_user.id}/preprocessed/{prerequisite}')
+        self.inpainting_mask_path = "disruptor" + url_for('static',
+                                                          filename=f'images/{current_user.id}/preprocessed/{inpainting_mask}')
         self.prerequisite_image_b64 = get_encoded_image(self.prerequisite_path)
         self.inpainting_mask_image_b64 = get_encoded_image(self.inpainting_mask_path)
         self.width, self.height = get_max_possible_size(self.prerequisite_path)
 
         space, room, budget, self.style = text.split(", ")
-        self.prompt = f'interior design, {room.lower()}, {self.style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
+        # self.prompt = f'interior design, {room.lower()}, {self.style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
+        self.prompt = f'interior design, {room.lower()}, {self.style.lower()} style, RAW photo, subject, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3, <lora:epi_noiseoffset2:1>'
         self.output_filename = output_filename
 
     def run(self):
@@ -251,10 +266,12 @@ class GreenScreenImageQuery(Query):
         if self.style in ("Modern", "Art Deco"):
             set_xsarchitectural()
         else:
-            set_deliberate()
+            set_realistic_vision()
+            # set_deliberate()
 
         self.staged_image_b64 = self.stage()
         self.design()
+
     def stage(self):
         self.denoising_strength = 1
         self.steps = 20
@@ -307,7 +324,9 @@ class GreenScreenImageQuery(Query):
 
     def design(self):
         self.denoising_strength = 0.75
-        self.steps = 30
+        self.cfg_scale = 7
+        self.steps = 20
+
         data = {
             "prompt": self.prompt,
             "sampler_name": self.sampler_name,
@@ -317,8 +336,8 @@ class GreenScreenImageQuery(Query):
             "steps": self.steps,
             "cfg_scale": self.cfg_scale,
             "denoising_strength": self.denoising_strength,
-            "width": self.width,
-            "height": self.height,
+            "width": self.width * 2,
+            "height": self.height * 2,
             # "seed": 123, # TODO add seed, before testing
             "alwayson_scripts": {
                 "controlnet": {
@@ -327,19 +346,39 @@ class GreenScreenImageQuery(Query):
                             "input_image": self.staged_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
-                            "weight": 1,
-                            "guidance_start": 0,
-                            "guidance_end": 1,
+                            "weight": 0.9,
+                            "guidance_start": 0.1,
+                            "guidance_end": 0.5,
+                            "control_mode": 1,
+                            "processor_res": 512
+                        },
+                        {
+                            "input_image": self.staged_image_b64,
+                            "module": "softedge_hed",
+                            "model": "control_sd15_hed [fef5e48e]",
+                            "weight": 0.55,
+                            "guidance_start": 0.1,
+                            "guidance_end": 0.5,
                             "control_mode": 0,
+                            "processor_res": 512
+                        },
+                        {
+                            "input_image": self.staged_image_b64,
+                            "module": "seg_ofade20k",
+                            "model": "control_sd15_seg [fef5e48e]",
+                            "weight": 0.9,
+                            "guidance_start": 0,
+                            "guidance_end": 0.5,
+                            "control_mode": 1,
                             "processor_res": 512
                         },
                         {
                             "input_image": self.staged_image_b64,
                             "module": "depth_midas",
                             "model": "control_sd15_depth [fef5e48e]",
-                            "weight": 1,
-                            "guidance_start": 0,
-                            "guidance_end": 1,
+                            "weight": 0.4,
+                            "guidance_start": 0.1,
+                            "guidance_end": 0.5,
                             "control_mode": 0,
                             "processor_res": 512
                         }
@@ -347,6 +386,45 @@ class GreenScreenImageQuery(Query):
                 }
             }
         }
+        # data = {
+        #     "prompt": self.prompt,
+        #     "sampler_name": self.sampler_name,
+        #     # "negative_prompt": self.negative_prompt,
+        #     "init_images": [self.staged_image_b64],
+        #     "batch_size": 1,
+        #     "steps": self.steps,
+        #     "cfg_scale": self.cfg_scale,
+        #     "denoising_strength": self.denoising_strength,
+        #     "width": self.width,
+        #     "height": self.height,
+        #     # "seed": 123, # TODO add seed, before testing
+        #     "alwayson_scripts": {
+        #         "controlnet": {
+        #             "args": [
+        #                 {
+        #                     "input_image": self.staged_image_b64,
+        #                     "module": "seg_ofade20k",
+        #                     "model": "control_sd15_seg [fef5e48e]",
+        #                     "weight": 1,
+        #                     "guidance_start": 0,
+        #                     "guidance_end": 1,
+        #                     "control_mode": 0,
+        #                     "processor_res": 512
+        #                 },
+        #                 {
+        #                     "input_image": self.staged_image_b64,
+        #                     "module": "depth_midas",
+        #                     "model": "control_sd15_depth [fef5e48e]",
+        #                     "weight": 1,
+        #                     "guidance_start": 0,
+        #                     "guidance_end": 1,
+        #                     "control_mode": 0,
+        #                     "processor_res": 512
+        #                 }
+        #             ]
+        #         }
+        #     }
+        # }
 
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
@@ -366,6 +444,7 @@ class GreenScreenImageQuery(Query):
         self.height = height
         self.width = width
 
+
 def submit_post(url: str, data: dict):
     """
     Submit a POST request to the given URL with the given data.
@@ -380,11 +459,20 @@ def save_encoded_image(b64_image: str, output_path: str):
     with open(output_path, "wb") as image_file:
         image_file.write(base64.b64decode(b64_image))
 
+
 def set_deliberate():
     print("SET DELIBERATE")
     data = {"sd_model_checkpoint": "deliberate_v2.safetensors"}
     options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
+
+
+def set_realistic_vision():
+    print("SET realisticVisionV60B1_v51VAE")
+    data = {"sd_model_checkpoint": "realisticVisionV60B1_v51VAE.safetensors"}
+    options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
+    response = submit_post(options_url, data)
+
 
 def set_xsarchitectural():
     print("SET xsarchitectural")
@@ -392,11 +480,13 @@ def set_xsarchitectural():
     options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
 
+
 def get_encoded_image(image_path):
     img = cv2.imread(image_path)
     # Encode into PNG and send to ControlNet
     retval, bytes = cv2.imencode('.png', img)
     return base64.b64encode(bytes).decode('utf-8')
+
 
 def change_image_size(input_path, output_path, target_size_kb=20):
     # Load the image using Pillow
@@ -447,6 +537,7 @@ def get_max_possible_size(input_path, target_resolution=MAX_CONTROLNET_IMAGE_RES
     # If no resizing was done, return the original dimensions
     return width, height
 
+
 def run_preprocessor(preprocessor_name, image_path, filename="preprocessed.jpg"):
     input_image = get_encoded_image(image_path)
     data = {
@@ -468,12 +559,14 @@ def run_preprocessor(preprocessor_name, image_path, filename="preprocessed.jpg")
         create_directory_if_not_exists(output_dir)
         save_encoded_image(response.json()['images'][0], output_filepath)
 
+
 def prep_bg_image(empty_space):
     """
         Moving our empty space image to background image folder in GracoNet
     """
     image = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
     shutil.copyfile(image, "../GracoNet-Object-Placement/new_OPA/background/sheep/186413.jpg")
+
 
 def prep_fg_image(furniture_piece):
     """
@@ -485,6 +578,7 @@ def prep_fg_image(furniture_piece):
     shutil.copyfile(image, "../GracoNet-Object-Placement/new_OPA/foreground/sheep/64754.jpg")
     shutil.copyfile(map, "../GracoNet-Object-Placement/new_OPA/foreground/sheep/mask_64754.jpg")
 
+
 def run_graconet():
     """
         Run graconet to place furniture
@@ -493,6 +587,7 @@ def run_graconet():
     os.chdir("disruptor")
     os.system("run_graconet_windows.sh")
     os.chdir(cwd)
+
 
 def remove_files(directory_path):
     # Check if the directory exists
@@ -509,6 +604,7 @@ def remove_files(directory_path):
                 print(f"{file_path} is not a file and won't be removed.")
     else:
         print(f"The directory {directory_path} does not exist.")
+
 
 def prepare_masks(current_user):
     directory_path = f"disruptor/static/images/{current_user.id}/parsed_furniture"
@@ -531,6 +627,7 @@ def prepare_masks(current_user):
     else:
         print(f"The directory {directory_path} does not exist.")
 
+
 def apply_style(empty_space, text):
     import os
     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
@@ -545,17 +642,22 @@ def apply_style(empty_space, text):
     i = 0
     paths_count = len(dataset_paths)
     for dataset_img in dataset_paths:
-        dataset_room = Room(dataset_img, False)
-        score = dataset_room.measure_similarity(user_empty_room)
-        if max_score is None:
-            max_score = score
-        elif score > max_score:
-            max_score = score
-            max_similar = Room.get_trio(dataset_img)["after"]
-            print(os.path.basename(max_similar), max_score, str(i) + "/" + str(paths_count))
+        if "before" in dataset_img.lower():
+            dataset_room = Room(dataset_img, False)
+            score = dataset_room.measure_similarity(user_empty_room)
+            if max_score is None:
+                max_score = score
+                max_similar = Room.get_trio(dataset_img)["after"]
+                print(os.path.basename(max_similar), max_score, str(i) + "/" + str(paths_count))
+            elif score > max_score:
+                max_score = score
+                max_similar = Room.get_trio(dataset_img)["after"]
+                print(os.path.basename(max_similar), max_score, str(i) + "/" + str(paths_count))
         i += 1
 
     print("Max similar:", os.path.basename(max_similar), max_score)
+    if not max_score > 15:
+        raise Exception("We do not have a similar design in our dataset.")
 
     # Parse furniture from the selected staged image
 
@@ -579,7 +681,8 @@ def apply_style(empty_space, text):
     mask_path = f'disruptor/static/images/{current_user.id}/preprocessed/inpainting_mask.png'
     unite_masks(mask_dir, mask_path)
     mask_img = Image.open(mask_path)
-    prerequisite_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/preprocessed/prerequisite.jpg')
+    prerequisite_path = "disruptor" + url_for('static',
+                                              filename=f'images/{current_user.id}/preprocessed/prerequisite.jpg')
     prerequisite_img = Image.open(prerequisite_path)
     mask_img = mask_img.resize(prerequisite_img.size, Image.Resampling.LANCZOS)
     mask_img.save(mask_path)

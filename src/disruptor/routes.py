@@ -295,11 +295,14 @@ def save_image():
         file_path = directory + filename
         file.save(file_path)
 
-        apply_style(filename, text)
-
-        # Return the URL of the saved image
-        return jsonify({'url': url_for('static', filename=f'images/{current_user.id}/applied.jpg')})
-        # return jsonify({'url': file_path})
+        try:
+            apply_style(filename, text)
+            # Return the URL of the saved image
+            return jsonify({'url': url_for('static', filename=f'images/{current_user.id}/applied.jpg')})
+            # return jsonify({'url': file_path})
+        except Exception as e:
+            print(e)
+            return jsonify({'url': url_for('static', filename=f'images/incorrect_image_message.png')})
 
     return jsonify({'error': 'Unknown error'})
 
@@ -352,19 +355,20 @@ def test():
     # df = Room.create_paired_dataframe(segmented_dir)
     # Room.save_stratified_dataset("bedroom_dataset.csv")
     # Room.visualize_dataset("train.csv")
-    Room.plot_predictions("train.csv")
+    # Room.plot_predictions("train.csv")
     # Room.visualize_polynomial_features("train.csv")
     # Room.visualize_all_vanishing_points(segmented_dir, "right")
     # Room.visualize_pairs(segmented_dir, "train.csv", "right")
     # Room.visualize_box_plots("train.csv")
-    # Room.train()
+    Room.train()
+    # Room.train_dt()
     # Room.test()
-    # Room.perform_cross_val_score("train.csv", "clf.pkl")
+    Room.perform_cross_val_score("train.csv", "clf.pkl")
     # Room.draw_roc_curve("train.csv", "clf.pkl")
     # Room.draw_precision_recall_vs_threshold("train.csv", "clf.pkl")
     # Room.clear_datasets()
 
-    # attradd = AttributesAdder(segmented_directory=segmented_dir, update_vp=False, update_iou=False, update_wall_center=True)
+    # attradd = AttributesAdder(segmented_directory=segmented_dir, update_vp=True, update_iou=True, update_wall_center=True)
     # df = attradd.fit_transform(pd.read_csv("train.csv"))
     # df.to_csv("train.csv", index=False)
 
