@@ -1,4 +1,4 @@
-from .base_options import BaseOptions
+from disruptor.UprightNet.options.base_options import BaseOptions
 
 class TestOptions(BaseOptions):
     def initialize(self):

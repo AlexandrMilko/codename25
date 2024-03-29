@@ -3,24 +3,40 @@ import time
 import torch
 import numpy as np
 from torch.autograd import Variable
-import models.networks
-from options.test_options import TestOptions
+import disruptor.UprightNet.models.networks
+from disruptor.UprightNet.options.test_options import TestOptions
 import sys
-from data.data_loader import *
-from models.models import create_model
+from disruptor.UprightNet.data.data_loader import *
+from disruptor.UprightNet.models.models import create_model
 import random
 from tensorboardX import SummaryWriter
+from PIL import Image
 
-def get_roll_pitch(original_image_bytes, normal_image_bytes):
-    upright_path = 'disruptor/UprightNet'
-    from disruptor.sdquery import save_encoded_image #TODO import properly
-    import os
-    save_encoded_image(original_image_bytes, os.path.join(upright_path, 'imgs/rgb/users.png')) #TODO save to the right directory
-    save_encoded_image(normal_image_bytes, os.path.join(upright_path, 'imgs/normal_pair/users.png')) #TODO save to the right directory
+def save_image_size(image_path, output_file):
+    try:
+        # Open the image
+        with Image.open(image_path) as img:
+            # Get the dimensions
+            width, height = img.size
+
+            # Write dimensions to a text file
+            with open(output_file, 'w') as f:
+                f.write(f"{height} {width}")
+
+            print(f"Image size saved to '{output_file}' successfully.")
+    except Exception as e:
+        print(f"Error: {e}")
+
+def get_roll_pitch():
+    # from disruptor.sdquery import save_encoded_image #TODO import properly
+    # import os
+    # save_encoded_image(original_image_bytes, os.path.join(upright_path, 'imgs/rgb/users.png')) #TODO save to the right directory
+    # save_encoded_image(normal_image_bytes, os.path.join(upright_path, 'imgs/normal_pair/users.png')) #TODO save to the right directory
+    save_image_size('imgs/rgb/users.png', 'imgs/precomputed_crop_hw/users.txt')
     EVAL_BATCH_SIZE = 8
     opt = TestOptions().parse()  # set CUDA_VISIBLE_DEVICES before import torch
 
-    eval_list_path = upright_path + 'paths.txt'
+    eval_list_path = 'paths.txt'
     eval_num_threads = 3
     test_data_loader = CreateInferenceDataLoader(opt, eval_list_path,
                                                     False, EVAL_BATCH_SIZE,
@@ -48,7 +64,7 @@ def get_roll_pitch(original_image_bytes, normal_image_bytes):
             stacked_img = data[0]
 
             pred_cam_geo_unit, pred_up_geo_unit, pred_weights = model.infer_model(stacked_img)
-            from models.networks import JointLoss
+            from disruptor.UprightNet.models.networks import JointLoss
             pred_roll, pred_pitch = JointLoss.compute_angle_from_pred(pred_cam_geo_unit, pred_up_geo_unit, pred_weights)
             return pred_roll, pred_pitch
 

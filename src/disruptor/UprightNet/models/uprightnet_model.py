@@ -4,15 +4,15 @@ import torch
 import os
 
 from torch.autograd import Variable
-from .base_model import BaseModel
-from . import networks
+from disruptor.UprightNet.models.base_model import BaseModel
+from disruptor.UprightNet.models import networks
 import sys
 import os.path
 import cv2
 import torchvision.utils as vutils
 import torch.nn as nn
 
-import models.models_resnet as models_resnet
+import disruptor.UprightNet.models.models_resnet as models_resnet
 
 
 EPSILON = 1e-8

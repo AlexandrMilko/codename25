@@ -301,7 +301,8 @@ def save_image():
             return jsonify({'url': url_for('static', filename=f'images/{current_user.id}/applied.jpg')})
             # return jsonify({'url': file_path})
         except Exception as e:
-            print(e)
+            import traceback
+            traceback.print_exc()
             return jsonify({'url': url_for('static', filename=f'images/incorrect_image_message.png')})
 
     return jsonify({'error': 'Unknown error'})
