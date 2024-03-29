@@ -15,7 +15,7 @@ from PIL import Image
 import math
 import shutil
 
-from disruptor.tools import create_directory_if_not_exists, min_max_scale, move_file
+from disruptor.tools import create_directory_if_not_exists, min_max_scale, move_file, submit_post, save_encoded_image, get_encoded_image, run_preprocessor
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 MAX_CONTROLNET_IMAGE_RESOLUTION = 600
@@ -261,7 +261,7 @@ class GreenScreenImageQuery(Query):
 
     def run(self):
         # We run segmentation for our prerequisite image to see if segmentation was done correctly
-        run_preprocessor("seg_ofade20k", self.prerequisite_path, "seg_prerequisite.jpg")
+        run_preprocessor("seg_ofade20k", self.prerequisite_path, current_user.id, "seg_prerequisite.jpg")
 
         if self.style in ("Modern", "Art Deco"):
             set_xsarchitectural()
@@ -445,19 +445,19 @@ class GreenScreenImageQuery(Query):
         self.width = width
 
 
-def submit_post(url: str, data: dict):
-    """
-    Submit a POST request to the given URL with the given data.
-    """
-    return requests.post(url, data=json.dumps(data))
+# def submit_post(url: str, data: dict):
+#     """
+#     Submit a POST request to the given URL with the given data.
+#     """
+#     return requests.post(url, data=json.dumps(data))
 
 
-def save_encoded_image(b64_image: str, output_path: str):
-    """
-    Save the given image to the given output path.
-    """
-    with open(output_path, "wb") as image_file:
-        image_file.write(base64.b64decode(b64_image))
+# def save_encoded_image(b64_image: str, output_path: str):
+#     """
+#     Save the given image to the given output path.
+#     """
+#     with open(output_path, "wb") as image_file:
+#         image_file.write(base64.b64decode(b64_image))
 
 
 def set_deliberate():
@@ -481,11 +481,11 @@ def set_xsarchitectural():
     response = submit_post(options_url, data)
 
 
-def get_encoded_image(image_path):
-    img = cv2.imread(image_path)
-    # Encode into PNG and send to ControlNet
-    retval, bytes = cv2.imencode('.png', img)
-    return base64.b64encode(bytes).decode('utf-8')
+# def get_encoded_image(image_path):
+#     img = cv2.imread(image_path)
+#     # Encode into PNG and send to ControlNet
+#     retval, bytes = cv2.imencode('.png', img)
+#     return base64.b64encode(bytes).decode('utf-8')
 
 
 def change_image_size(input_path, output_path, target_size_kb=20):
@@ -538,26 +538,26 @@ def get_max_possible_size(input_path, target_resolution=MAX_CONTROLNET_IMAGE_RES
     return width, height
 
 
-def run_preprocessor(preprocessor_name, image_path, filename="preprocessed.jpg", res=512):
-    input_image = get_encoded_image(image_path)
-    data = {
-        "controlnet_module": preprocessor_name,
-        "controlnet_input_images": [input_image],
-        "controlnet_processor_res": res,
-        "controlnet_threshold_a": 64,
-        "controlnet_threshold_b": 64
-    }
-    preprocessor_url = 'http://127.0.0.1:7861/controlnet/detect'
-    response = submit_post(preprocessor_url, data)
-    output_dir = f"disruptor/static/images/{current_user.id}/preprocessed"
-    output_filepath = os.path.join(output_dir, filename)
-
-    # If there was no such dir, we create it and try again
-    try:
-        save_encoded_image(response.json()['images'][0], output_filepath)
-    except FileNotFoundError as e:
-        create_directory_if_not_exists(output_dir)
-        save_encoded_image(response.json()['images'][0], output_filepath)
+# def run_preprocessor(preprocessor_name, image_path, filename="preprocessed.jpg", res=512):
+#     input_image = get_encoded_image(image_path)
+#     data = {
+#         "controlnet_module": preprocessor_name,
+#         "controlnet_input_images": [input_image],
+#         "controlnet_processor_res": res,
+#         "controlnet_threshold_a": 64,
+#         "controlnet_threshold_b": 64
+#     }
+#     preprocessor_url = 'http://127.0.0.1:7861/controlnet/detect'
+#     response = submit_post(preprocessor_url, data)
+#     output_dir = f"disruptor/static/images/{current_user.id}/preprocessed"
+#     output_filepath = os.path.join(output_dir, filename)
+#
+#     # If there was no such dir, we create it and try again
+#     try:
+#         save_encoded_image(response.json()['images'][0], output_filepath)
+#     except FileNotFoundError as e:
+#         create_directory_if_not_exists(output_dir)
+#         save_encoded_image(response.json()['images'][0], output_filepath)
 
 
 def prep_bg_image(empty_space):
@@ -630,16 +630,13 @@ def prepare_masks(current_user):
 
 def apply_style(empty_space, text):
     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
-    es_img = Image.open(es_path)
-    width, height = es_img.size
-    run_preprocessor("normal_bae", es_path, "users.png", height)
-    move_file(es_path, "disruptor/UprightNet/imgs/rgb/users.png")
-    move_file(f"disruptor/static/images/{current_user.id}/preprocessed/users.png", "disruptor/UprightNet/imgs/normal_pair/users.png")
-    from disruptor.UprightNet.infer import get_roll_pitch
-    upright_path = 'disruptor/UprightNet'
-    os.chdir(upright_path)
-    print(get_roll_pitch())
-    os.chdir('../..')
+    import disruptor.stage as stage
+    room = stage.Room(es_path)
+    roll, pitch = room.find_roll_pitch(current_user.id)
+    walls = room.get_walls(current_user.id)
+    print(roll, pitch)
+    for wall in walls:
+        print(wall.find_angle())
 
 # def apply_style(empty_space, text):
 #     import os
