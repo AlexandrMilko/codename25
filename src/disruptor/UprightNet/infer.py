@@ -29,7 +29,9 @@ def save_image_size(image_path, output_file):
 
 def get_roll_pitch():
     # from disruptor.sdquery import save_encoded_image #TODO import properly
-    # import os
+    import os
+    upright_path = 'disruptor/UprightNet'
+    os.chdir(upright_path)
     # save_encoded_image(original_image_bytes, os.path.join(upright_path, 'imgs/rgb/users.png')) #TODO save to the right directory
     # save_encoded_image(normal_image_bytes, os.path.join(upright_path, 'imgs/normal_pair/users.png')) #TODO save to the right directory
     save_image_size('imgs/rgb/users.png', 'imgs/precomputed_crop_hw/users.txt')
@@ -66,6 +68,7 @@ def get_roll_pitch():
             pred_cam_geo_unit, pred_up_geo_unit, pred_weights = model.infer_model(stacked_img)
             from disruptor.UprightNet.models.networks import JointLoss
             pred_roll, pred_pitch = JointLoss.compute_angle_from_pred(pred_cam_geo_unit, pred_up_geo_unit, pred_weights)
+            os.chdir('../..')
             return pred_roll, pred_pitch
 
     return infer(model, test_dataset, global_step)
