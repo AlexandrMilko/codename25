@@ -1,6 +1,6 @@
 import argparse
 import os
-from util import util
+from disruptor.UprightNet.util import util
 
 def mkdirs(paths):
     if isinstance(paths, list) and not isinstance(paths, str):
@@ -23,7 +23,8 @@ class BaseOptions():
         self.parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints/', help='models are saved here')
  
         self.parser.add_argument('--log_comment', type=str, default='exp_upright_9_sphere_ls', help='tensorboard log dir comment')
-        self.parser.add_argument('--dataset', type=str, required=True, help='Dataset for training')
+        # We use scannet because stable diffusion normal_bae preprocessor was trained on scannet
+        self.parser.add_argument('--dataset', type=str, default='scannet', help='Dataset for training')
         self.parser.add_argument('--mode', type=str, default='ResNet', help='Network models')
 
         self.initialized = True

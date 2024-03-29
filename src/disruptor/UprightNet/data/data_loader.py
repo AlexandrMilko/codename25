@@ -1,4 +1,4 @@
-from data.dataset_loader import *
+from disruptor.UprightNet.data.dataset_loader import *
 
 
 def CreateInferenceDataLoader(opt, list_path,
