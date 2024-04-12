@@ -295,15 +295,17 @@ def save_image():
         file_path = directory + filename
         file.save(file_path)
 
-        try:
-            apply_style(filename, text)
-            # Return the URL of the saved image
-            return jsonify({'url': url_for('static', filename=f'images/{current_user.id}/applied.jpg')})
-            # return jsonify({'url': file_path})
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return jsonify({'url': url_for('static', filename=f'images/incorrect_image_message.png')})
+        apply_style(filename, text)
+        return jsonify({'url': url_for('static', filename=f'images/{current_user.id}/applied.jpg')})
+        # try:
+        #     apply_style(filename, text)
+        #     # Return the URL of the saved image
+        #     return jsonify({'url': url_for('static', filename=f'images/{current_user.id}/applied.jpg')})
+        #     # return jsonify({'url': file_path})
+        # except Exception as e:
+        #     import traceback
+        #     traceback.print_exc()
+        #     return jsonify({'url': url_for('static', filename=f'images/incorrect_image_message.png')})
 
     return jsonify({'error': 'Unknown error'})
 
