@@ -289,7 +289,7 @@ class GreenScreenImageQuery(Query):
             "height": self.height,
             # "seed": 123, # TODO add seed, before testing
             "mask": self.inpainting_mask_image_b64,
-            "mask_blur": 10,
+            "mask_blur": 3,
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
@@ -323,7 +323,7 @@ class GreenScreenImageQuery(Query):
         return response.json()['images'][0]
 
     def design(self):
-        self.denoising_strength = 0.75
+        self.denoising_strength = 0.6
         self.cfg_scale = 7
         self.steps = 20
 
@@ -632,11 +632,9 @@ def apply_style(empty_space, text):
     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
     import disruptor.stage as stage
     room = stage.Room(es_path)
-    roll, pitch = room.find_roll_pitch(current_user.id)
-    walls = room.get_walls(current_user.id)
-    print(roll, pitch)
-    for wall in walls:
-        print(wall.find_angle())
+    room.stage(text, current_user.id)
+    query = GreenScreenImageQuery(text)
+    query.run()
 
 # def apply_style(empty_space, text):
 #     import os

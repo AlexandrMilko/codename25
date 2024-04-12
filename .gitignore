@@ -22,3 +22,6 @@ src/disruptor/static/images/fav4.jpg
 src/disruptor/static/images/fav5.jpg
 src/instance/site.db
 src/disruptor/UprightNet/checkpoints
+src/disruptor/UprightNet/imgs/normal_pair/users.png
+src/disruptor/UprightNet/imgs/precomputed_crop_hw/users.txt
+src/disruptor/UprightNet/imgs/rgb/users.png

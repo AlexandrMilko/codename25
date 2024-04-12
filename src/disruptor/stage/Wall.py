@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from disruptor.stage.transform import four_point_transform
 
 class Wall:
-    def __init__(self, corners: list[int], image_path):
+    def __init__(self, corners: list[list[int]], image_path):
         self.corners = corners
         self.image_path = image_path
 
@@ -12,8 +12,23 @@ class Wall:
         yaw = four_point_transform(np.array(self.corners))[1]
         return yaw
 
-    def render_for_wall(self):
-        pass
+    def save_mask(self, save_path):
+        from PIL import Image, ImageDraw
+        # Open the image
+        image = Image.open(self.image_path)
+
+        # Create a new blank image with the same size as the original image
+        mask = Image.new("RGB", image.size, color=(0, 0, 0))
+
+        # Create a draw object
+        draw = ImageDraw.Draw(mask)
+        corners = [tuple(point) for point in self.corners]
+        # Draw a quadrilateral
+        draw.polygon(corners, fill=(255, 255, 255))
+
+        # Save the masked image
+        mask.save(save_path)
+
     @staticmethod
     def find_walls(seg_img_path):
         # We separate the walls from each other from a segmented image
