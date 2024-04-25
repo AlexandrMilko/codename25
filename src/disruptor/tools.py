@@ -229,69 +229,81 @@ def find_lowest_point(points):
     return lowest_point
 
 
-def find_bed_placement_coordinates(bed_back_mask_path, wall_mask_path, save_path=None):
-    # Load images
-    bed_back_mask = cv2.imread(bed_back_mask_path, cv2.IMREAD_GRAYSCALE)
+# def find_bed_placement_coordinates(bed_back_mask_path, wall_mask_path, save_path=None):
+#     # Load images
+#     bed_back_mask = cv2.imread(bed_back_mask_path, cv2.IMREAD_GRAYSCALE)
+#     wall_mask = cv2.imread(wall_mask_path, cv2.IMREAD_GRAYSCALE)
+#
+#     # Find contours in both masks
+#     bed_back_contours, _ = cv2.findContours(bed_back_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#     wall_contours, _ = cv2.findContours(wall_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#
+#     # Calculate centroid of bed contour
+#     bed_back_centroid = np.mean(bed_back_contours[0], axis=0)[0]
+#
+#     # Calculate offset from bed centroid to wall centroid
+#     wall_centroid = np.mean(wall_contours[0], axis=0)[0]
+#     offset_x = wall_centroid[0] - bed_back_centroid[0]
+#
+#     # Find lowest possible y-coordinate for the bed within wall boundaries
+#     bed_contour = bed_back_contours[0]
+#     wall_contour = wall_contours[0]
+#
+#     # Shift bed contour along x-axis
+#     bed_contour_shifted = bed_contour.copy()
+#     bed_contour_shifted[:, 0, 0] += int(offset_x)
+#
+#     wall_mask = cv2.imread(wall_mask_path)
+#     ordered_corners = order_points(np.array(get_corners(bed_contour_shifted, wall_mask)))
+#     br = ordered_corners[2]
+#     bl = ordered_corners[3]
+#     print(br, bl)
+#
+#     matching_br, matching_bl = find_matching_points(wall_contour, br, bl, 2)
+#     print(matching_br, matching_bl)
+#
+#     lowest_for_br = find_lowest_point(matching_br)
+#     lowest_for_bl = find_lowest_point(matching_bl)
+#     print(lowest_for_br, lowest_for_bl)
+#     offset_br_y = int(lowest_for_br[1] - br[1])
+#     offset_bl_y = int(lowest_for_bl[1] - bl[1])
+#     print(offset_br_y, offset_bl_y)
+#     offset_y = max(offset_br_y, offset_bl_y)
+#     print(offset_y)
+#
+#     if save_path:
+#         contours_image = cv2.imread(wall_mask_path)
+#         cv2.drawContours(contours_image, [wall_contour, bed_contour], -1, (255, 0, 0), 5)
+#         cv2.imwrite(save_path + "/contours_before.png", contours_image)
+#
+#         contours_image = cv2.imread(wall_mask_path)
+#         cv2.drawContours(contours_image, [wall_contour, bed_contour_shifted], -1, (255, 0, 0), 5)
+#         cv2.imwrite(save_path + "/contours_x.png", contours_image)
+#
+#         bed_contour_xy_shifted = bed_contour_shifted.copy()
+#         bed_contour_xy_shifted[:, 0, 1] += int(offset_y)
+#         contours_image = cv2.imread(wall_mask_path)
+#         cv2.drawContours(contours_image, [wall_contour, bed_contour_xy_shifted], -1, (255, 0, 0), 5)
+#         cv2.imwrite(save_path + "/contours_xy.png", contours_image)
+#     return int(offset_x), int(offset_y)
+
+def find_bed_placement_coordinates(wall_mask_path):
     wall_mask = cv2.imread(wall_mask_path, cv2.IMREAD_GRAYSCALE)
-
-    # Find contours in both masks
-    bed_back_contours, _ = cv2.findContours(bed_back_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     wall_contours, _ = cv2.findContours(wall_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Calculate centroid of bed contour
-    bed_back_centroid = np.mean(bed_back_contours[0], axis=0)[0]
 
     # Calculate offset from bed centroid to wall centroid
     wall_centroid = np.mean(wall_contours[0], axis=0)[0]
-    offset_x = wall_centroid[0] - bed_back_centroid[0]
+    pixel_x = wall_centroid[0]
+    pixel_y = wall_centroid[1]
 
-    # Find lowest possible y-coordinate for the bed within wall boundaries
-    bed_contour = bed_back_contours[0]
-    wall_contour = wall_contours[0]
-
-    # Shift bed contour along x-axis
-    bed_contour_shifted = bed_contour.copy()
-    bed_contour_shifted[:, 0, 0] += int(offset_x)
-
-    wall_mask = cv2.imread(wall_mask_path)
-    ordered_corners = order_points(np.array(get_corners(bed_contour_shifted, wall_mask)))
-    br = ordered_corners[2]
-    bl = ordered_corners[3]
-    print(br, bl)
-
-    matching_br, matching_bl = find_matching_points(wall_contour, br, bl, 2)
-    print(matching_br, matching_bl)
-
-    lowest_for_br = find_lowest_point(matching_br)
-    lowest_for_bl = find_lowest_point(matching_bl)
-    print(lowest_for_br, lowest_for_bl)
-    offset_br_y = int(lowest_for_br[1] - br[1])
-    offset_bl_y = int(lowest_for_bl[1] - bl[1])
-    print(offset_br_y, offset_bl_y)
-    offset_y = max(offset_br_y, offset_bl_y)
-    print(offset_y)
-
-    if save_path:
-        contours_image = cv2.imread(wall_mask_path)
-        cv2.drawContours(contours_image, [wall_contour, bed_contour], -1, (255, 0, 0), 5)
-        cv2.imwrite(save_path + "/contours_before.png", contours_image)
-
-        contours_image = cv2.imread(wall_mask_path)
-        cv2.drawContours(contours_image, [wall_contour, bed_contour_shifted], -1, (255, 0, 0), 5)
-        cv2.imwrite(save_path + "/contours_x.png", contours_image)
-
-        bed_contour_xy_shifted = bed_contour_shifted.copy()
-        bed_contour_xy_shifted[:, 0, 1] += int(offset_y)
-        contours_image = cv2.imread(wall_mask_path)
-        cv2.drawContours(contours_image, [wall_contour, bed_contour_xy_shifted], -1, (255, 0, 0), 5)
-        cv2.imwrite(save_path + "/contours_xy.png", contours_image)
-    return int(offset_x), int(offset_y)
+    return int(pixel_x), int(pixel_y)
 
 
 def create_mask_of_size(width, height):
     # Create a new black image with the same size
     black_mask = Image.new("RGB", (width, height), color=(0, 0, 0))
     return black_mask
+
 
 def create_furniture_mask(es_path, furniture_renders_paths: list, furniture_renders_offsets: list, save_path):
     try:
@@ -362,3 +374,10 @@ def overlay_images(fg_image_path, bg_image_path, output_path, coordinates):
     # Save or display the resulting image
     # img2.show()  # Display the resulting image
     img2.save(output_path)  # Save the resulting image
+
+
+def get_image_size(image_path):
+    image = Image.open(image_path)
+    width, height = image.size
+    image.close()
+    return width, height

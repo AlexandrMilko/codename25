@@ -6,17 +6,18 @@ from vedo import *
 
 
 class FurniturePiece:
-    def __init__(self, model_path, wall_projection_model_path, floor_projection_model_path, angles_offset):
+    scale = 1, 1, 1
+    offset_angles = 0, 0, 0
+
+    def __init__(self, model_path, wall_projection_model_path, floor_projection_model_path):
         (
             self.model_path,
             self.wall_projection_model_path,
             self.floor_projection_model_path,
-            self.angles_offset
         ) = (
             model_path,
             wall_projection_model_path,
             floor_projection_model_path,
-            angles_offset
         )
 
     def render_model(self, render_directory, angles: tuple[int, int, int]):
@@ -26,10 +27,9 @@ class FurniturePiece:
             # mesh = load("3ds/bed.obj").texture("Texture/20430_cat_diff_v1.jpg")
             # mesh.lighting('glossy') # change lighting (press k interactively)
             angle_x, angle_y, angle_z = angles
-            offset_x, offset_y, offset_z = self.angles_offset
-            mesh.rotateX(angle_x + offset_x)
-            mesh.rotateY(angle_y + offset_y)
-            mesh.rotateZ(angle_z + offset_z)
+            mesh.rotateX(angle_x)
+            mesh.rotateY(angle_y)
+            mesh.rotateZ(angle_z)
             vp += mesh
             vp.show()
             print("showed")
@@ -37,10 +37,21 @@ class FurniturePiece:
             save_path = os.path.join(render_directory, get_filename_without_extension(obj_path) + '.png')
             screenshot(save_path)
 
+    def get_scale(self):
+        return self.scale
+
+    def get_offset_angles(self):
+        return self.offset_angles
+
 
 class Bed(FurniturePiece):
+    # We use it to scale the model to metric units
+    scale = 0.01, 0.01, 0.01
+    # We use it to compensate the angle if the model is originally rotated in a wrong way
+    offset_angles = 0, 0, 90
+
     def __init__(self, model_path='disruptor/stage/3Ds/bedroom/bed/bed.obj',
                  wall_projection_model_path='disruptor/stage/3Ds/bedroom/bed/bed_back.obj',
                  floor_projection_model_path='disruptor/stage/3Ds/bedroom/bed/bed_bottom.obj',
-                 angles_offset=(0, 90, 0)):
-        super().__init__(model_path, wall_projection_model_path, floor_projection_model_path, angles_offset)
+                 ):
+        super().__init__(model_path, wall_projection_model_path, floor_projection_model_path)

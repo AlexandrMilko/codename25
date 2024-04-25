@@ -1,7 +1,7 @@
 # import the necessary packages
 import numpy as np
 import cv2
-from disruptor.tools import order_points
+from disruptor.tools import order_points, get_image_size
 
 def plot_points(pts):
     import matplotlib.pyplot as plt
@@ -52,13 +52,15 @@ def yaw_rot(lst):
 def pitch_rot(lst):
     return abs(lst[0])
 
-def extract_angle_new(H):
+def extract_angle_new(H, height, width):
     import disruptor.stage.shapeUtil as su
+    from disruptor.stage.depth_estimation import get_intrinsics
     # Define the camera matrix (example)
-    K = np.matrix([
-        [476.7, 0.0, 400.0],
-        [0.0, 476.7, 400.0],
-        [0.0, 0.0, 1.0]])
+    # K = np.matrix([
+    #     [476.7, 0.0, 400.0],
+    #     [0.0, 476.7, 400.0],
+    #     [0.0, 0.0, 1.0]])
+    K = get_intrinsics(height, width)
 
     (R, T) = su.decHomography(K, H)
     Rot = su.decRotation(R)
@@ -88,7 +90,7 @@ def extract_angle_new(H):
 
 
 # def four_point_transform(image, pts):
-def four_point_transform(pts):
+def four_point_transform(pts, image_path):
     # obtain a consistent order of the points and unpack them
     # individually
     rect = order_points(pts)
@@ -119,7 +121,9 @@ def four_point_transform(pts):
     M = cv2.getPerspectiveTransform(rect, dst)
 
     # print(tl, tr, br, bl)
-    xyz_deg = extract_angle_new(M)
+    from PIL import Image
+    width, height = get_image_size(image_path)
+    xyz_deg = extract_angle_new(M, height, width)
     # print(xyz_deg, "ANGLES")
 
     # warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
