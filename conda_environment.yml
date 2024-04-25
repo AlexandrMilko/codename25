@@ -169,4 +169,5 @@ dependencies:
   - zstd=1.5.5=hc292b87_0
   - pip:
       - opencv-python==4.9.0.80
+      - timm==0.6.7
 prefix: /root/miniconda3/envs/env

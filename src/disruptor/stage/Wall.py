@@ -4,13 +4,56 @@ import matplotlib.pyplot as plt
 from disruptor.stage.transform import four_point_transform
 
 class Wall:
-    def __init__(self, corners: list[list[int]], image_path):
+    def __init__(self, corners: list[list[int]], image_path: str, centroids: list[list[int]]):
         self.corners = corners
         self.image_path = image_path
+        self.left_centroid, self.right_centroid = centroids
 
-    def find_angle(self):
-        yaw = four_point_transform(np.array(self.corners))[1]
+    def find_angle_from_2d(self):
+        yaw = four_point_transform(np.array(self.corners), self.image_path)[1]
         return yaw
+
+    def find_angle_from_3d(self, room, compensate_pitch_rad, compensate_roll_rad):
+        # # We consider only top corners. Taking bottom corners additionally doesnt give us any more useful info
+        # top_left, top_right = self.corners[:2]
+
+        # We use left and right centroids,
+        # because sometimes depth estimation models is not accurate and it thinks
+        # corner is a pixel on a wall next to our wall, so it outputs wrong 3D position
+        # Additionally, sometimes our corners are estimated incorrectly due to watershed algo errors when
+        # there is a small wall next to our wall
+        try:
+            from disruptor.stage.depth_estimation import image_pixel_list_to_3d, rotate_3d_point
+            points_3d = image_pixel_list_to_3d(room.original_image_path, [self.left_centroid, self.right_centroid])
+            points_3d_before_camera_rotation = [rotate_3d_point(point, compensate_pitch_rad, compensate_roll_rad) for point in points_3d]
+        except Exception as e:
+            raise e
+
+        points_3d_before_camera_rotation = np.array(points_3d_before_camera_rotation)
+        # Project points onto the XY plane (ignoring Z-coordinate)
+        projected_points = points_3d_before_camera_rotation[:, :2]
+
+        # Calculate the angle between the vector formed by the first and last projected points and the positive, negative X-axis
+        vec1 = projected_points[-1] - projected_points[0]
+        pos_x = np.array([1, 0])  # Positive X-axis
+        neg_x = np.array([-1, 0])  # Negative X-axis
+        angle_pos = np.arccos(np.dot(vec1, pos_x) / (np.linalg.norm(vec1) * np.linalg.norm(pos_x)))
+        angle_neg = np.arccos(np.dot(vec1, neg_x) / (np.linalg.norm(vec1) * np.linalg.norm(neg_x)))
+
+        # Convert angle from radians to degrees
+        angle_pos_degrees = np.degrees(angle_pos)
+        angle_neg_degrees = np.degrees(angle_neg)
+
+        cross_product_pos = np.cross(vec1, pos_x)
+        rotation_direction_pos = np.sign(cross_product_pos)
+
+        cross_product_neg = np.cross(vec1, neg_x)
+        rotation_direction_neg = np.sign(cross_product_neg)
+
+        # We take the angle whichever is smaller from two angles: angle with positive and negative x-axis
+        if angle_pos_degrees < angle_neg_degrees:
+            return -angle_pos_degrees * rotation_direction_pos
+        return -angle_neg_degrees * rotation_direction_neg
 
     def save_mask(self, save_path):
         from PIL import Image, ImageDraw
@@ -69,11 +112,13 @@ class Wall:
 
         filtered_classes = Wall.filter_walls(labels)
 
-        walls_corners = Wall.find_corners_of_labeled_regions(labels, filtered_classes)
+        walls_corners, walls_centroids = Wall.find_corners_of_labeled_regions(labels, filtered_classes)
 
         walls = []
-        for wall_corners in walls_corners.values():
-            walls.append(Wall(wall_corners, seg_img_path))
+        for label in walls_corners.keys():
+            wall_corners = walls_corners[label]
+            wall_centroids = walls_centroids[label]
+            walls.append(Wall(wall_corners, seg_img_path, wall_centroids))
 
         # fig.tight_layout()
         # plt.show()
@@ -93,6 +138,7 @@ class Wall:
     @staticmethod
     def find_corners_of_labeled_regions(label_array, filtered_classes):
         walls_corners = dict()
+        walls_centroids = dict()
         for label in filtered_classes:
             if label == 0: continue
             mask = np.uint8(label_array == label) * 255  # Convert to 0 or 255
@@ -101,6 +147,7 @@ class Wall:
             contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             epsilon = 0.05 * cv2.arcLength(contours[0], True)  # Adjust epsilon as needed
             approx = cv2.approxPolyDP(contours[0], epsilon, True)
+            centroids = Wall.find_left_right_centroids(contours[0])
             mask_approx = np.zeros_like(mask)
             # cv2.drawContours(mask_approx, [approx], -1, 255, -1)
             # Convert single-channel mask to 3-channel for Harris corner detection
@@ -139,8 +186,28 @@ class Wall:
                 cluster_centers[cluster_number] = np.flip(center) # To make it x,y and not y,x
 
             walls_corners[label] = [x_y for x_y in cluster_centers.values()]
+            walls_centroids[label] = centroids
 
-        return walls_corners
+        return walls_corners, walls_centroids
+    @staticmethod
+    def find_left_right_centroids(wall_contour):
+        M = cv2.moments(wall_contour)
+        centroid_x = int(M["m10"] / M["m00"])
+
+        contour_left_half = wall_contour[wall_contour[:, :, 0] < centroid_x]
+        contour_right_half = wall_contour[wall_contour[:, :, 0] >= centroid_x]
+
+        # Compute moments for left and right halves
+        moments_left = cv2.moments(contour_left_half)
+        moments_right = cv2.moments(contour_right_half)
+
+        # Calculate centroids
+        centroid_left = (
+            int(moments_left["m10"] / moments_left["m00"]), int(moments_left["m01"] / moments_left["m00"]))
+        centroid_right = (
+            int(moments_right["m10"] / moments_right["m00"]), int(moments_right["m01"] / moments_right["m00"]))
+
+        return centroid_left, centroid_right
 
 if __name__ == "__main__":
     walls = Wall.find_walls('../test_imgs/39Before.jpg')
@@ -150,4 +217,4 @@ if __name__ == "__main__":
     # walls = Wall.find_walls('test_imgs/349Before.jpg')
 
     for wall in walls:
-        print(wall.find_angle())
+        print(wall.find_angle_from_2d())
