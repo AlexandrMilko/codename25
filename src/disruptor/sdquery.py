@@ -23,7 +23,7 @@ MAX_CONTROLNET_IMAGE_RESOLUTION = 600
 
 class Query:
     negative_prompt = "ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish, text"
-    sampler_name = "DPM2 Karras"
+    sampler_name = "DPM2"
 
 
 class TextQuery(Query):
