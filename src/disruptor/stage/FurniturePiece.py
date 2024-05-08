@@ -2,7 +2,7 @@ import os.path
 
 from disruptor.stage import Room
 from disruptor.tools import get_filename_without_extension, create_directory_if_not_exists
-from vedo import *
+# from vedo import *
 
 
 class FurniturePiece:
@@ -20,22 +20,22 @@ class FurniturePiece:
             floor_projection_model_path,
         )
 
-    def render_model(self, render_directory, angles: tuple[int, int, int]):
-        for obj_path in (self.model_path, self.wall_projection_model_path, self.floor_projection_model_path):
-            vp = Plotter(axes=0, offscreen=True)
-            mesh = load(obj_path)
-            # mesh = load("3ds/bed.obj").texture("Texture/20430_cat_diff_v1.jpg")
-            # mesh.lighting('glossy') # change lighting (press k interactively)
-            angle_x, angle_y, angle_z = angles
-            mesh.rotateX(angle_x)
-            mesh.rotateY(angle_y)
-            mesh.rotateZ(angle_z)
-            vp += mesh
-            vp.show()
-            print("showed")
-            create_directory_if_not_exists(render_directory)
-            save_path = os.path.join(render_directory, get_filename_without_extension(obj_path) + '.png')
-            screenshot(save_path)
+#    def render_model(self, render_directory, angles: tuple[int, int, int]):
+#        for obj_path in (self.model_path, self.wall_projection_model_path, self.floor_projection_model_path):
+#            vp = Plotter(axes=0, offscreen=True)
+#            mesh = load(obj_path)
+#            # mesh = load("3ds/bed.obj").texture("Texture/20430_cat_diff_v1.jpg")
+#            # mesh.lighting('glossy') # change lighting (press k interactively)
+#            angle_x, angle_y, angle_z = angles
+#            mesh.rotateX(angle_x)
+#            mesh.rotateY(angle_y)
+#            mesh.rotateZ(angle_z)
+#            vp += mesh
+#            vp.show()
+#            print("showed")
+#            create_directory_if_not_exists(render_directory)
+#            save_path = os.path.join(render_directory, get_filename_without_extension(obj_path) + '.png')
+#            screenshot(save_path)
 
     def get_scale(self):
         return self.scale

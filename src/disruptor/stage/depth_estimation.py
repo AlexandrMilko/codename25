@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import torch
+import gc
 
 def pixel_to_3d(camera_intrinsics, depth_image, pixel_coord):
     """Converts a 2D pixel coordinate to 3D position relative to camera center.
@@ -160,66 +161,75 @@ def get_intrinsics(H,W):
 
 def image_pixel_list_to_3d(image_path, pixels_coordinates: list[list[int,int]]):
     from PIL import Image
-    DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = torch.hub.load('isl-org/ZoeDepth', "ZoeD_NK", pretrained=True).to(DEVICE).eval()
-    image = Image.open(image_path)
+    with torch.no_grad():
+        DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+        model = torch.hub.load('isl-org/ZoeDepth', "ZoeD_NK", pretrained=True).to(DEVICE).eval()
+        image = Image.open(image_path)
 
-    # TODO play with this thumbnail if your depth 3d representation is squeezed
-    image.thumbnail((1024, 1024))  # limit the size of the input image
-    depth = predict_depth(model, image)
-    print("DEPTH PREDICTED FOR WALL CORNERS")
-    camera_intrinsics = get_intrinsics(depth.shape[0], depth.shape[1])
-    points_3d = []
-    for x, y in pixels_coordinates:
-        print("POINT being processed: ", x, y)
-        point_3d = transform_to_blender_xyz(*pixel_to_3d(camera_intrinsics, depth, (x, y)))
-        print(f"{x, y} -> {point_3d}")
-        points_3d.append(point_3d)
-    print("ALL POINTS WERE ADDED")
-    del depth
-    del image
-    torch.cuda.empty_cache()
-    print("RETURNED")
-    return points_3d
+        # TODO play with this thumbnail if your depth 3d representation is squeezed
+        image.thumbnail((1024, 1024))  # limit the size of the input image
+        depth = predict_depth(model, image)
+        print("DEPTH PREDICTED FOR WALL CORNERS")
+        camera_intrinsics = get_intrinsics(depth.shape[0], depth.shape[1])
+        points_3d = []
+        for x, y in pixels_coordinates:
+            print("POINT being processed: ", x, y)
+            point_3d = transform_to_blender_xyz(*pixel_to_3d(camera_intrinsics, depth, (x, y)))
+            print(f"{x, y} -> {point_3d}")
+            points_3d.append(point_3d)
+        print("ALL POINTS WERE ADDED")
+        del depth
+        del image
+        del model
+        gc.collect()
+        torch.cuda.empty_cache()
+        print("RETURNED")
+        return points_3d
 
 def image_pixel_to_3d(image_path, pixel_coordinates):
     from PIL import Image
-    DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = torch.hub.load('isl-org/ZoeDepth', "ZoeD_NK", pretrained=True).to(DEVICE).eval()
-    image = Image.open(image_path)
+    with torch.no_grad():
+        DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+        model = torch.hub.load('isl-org/ZoeDepth', "ZoeD_NK", pretrained=True).to(DEVICE).eval()
+        image = Image.open(image_path)
 
-    # TODO play with this thumbnail if your depth 3d representation is squeezed
-    image.thumbnail((1024, 1024))  # limit the size of the input image
-    depth = predict_depth(model, image)
+        # TODO play with this thumbnail if your depth 3d representation is squeezed
+        image.thumbnail((1024, 1024))  # limit the size of the input image
+        depth = predict_depth(model, image)
 
-    camera_intrinsics = get_intrinsics(depth.shape[0], depth.shape[1])
-    pixel_3d = transform_to_blender_xyz(*pixel_to_3d(camera_intrinsics, depth, pixel_coordinates))
+        camera_intrinsics = get_intrinsics(depth.shape[0], depth.shape[1])
+        pixel_3d = transform_to_blender_xyz(*pixel_to_3d(camera_intrinsics, depth, pixel_coordinates))
 
-    del depth
-    del image
-    torch.cuda.empty_cache()
-    return pixel_3d
+        del depth
+        del image
+        del model
+        gc.collect()
+        torch.cuda.empty_cache()
+        return pixel_3d
 def image_pixels_to_3d(image_path, output_fname):
     from PIL import Image
-    DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = torch.hub.load('isl-org/ZoeDepth', "ZoeD_NK", pretrained=True).to(DEVICE).eval()
-    image = Image.open(image_path)
+    with torch.no_grad():
+        DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+        model = torch.hub.load('isl-org/ZoeDepth', "ZoeD_NK", pretrained=True).to(DEVICE).eval()
+        image = Image.open(image_path)
 
-    # TODO play with this thumbnail if your depth 3d representation is squeezed
-    image.thumbnail((1024, 1024))  # limit the size of the input image
-    depth = predict_depth(model, image)
+        # TODO play with this thumbnail if your depth 3d representation is squeezed
+        image.thumbnail((1024, 1024))  # limit the size of the input image
+        depth = predict_depth(model, image)
 
-    camera_intrinsics = get_intrinsics(depth.shape[0], depth.shape[1])
-    print(depth.shape[0], depth.shape[1], "depth IMAGE size")
+        camera_intrinsics = get_intrinsics(depth.shape[0], depth.shape[1])
+        print(depth.shape[0], depth.shape[1], "depth IMAGE size")
 
-    pixel_coords_3d = get_pixel_3d_coords(camera_intrinsics, depth)
-    with open(output_fname, "w") as f:
-        for coord in pixel_coords_3d:
-            f.write(f"{coord[0]},{coord[1]},{coord[2]}\n")
+        pixel_coords_3d = get_pixel_3d_coords(camera_intrinsics, depth)
+        with open(output_fname, "w") as f:
+            for coord in pixel_coords_3d:
+                f.write(f"{coord[0]},{coord[1]},{coord[2]}\n")
 
-    del depth
-    del image
-    torch.cuda.empty_cache()
+        del depth
+        del image
+        del model
+        gc.collect()
+        torch.cuda.empty_cache()
 
 def rotate_3d_points(input_fname, output_fname, pitch_rad, roll_rad): # We rotate them to restore the original global coordinates which were moved due to camera rotation
     # Read points from the .txt file
