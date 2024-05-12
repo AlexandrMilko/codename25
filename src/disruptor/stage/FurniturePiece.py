@@ -1,10 +1,11 @@
+import math
 import os.path
 import cv2
 import numpy as np
 
 from disruptor.stage import Room
+from sklearn.cluster import KMeans
 from disruptor.tools import get_filename_without_extension, create_directory_if_not_exists
-# from vedo import *
 
 
 class FurniturePiece:
@@ -42,7 +43,7 @@ class Bed(FurniturePiece):
         super().__init__(model_path, wall_projection_model_path, floor_projection_model_path)
 
     @staticmethod
-    def find_placement_pixel(wall_mask_path):
+    def find_placement_pixel(wall_mask_path) -> list[list[int]]: # list[list[int]] We return list of coordinates, because some of the furniture pieces, like curtains have numerous copies in the room
         wall_mask = cv2.imread(wall_mask_path, cv2.IMREAD_GRAYSCALE)
         wall_contours, _ = cv2.findContours(wall_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -51,7 +52,89 @@ class Bed(FurniturePiece):
         pixel_x = wall_centroid[0]
         pixel_y = wall_centroid[1]
 
-        return int(pixel_x), int(pixel_y)
+        return [[int(pixel_x), int(pixel_y)]]
 
 class Curtain(FurniturePiece):
-    pass
+    scale = 0.01, 0.01, 0.01
+    # We use it to compensate the angle if the model is originally rotated in a wrong way
+    default_angles = 0, 0, 90
+    def __init__(self, model_path='disruptor/stage/3Ds/bedroom/curtain/curtain.obj',
+                 wall_projection_model_path='disruptor/stage/3Ds/bedroom/curtain/curtain.obj',
+                 floor_projection_model_path='disruptor/stage/3Ds/bedroom/curtain/curtain.obj',
+                 ):
+        super().__init__(model_path, wall_projection_model_path, floor_projection_model_path)
+
+    @staticmethod
+    def find_perspective_angle(x1, y1, x2, y2):
+        dx = x2 - x1
+        dy = y2 - y1
+        angle_radians = math.atan2(dy, dx)
+        angle_degrees = math.degrees(angle_radians)
+        if angle_degrees < 0:
+            angle_degrees += 360
+        return angle_degrees
+
+    @staticmethod
+    def find_placement_pixel(window_mask_path: str) -> list[list[int]]:
+        '''
+
+        Args:
+            img_name: название маски окна, важно что бы она была в папке my_test/masked/
+
+        Returns:
+            list[int]: массив коoрдинат точек гардин в формате [[(x1, y1), (x2, y2)]]
+                                                                    |          |
+                                                            левая точка    правая точка
+                                                                    |___________|
+                                                                          |
+                                                                   гардина целиком
+        '''
+        img = cv2.imread(window_mask_path)  # Замените на ваш путь к файлу
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        number_of_windows = Room.find_number_of_windows(window_mask_path)
+
+        corners = cv2.goodFeaturesToTrack(gray, number_of_windows * 4, 0.01, 40)
+        corners = np.int0(corners)
+
+        # Кластеризация точек
+        kmeans = KMeans(n_clusters=number_of_windows)
+        points = np.array([i.ravel() for i in corners])
+        kmeans.fit(points)
+        labels = kmeans.labels_
+        saved_points = []
+
+        # Определение и визуализация верхних точек каждого кластера
+        for i in range(number_of_windows):
+            cluster_points = points[labels == i]
+            # Сортировка по Y и выбор двух верхних точек
+            top_points = cluster_points[np.argsort(cluster_points[:, 1])][:2]
+            for point in top_points:
+                saved_points.append(point)
+
+        final_points = []
+
+        for i in range(0, len(saved_points), 2):
+            top_left_point = saved_points[i]
+            top_right_point = saved_points[i + 1]
+            x1, y1 = top_left_point[0], top_left_point[1]
+            x2, y2 = top_right_point[0], top_right_point[1]
+
+            # Вычисление угла в радианах
+            angle_radians = math.radians(Curtain.find_perspective_angle(x1, y1, x2, y2))
+
+            # Вычисление координат точек слева и справа от верхних углов
+            right_top_point = (
+                int(top_left_point[0] - 20 * math.cos(angle_radians)), -10 + int(top_left_point[1] - 130 * math.sin(angle_radians)))
+            left_top_point = (
+                int(top_right_point[0] + 20 * math.cos(angle_radians)), -10 + int(top_right_point[1] - 20 * math.sin(angle_radians)))
+            point = [left_top_point, right_top_point]
+            final_points.append(point)
+            # print("Координаты точек слева и справа от верхних углов:")
+            # print(left_top_point, right_top_point)
+        #     cv2.circle(img, right_top_point, 3, (0, 255, 0), -1)  # зеленая точка - справа
+        #     cv2.circle(img, left_top_point, 3, (0, 0, 255), -1)   # красная точка - слева
+        return final_points
+        # cv2.imshow('Image with Points', img)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()

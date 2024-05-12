@@ -1,3 +1,4 @@
+import cv2
 from PIL import Image
 import os
 from disruptor.tools import move_file, run_preprocessor, copy_file, convert_to_mask, overlay_images, create_furniture_mask
@@ -67,17 +68,14 @@ class Room:
         obj_offsets_floor = obj_offsets.copy()
         obj_offsets_floor[2] = 0
 
-        print("BED coords")
+        print("Furniture coords")
+        print(obj_offsets, "obj_offsets")
         print(obj_offsets_floor, "obj_offsets for blender with floor z axis")
         print(obj_angles, "obj_angles")
         print(yaw_angle, "yaw_angle")
         print(obj_scale, "obj_scale")
         print(camera_angles, "camera_angles")
         print(camera_location, "camera_location")
-
-        print()
-
-        print("Curtains coords")
         # furniture.render_model(f'disruptor/static/images/{current_user_id}/preprocessed/furniture_render', (roll, yaw, pitch))
         # for filename in os.listdir(render_directory):
         #     if 'back' in filename or 'bottom' in filename:
@@ -110,3 +108,22 @@ class Room:
         rotated_points = rotate_3d_points(points_filepath, rotated_points_filepath, compensate_pitch, compensate_roll)
         camera_height = find_abs_min_z(rotated_points)
         return camera_height
+
+    @staticmethod
+    def find_number_of_windows(windows_mask_path: str) -> int:
+        # Загрузка изображения
+        img = cv2.imread(windows_mask_path, cv2.IMREAD_GRAYSCALE)  # Укажите правильный путь к файлу
+        # Адаптивная пороговая обработка
+        thresh = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+        # Морфологические операции для разделения окон
+        kernel = np.ones((3, 3), np.uint8)
+        thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)  # Увеличьте iterations, если нужно
+        # Поиск контуров
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Визуализация результатов
+        img_contours = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  # Переводим в цвет для визуализации контуров
+        cv2.drawContours(img_contours, contours, -1, (0, 255, 0), 3)
+        # Подсчет количества окон
+        number_of_windows = len(contours)
+
+        return number_of_windows

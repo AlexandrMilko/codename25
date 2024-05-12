@@ -20,8 +20,9 @@ class Bedroom(Room):
                 wall = walls[i]
                 render_directory = f'disruptor/static/images/{current_user_id}/preprocessed/furniture_render'
                 wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
-                pixel_for_placing = furniture_piece.find_placement_pixel(os.path.join(render_directory, 'wall_mask.png'))
+                pixels_for_placing = furniture_piece.find_placement_pixel(os.path.join(render_directory, 'wall_mask.png'))
                 yaw_angle = wall.find_angle_from_3d(self, compensate_pitch, compensate_roll)
-                self.add_furniture(furniture_piece, pixel_for_placing, yaw_angle, (roll, pitch), current_user_id)
+                for pixel in pixels_for_placing:
+                    self.add_furniture(furniture_piece, pixel, yaw_angle, (roll, pitch), current_user_id)
             except IndexError:
                 break
