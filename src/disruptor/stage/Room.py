@@ -131,6 +131,7 @@ class Room:
     @staticmethod
     def save_windows_mask(windows_mask_path: str, current_user_id):
         segmented_es_path = f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png'
+        image = cv2.imread(segmented_es_path)
         rgb_values = Room.window_color
 
         # Define the lower and upper bounds for the color
@@ -139,7 +140,7 @@ class Room:
         upper_color = np.array([x + tolerance for x in rgb_values])
 
         # Create a mask for the color
-        color_mask = cv2.inRange(segmented_es_path, lower_color, upper_color)
+        color_mask = cv2.inRange(image, lower_color, upper_color)
 
         # Create a black and white mask
         bw_mask = np.zeros_like(color_mask)
