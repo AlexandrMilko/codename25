@@ -3,7 +3,7 @@ import os.path
 import cv2
 import numpy as np
 
-from disruptor.stage import Room
+from disruptor.stage.Room import Room
 from sklearn.cluster import KMeans
 from disruptor.tools import get_filename_without_extension, create_directory_if_not_exists
 
