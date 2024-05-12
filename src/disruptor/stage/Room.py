@@ -1,7 +1,7 @@
 from PIL import Image
 import os
-from disruptor.tools import move_file, run_preprocessor, copy_file, convert_to_mask, find_bed_placement_coordinates, overlay_images, create_furniture_mask
-from disruptor.stage.FurniturePiece import FurniturePiece, Bed
+from disruptor.tools import move_file, run_preprocessor, copy_file, convert_to_mask, overlay_images, create_furniture_mask
+from disruptor.stage.FurniturePiece import FurniturePiece
 from disruptor.stage.Wall import Wall
 import numpy as np
 
