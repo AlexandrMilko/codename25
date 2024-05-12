@@ -3,7 +3,7 @@ import os.path
 import cv2
 import numpy as np
 
-from disruptor.stage.Room import Room
+from disruptor.stage import Room
 from sklearn.cluster import KMeans
 from disruptor.tools import get_filename_without_extension, create_directory_if_not_exists
 
@@ -126,7 +126,7 @@ class Curtain(FurniturePiece):
         img = cv2.imread(window_mask_path)  # Замените на ваш путь к файлу
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        number_of_windows = Room.find_number_of_windows(window_mask_path)
+        number_of_windows = Room.Room.find_number_of_windows(window_mask_path)
 
         corners = cv2.goodFeaturesToTrack(gray, number_of_windows * 4, 0.01, 40)
         corners = np.int0(corners)
