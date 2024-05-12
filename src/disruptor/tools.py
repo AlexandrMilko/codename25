@@ -287,16 +287,16 @@ def find_lowest_point(points):
 #         cv2.imwrite(save_path + "/contours_xy.png", contours_image)
 #     return int(offset_x), int(offset_y)
 
-def find_bed_placement_coordinates(wall_mask_path):
-    wall_mask = cv2.imread(wall_mask_path, cv2.IMREAD_GRAYSCALE)
-    wall_contours, _ = cv2.findContours(wall_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Calculate offset from bed centroid to wall centroid
-    wall_centroid = np.mean(wall_contours[0], axis=0)[0]
-    pixel_x = wall_centroid[0]
-    pixel_y = wall_centroid[1]
-
-    return int(pixel_x), int(pixel_y)
+# def find_bed_placement_coordinates(wall_mask_path):
+#     wall_mask = cv2.imread(wall_mask_path, cv2.IMREAD_GRAYSCALE)
+#     wall_contours, _ = cv2.findContours(wall_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#
+#     # Calculate offset from bed centroid to wall centroid
+#     wall_centroid = np.mean(wall_contours[0], axis=0)[0]
+#     pixel_x = wall_centroid[0]
+#     pixel_y = wall_centroid[1]
+#
+#     return int(pixel_x), int(pixel_y)
 
 
 def create_mask_of_size(width, height):
@@ -381,3 +381,8 @@ def get_image_size(image_path):
     width, height = image.size
     image.close()
     return width, height
+
+def find_abs_min_z(points):
+    # Find the minimum z-coordinate among the points
+    min_z = np.min(points[:, 2])
+    return abs(min_z)

@@ -275,11 +275,6 @@ def rotate_3d_point(point: tuple[float, float, float], pitch_rad, roll_rad):
     rotated_point = point.dot(rotation_matrix_x(pitch_rad).T).dot(rotation_matrix_y(roll_rad).T)
     return rotated_point
 
-def estimate_camera_height(points):
-    # Find the minimum z-coordinate among the points
-    min_z = np.min(points[:, 2])
-    return abs(min_z)
-
 if __name__ == "__main__":
     image_pixels_to_3d('10_empty.jpg', '3d_coords.txt')
     rotate_3d_points('3d_coords.txt', '3d_coords_rotated.txt', np.deg2rad(-18.33465), np.deg2rad(-15))
