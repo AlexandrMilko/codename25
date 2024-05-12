@@ -51,44 +51,44 @@ class Room:
     #             break
 
 
-    def add_furniture(self, furniture: FurniturePiece, placement_pixel: tuple[int, int], yaw_angle: float, camera_angles: tuple[float, float], current_user_id): # Saves corresponding mask and render
-        from math import radians
-        roll, pitch = camera_angles
-        compensate_pitch = -radians(pitch)
-        compensate_roll = -radians(roll)
-        default_angles = furniture.get_default_angles()
-
-        obj_offsets = self.infer_3d(placement_pixel, compensate_pitch, compensate_roll) # We set negative rotation to compensate
-        obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(default_angles[2] + yaw_angle)  # In blender, yaw angle is around z axis. z axis is to the top
-        obj_scale = furniture.get_scale()
-        # We set opposite
-        camera_angles = radians(90) + compensate_pitch, -compensate_roll, 0 # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
-        camera_height = self.estimate_camera_height((compensate_pitch, compensate_roll), current_user_id)
-        camera_location = 0, 0, camera_height
-        obj_offsets_floor = obj_offsets.copy()
-        obj_offsets_floor[2] = 0
-
-        print("Furniture coords")
-        print(obj_offsets, "obj_offsets")
-        print(obj_offsets_floor, "obj_offsets for blender with floor z axis")
-        print(obj_angles, "obj_angles")
-        print(yaw_angle, "yaw_angle")
-        print(obj_scale, "obj_scale")
-        print(camera_angles, "camera_angles")
-        print(camera_location, "camera_location")
-        # furniture.render_model(f'disruptor/static/images/{current_user_id}/preprocessed/furniture_render', (roll, yaw, pitch))
-        # for filename in os.listdir(render_directory):
-        #     if 'back' in filename or 'bottom' in filename:
-        #         convert_to_mask(os.path.join(render_directory, filename))
-        # # coords_for_placing = find_bed_placement_coordinates(os.path.join(render_directory, 'bed_back.png'), os.path.join(render_directory, 'wall_mask.png'), render_directory)
-        # create_furniture_mask(self.original_image_path, [os.path.join(render_directory, 'bed.png')], [coords_for_placing], f'disruptor/static/images/{current_user_id}/preprocessed/inpainting_mask.png')
-        # overlay_images(os.path.join(render_directory, 'bed_back.png'), os.path.join(render_directory, 'wall_mask.png'), f'disruptor/static/images/{current_user_id}/preprocessed/test.png', coords_for_placing)
-        # overlay_images(os.path.join(render_directory, 'bed.png'), self.original_image_path, f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.jpg', coords_for_placing)
-        # # convert to masks
-        # # scale the renders to 0.4 height of wall height(write get_height in Wall)
-        # # write a function that adds an image to a specific location in another image (use create_pngs.py and preprocess_for_empty_space.py)
-        # # add render onto your prerequisite which is original_image_copy in the beginning
-        # # write a function that positions it properly
+    # def add_furniture(self, furniture: FurniturePiece, placement_pixel: tuple[int, int], yaw_angle: float, camera_angles: tuple[float, float], current_user_id): # Saves corresponding mask and render
+    #     from math import radians
+    #     roll, pitch = camera_angles
+    #     compensate_pitch = -radians(pitch)
+    #     compensate_roll = -radians(roll)
+    #     default_angles = furniture.get_default_angles()
+    #
+    #     obj_offsets = self.infer_3d(placement_pixel, compensate_pitch, compensate_roll) # We set negative rotation to compensate
+    #     obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(default_angles[2] + yaw_angle)  # In blender, yaw angle is around z axis. z axis is to the top
+    #     obj_scale = furniture.get_scale()
+    #     # We set opposite
+    #     camera_angles = radians(90) + compensate_pitch, -compensate_roll, 0 # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+    #     camera_height = self.estimate_camera_height((compensate_pitch, compensate_roll), current_user_id)
+    #     camera_location = 0, 0, camera_height
+    #     obj_offsets_floor = obj_offsets.copy()
+    #     obj_offsets_floor[2] = 0
+    #
+    #     print("Furniture coords")
+    #     print(obj_offsets, "obj_offsets")
+    #     print(obj_offsets_floor, "obj_offsets for blender with floor z axis")
+    #     print(obj_angles, "obj_angles")
+    #     print(yaw_angle, "yaw_angle")
+    #     print(obj_scale, "obj_scale")
+    #     print(camera_angles, "camera_angles")
+    #     print(camera_location, "camera_location")
+    #     # furniture.render_model(f'disruptor/static/images/{current_user_id}/preprocessed/furniture_render', (roll, yaw, pitch))
+    #     # for filename in os.listdir(render_directory):
+    #     #     if 'back' in filename or 'bottom' in filename:
+    #     #         convert_to_mask(os.path.join(render_directory, filename))
+    #     # # coords_for_placing = find_bed_placement_coordinates(os.path.join(render_directory, 'bed_back.png'), os.path.join(render_directory, 'wall_mask.png'), render_directory)
+    #     # create_furniture_mask(self.original_image_path, [os.path.join(render_directory, 'bed.png')], [coords_for_placing], f'disruptor/static/images/{current_user_id}/preprocessed/inpainting_mask.png')
+    #     # overlay_images(os.path.join(render_directory, 'bed_back.png'), os.path.join(render_directory, 'wall_mask.png'), f'disruptor/static/images/{current_user_id}/preprocessed/test.png', coords_for_placing)
+    #     # overlay_images(os.path.join(render_directory, 'bed.png'), self.original_image_path, f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.jpg', coords_for_placing)
+    #     # # convert to masks
+    #     # # scale the renders to 0.4 height of wall height(write get_height in Wall)
+    #     # # write a function that adds an image to a specific location in another image (use create_pngs.py and preprocess_for_empty_space.py)
+    #     # # add render onto your prerequisite which is original_image_copy in the beginning
+    #     # # write a function that positions it properly
 
     def infer_3d(self, pixel: tuple[int, int], compensate_pitch_rad: float, compensate_roll_rad: float):
         from disruptor.stage.depth_estimation import image_pixel_to_3d, rotate_3d_point
@@ -127,3 +127,25 @@ class Room:
         number_of_windows = len(contours)
 
         return number_of_windows
+
+    @staticmethod
+    def save_windows_mask(windows_mask_path: str, current_user_id):
+        segmented_es_path = f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png'
+        rgb_values = Room.window_color
+
+        # Define the lower and upper bounds for the color
+        tolerance = 3
+        lower_color = np.array([x - tolerance for x in rgb_values])
+        upper_color = np.array([x + tolerance for x in rgb_values])
+
+        # Create a mask for the color
+        color_mask = cv2.inRange(segmented_es_path, lower_color, upper_color)
+
+        # Create a black and white mask
+        bw_mask = np.zeros_like(color_mask)
+        bw_mask[color_mask != 0] = 255
+
+        # Check if the mask contains white pixels
+        if np.any(bw_mask == 255):
+            mask_filename = os.path.join(windows_mask_path)
+            cv2.imwrite(mask_filename, bw_mask)

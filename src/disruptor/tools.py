@@ -386,3 +386,30 @@ def find_abs_min_z(points):
     # Find the minimum z-coordinate among the points
     min_z = np.min(points[:, 2])
     return abs(min_z)
+
+def calculate_angle_from_top_view(point1, point2):
+    points3d = np.array([point1, point2])
+    # Project points onto the XY plane (ignoring Z-coordinate)
+    projected_points = points3d[:, :2]
+
+    # Calculate the angle between the vector formed by the first and last projected points and the positive, negative X-axis
+    vec1 = projected_points[-1] - projected_points[0]
+    pos_x = np.array([1, 0])  # Positive X-axis
+    neg_x = np.array([-1, 0])  # Negative X-axis
+    angle_pos = np.arccos(np.dot(vec1, pos_x) / (np.linalg.norm(vec1) * np.linalg.norm(pos_x)))
+    angle_neg = np.arccos(np.dot(vec1, neg_x) / (np.linalg.norm(vec1) * np.linalg.norm(neg_x)))
+
+    # Convert angle from radians to degrees
+    angle_pos_degrees = np.degrees(angle_pos)
+    angle_neg_degrees = np.degrees(angle_neg)
+
+    cross_product_pos = np.cross(vec1, pos_x)
+    rotation_direction_pos = np.sign(cross_product_pos)
+
+    cross_product_neg = np.cross(vec1, neg_x)
+    rotation_direction_neg = np.sign(cross_product_neg)
+
+    # We take the angle whichever is smaller from two angles: angle with positive and negative x-axis
+    if angle_pos_degrees < angle_neg_degrees:
+        return -angle_pos_degrees * rotation_direction_pos
+    return -angle_neg_degrees * rotation_direction_neg

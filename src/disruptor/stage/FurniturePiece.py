@@ -43,7 +43,8 @@ class Bed(FurniturePiece):
         super().__init__(model_path, wall_projection_model_path, floor_projection_model_path)
 
     @staticmethod
-    def find_placement_pixel(wall_mask_path) -> list[list[int]]: # list[list[int]] We return list of coordinates, because some of the furniture pieces, like curtains have numerous copies in the room
+    def find_placement_pixel(wall_mask_path) -> list[list[
+        int]]:  # list[list[int]] We return list of coordinates, because some of the furniture pieces, like curtains have numerous copies in the room
         wall_mask = cv2.imread(wall_mask_path, cv2.IMREAD_GRAYSCALE)
         wall_contours, _ = cv2.findContours(wall_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -54,10 +55,43 @@ class Bed(FurniturePiece):
 
         return [[int(pixel_x), int(pixel_y)]]
 
+    def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
+                                       yaw_angle: float,
+                                       camera_angles: tuple[float, float], current_user_id):
+        from math import radians
+        roll, pitch = camera_angles
+        compensate_pitch = -radians(pitch)
+        compensate_roll = -radians(roll)
+        default_angles = self.get_default_angles()
+
+        obj_offsets = room.infer_3d(placement_pixel, compensate_pitch,
+                                    compensate_roll)  # We set negative rotation to compensate
+        obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(
+            default_angles[2] + yaw_angle)  # In blender, yaw angle is around z axis. z axis is to the top
+        obj_scale = self.get_scale()
+        # We set opposite
+        camera_angles = radians(
+            90) + compensate_pitch, -compensate_roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+        camera_height = room.estimate_camera_height((compensate_pitch, compensate_roll), current_user_id)
+        camera_location = 0, 0, camera_height
+        obj_offsets_floor = obj_offsets.copy()
+        obj_offsets_floor[2] = 0
+
+        print("Bed coords")
+        print(obj_offsets, "obj_offsets")
+        print(obj_offsets_floor, "obj_offsets for blender with floor z axis")
+        print(obj_angles, "obj_angles")
+        print(yaw_angle, "yaw_angle")
+        print(obj_scale, "obj_scale")
+        print(camera_angles, "camera_angles")
+        print(camera_location, "camera_location")
+
+
 class Curtain(FurniturePiece):
     scale = 0.01, 0.01, 0.01
     # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 90
+
     def __init__(self, model_path='disruptor/stage/3Ds/bedroom/curtain/curtain.obj',
                  wall_projection_model_path='disruptor/stage/3Ds/bedroom/curtain/curtain.obj',
                  floor_projection_model_path='disruptor/stage/3Ds/bedroom/curtain/curtain.obj',
@@ -125,9 +159,11 @@ class Curtain(FurniturePiece):
 
             # Вычисление координат точек слева и справа от верхних углов
             right_top_point = (
-                int(top_left_point[0] - 20 * math.cos(angle_radians)), -10 + int(top_left_point[1] - 130 * math.sin(angle_radians)))
+                int(top_left_point[0] - 20 * math.cos(angle_radians)),
+                -10 + int(top_left_point[1] - 130 * math.sin(angle_radians)))
             left_top_point = (
-                int(top_right_point[0] + 20 * math.cos(angle_radians)), -10 + int(top_right_point[1] - 20 * math.sin(angle_radians)))
+                int(top_right_point[0] + 20 * math.cos(angle_radians)),
+                -10 + int(top_right_point[1] - 20 * math.sin(angle_radians)))
             point = [left_top_point, right_top_point]
             final_points.append(point)
             # print("Координаты точек слева и справа от верхних углов:")
@@ -138,3 +174,31 @@ class Curtain(FurniturePiece):
         # cv2.imshow('Image with Points', img)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
+
+    def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
+                                       yaw_angle: float,
+                                       camera_angles: tuple[float, float], current_user_id):
+        from math import radians
+        roll, pitch = camera_angles
+        compensate_pitch = -radians(pitch)
+        compensate_roll = -radians(roll)
+        default_angles = self.get_default_angles()
+
+        obj_offsets = room.infer_3d(placement_pixel, compensate_pitch,
+                                    compensate_roll)  # We set negative rotation to compensate
+        obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(
+            default_angles[2] + yaw_angle)  # In blender, yaw angle is around z axis. z axis is to the top
+        obj_scale = self.get_scale()
+        # We set opposite
+        camera_angles = radians(
+            90) + compensate_pitch, -compensate_roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+        camera_height = room.estimate_camera_height((compensate_pitch, compensate_roll), current_user_id)
+        camera_location = 0, 0, camera_height
+
+        print("Curtain coords")
+        print(obj_offsets, "obj_offsets")
+        print(obj_angles, "obj_angles")
+        print(yaw_angle, "yaw_angle")
+        print(obj_scale, "obj_scale")
+        print(camera_angles, "camera_angles")
+        print(camera_location, "camera_location")
