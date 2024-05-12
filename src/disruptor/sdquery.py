@@ -630,7 +630,7 @@ def prepare_masks(current_user):
 
 def apply_style(empty_space, text):
     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
-    from disruptor.stage.bedroom import Bedroom
+    from disruptor.stage.Bedroom import Bedroom
     room = Bedroom(es_path)
     room.stage(current_user.id)
     # query = GreenScreenImageQuery(text)
