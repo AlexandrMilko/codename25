@@ -62,7 +62,7 @@ class Room:
         obj_scale = furniture.get_scale()
         # We set opposite
         camera_angles = radians(90) + compensate_pitch, -compensate_roll, 0 # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
-        camera_height = self.estimate_camera_height(current_user_id)
+        camera_height = self.estimate_camera_height((compensate_pitch, compensate_roll), current_user_id)
         camera_location = 0, 0, camera_height
         obj_offsets_floor = obj_offsets.copy()
         obj_offsets_floor[2] = 0
@@ -99,7 +99,8 @@ class Room:
         offset_relative_to_camera = rotate_3d_point(target_point, compensate_pitch_rad, compensate_roll_rad)
         return offset_relative_to_camera
 
-    def estimate_camera_height(self, current_user_id):
+    def estimate_camera_height(self, compensate_angles: tuple[float, float], current_user_id):
+        compensate_pitch, compensate_roll = compensate_angles
         points_filepath = f'disruptor/static/images/{current_user_id}/preprocessed/3d_coords.txt'
         rotated_points_filepath = f'disruptor/static/images/{current_user_id}/preprocessed/3d_coords_rotated.txt'
         from disruptor.stage.depth_estimation import rotate_3d_points, image_pixels_to_3d
