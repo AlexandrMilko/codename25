@@ -1,12 +1,12 @@
 from disruptor.stage.Room import Room
-from disruptor.stage.FurniturePiece import FurniturePiece, Bed
+from disruptor.stage.FurniturePiece import FurniturePiece, Bed, Curtain
 import numpy as np
 import os
 from math import radians
 
 
 class Bedroom(Room):
-    furniture_pieces = [Bed()]
+    furniture_pieces = [Bed(), Curtain()]
 
     def stage(self, current_user_id):
         roll, pitch = np.negative(np.degrees(self.find_roll_pitch(current_user_id)))
