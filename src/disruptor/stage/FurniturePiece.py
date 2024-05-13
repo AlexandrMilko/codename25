@@ -132,9 +132,9 @@ class Curtain(FurniturePiece):
         kernel = np.ones((3, 3), np.uint8)
         erosion = cv2.erode(thresh, kernel, iterations=1)
         img = cv2.dilate(erosion, kernel, iterations=1)
-        cv2.imshow('gray', img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.imshow('gray', img)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
 
         number_of_windows = Room.Room.find_number_of_windows(window_mask_path)
