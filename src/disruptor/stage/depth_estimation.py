@@ -167,7 +167,7 @@ def image_pixel_list_to_3d(image_path, pixels_coordinates: list[list[int,int]]):
         image = Image.open(image_path)
 
         # TODO play with this thumbnail if your depth 3d representation is squeezed
-        image.thumbnail((1024, 1024))  # limit the size of the input image
+        # image.thumbnail((1024, 1024))  # limit the size of the input image
         depth = predict_depth(model, image)
         print("DEPTH PREDICTED FOR WALL CORNERS")
         camera_intrinsics = get_intrinsics(depth.shape[0], depth.shape[1])
@@ -194,7 +194,7 @@ def image_pixel_to_3d(image_path, pixel_coordinates):
         image = Image.open(image_path)
 
         # TODO play with this thumbnail if your depth 3d representation is squeezed
-        image.thumbnail((1024, 1024))  # limit the size of the input image
+        # image.thumbnail((1024, 1024))  # limit the size of the input image
         depth = predict_depth(model, image)
 
         camera_intrinsics = get_intrinsics(depth.shape[0], depth.shape[1])
@@ -214,7 +214,7 @@ def image_pixels_to_3d(image_path, output_fname):
         image = Image.open(image_path)
 
         # TODO play with this thumbnail if your depth 3d representation is squeezed
-        image.thumbnail((1024, 1024))  # limit the size of the input image
+        # image.thumbnail((1024, 1024))  # limit the size of the input image
         depth = predict_depth(model, image)
 
         camera_intrinsics = get_intrinsics(depth.shape[0], depth.shape[1])
