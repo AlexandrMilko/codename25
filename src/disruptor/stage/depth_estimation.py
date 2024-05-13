@@ -167,7 +167,7 @@ def image_pixel_list_to_3d(image_path, pixels_coordinates: list[list[int,int]]):
         image = Image.open(image_path)
 
         # TODO play with this thumbnail if your depth 3d representation is squeezed
-        image.thumbnail((1024, 1024))  # limit the size of the input image
+        # image.thumbnail((1024, 1024))  # limit the size of the input image
         depth = predict_depth(model, image)
         print("DEPTH PREDICTED FOR WALL CORNERS")
         camera_intrinsics = get_intrinsics(depth.shape[0], depth.shape[1])
@@ -194,7 +194,7 @@ def image_pixel_to_3d(image_path, pixel_coordinates):
         image = Image.open(image_path)
 
         # TODO play with this thumbnail if your depth 3d representation is squeezed
-        image.thumbnail((1024, 1024))  # limit the size of the input image
+        # image.thumbnail((1024, 1024))  # limit the size of the input image
         depth = predict_depth(model, image)
 
         camera_intrinsics = get_intrinsics(depth.shape[0], depth.shape[1])
@@ -214,7 +214,7 @@ def image_pixels_to_3d(image_path, output_fname):
         image = Image.open(image_path)
 
         # TODO play with this thumbnail if your depth 3d representation is squeezed
-        image.thumbnail((1024, 1024))  # limit the size of the input image
+        # image.thumbnail((1024, 1024))  # limit the size of the input image
         depth = predict_depth(model, image)
 
         camera_intrinsics = get_intrinsics(depth.shape[0], depth.shape[1])
@@ -274,11 +274,6 @@ def rotate_3d_point(point: tuple[float, float, float], pitch_rad, roll_rad):
     point = np.array(point)
     rotated_point = point.dot(rotation_matrix_x(pitch_rad).T).dot(rotation_matrix_y(roll_rad).T)
     return rotated_point
-
-def estimate_camera_height(points):
-    # Find the minimum z-coordinate among the points
-    min_z = np.min(points[:, 2])
-    return abs(min_z)
 
 if __name__ == "__main__":
     image_pixels_to_3d('10_empty.jpg', '3d_coords.txt')
