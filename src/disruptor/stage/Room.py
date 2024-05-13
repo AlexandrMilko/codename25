@@ -92,6 +92,7 @@ class Room:
 
     def infer_3d(self, pixel: tuple[int, int], compensate_pitch_rad: float, compensate_roll_rad: float):
         from disruptor.stage.depth_estimation import image_pixel_to_3d, rotate_3d_point
+        print(self.original_image_path, pixel, "IMAGE PATH and PIXEL")
         target_point = image_pixel_to_3d(self.original_image_path, pixel)
         # We rotate it back to compensate our camera rotation
         offset_relative_to_camera = rotate_3d_point(target_point, compensate_pitch_rad, compensate_roll_rad)
