@@ -88,9 +88,9 @@ class Bed(FurniturePiece):
 
 
 class Curtain(FurniturePiece):
-    scale = 0.01, 0.01, 0.01
+    scale = 0.005, 0.01, 0.01
     # We use it to compensate the angle if the model is originally rotated in a wrong way
-    default_angles = 0, 0, 90
+    default_angles = 0, 0, 0
 
     def __init__(self, model_path='disruptor/stage/3Ds/bedroom/curtain/curtain.obj',
                  wall_projection_model_path='disruptor/stage/3Ds/bedroom/curtain/curtain.obj',
