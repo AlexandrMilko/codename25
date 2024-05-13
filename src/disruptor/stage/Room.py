@@ -114,16 +114,20 @@ class Room:
     def find_number_of_windows(windows_mask_path: str) -> int:
         # Загрузка изображения
         img = cv2.imread(windows_mask_path, cv2.IMREAD_GRAYSCALE)  # Укажите правильный путь к файлу
-        # Адаптивная пороговая обработка
-        thresh = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
-        # Морфологические операции для разделения окон
+        blurred = cv2.GaussianBlur(img, (5, 5), 0)
+
+        _, thresh = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
         kernel = np.ones((3, 3), np.uint8)
-        thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)  # Увеличьте iterations, если нужно
+        erosion = cv2.erode(thresh, kernel, iterations=1)
+        img = cv2.dilate(erosion, kernel, iterations=1)
+
         # Поиск контуров
-        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
         # Визуализация результатов
         img_contours = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  # Переводим в цвет для визуализации контуров
         cv2.drawContours(img_contours, contours, -1, (0, 255, 0), 3)
+
         # Подсчет количества окон
         number_of_windows = len(contours)
 

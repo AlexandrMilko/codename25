@@ -30,6 +30,9 @@ class Bedroom(Room):
                                current_user_id)
         pixels_for_placing = curtain.find_placement_pixel(
             f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png')
-        yaw_angle = calculate_angle_from_top_view(*[self.infer_3d(pixel, compensate_pitch, compensate_roll) for pixel in pixels_for_placing])
-        for pixel in pixels_for_placing:
-            curtain.calculate_rendering_parameters(self, pixel, yaw_angle, (roll, pitch), current_user_id)
+        for window in pixels_for_placing:
+            for left_top_point, right_top_point in window:
+                yaw_angle = calculate_angle_from_top_view(*[self.infer_3d(pixel, compensate_pitch, compensate_roll) for
+                                                            pixel in (left_top_point, right_top_point)])
+                for pixel in (left_top_point, right_top_point):
+                    curtain.calculate_rendering_parameters(self, pixel, yaw_angle, (roll, pitch), current_user_id)
