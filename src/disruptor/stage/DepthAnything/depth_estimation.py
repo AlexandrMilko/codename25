@@ -95,9 +95,9 @@ def pixel_to_3d(x, y, image_path, depth_npy_path):
 
 def image_pixels_to_depth(image_path, depth_npy_path):
     parser = argparse.ArgumentParser()
-    parser.add_argument("-m", "--model", type=str, default='zoedepth', help="Name of the model to test")
+    parser.add_argument("-m", "--model", type=str, default='disruptor/stage/DepthAnything/zoedepth', help="Name of the model to test")
     parser.add_argument("-p", "--pretrained_resource", type=str,
-                        default='local::./disruptor/zoedepth/checkpoints/depth_anything_metric_depth_indoor.pt',
+                        default='local::./disruptor/stage/DepthAnything/zoedepth/checkpoints/depth_anything_metric_depth_indoor.pt',
                         help="Pretrained resource to use for fetching weights.")
 
     args = parser.parse_args()
