@@ -77,8 +77,11 @@ def pixel_to_3d(x, y, w, h, depth_npy_path):
         X_3D, Y_3D, Z_3D: 3D coordinates of pixel
     """
     import time
-    FY = w * 0.6
-    FX = h * 0.6
+    # FY = w * 0.6
+    # FX = h * 0.6
+
+    FY = 500
+    FX = 500
 
     start_time_line = time.time()
     depth_image = np.load(depth_npy_path)

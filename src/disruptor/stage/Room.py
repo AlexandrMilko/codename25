@@ -104,6 +104,7 @@ class Room:
         from disruptor.stage.Floor import Floor
         floor_pixel = Floor.find_centroid(f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png')
         point_3d = image_pixel_to_3d(*floor_pixel, self.original_image_path)
+        print(f"Floor Centroid: {floor_pixel} -> {point_3d}")
         rotated_point = rotate_3d_point(point_3d, compensate_pitch, compensate_roll)
         z_coordinate = rotated_point[2]
         return abs(z_coordinate)
