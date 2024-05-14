@@ -28,6 +28,7 @@ def image_pixel_list_to_3d(image_path, pixels_coordinates: list[list[int,int]]):
         point_3d = transform_to_blender_xyz(*pixel_to_3d(x, y, image_path, depth_npy_path))
         print(f"{x, y} -> {point_3d}")
         points_3d.append(point_3d)
+    print("POINTS TO GET 3D TOP ANGLE from: ", points_3d)
     return points_3d
 
 
