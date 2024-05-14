@@ -40,8 +40,12 @@ def get_pixel_3d_coords(image_path, depth_npy_path):
     Returns:
         List of 3D coordinates for each pixel.
     """
+    import time
+    start_time_image = time.time()
     color_image = Image.open(image_path).convert('RGB')
     w, h = color_image.size
+    end_time_image = time.time()
+    print("Image loading time:", end_time_image - start_time_image)
 
     # Create arrays to store 3D coordinates
     pixel_coords_3d = []
@@ -49,7 +53,10 @@ def get_pixel_3d_coords(image_path, depth_npy_path):
     for y in range(h):
         for x in range(w):
             # Calculate 3D coordinates for each pixel
+            start_time_line = time.time()
             pixel_3d = transform_to_blender_xyz(*pixel_to_3d(x, y, image_path, depth_npy_path))
+            end_time_line = time.time()
+            print("Line execution time:", end_time_line - start_time_line)
             print(f"Iterating the image: {x, y} -> {pixel_3d}")
             pixel_coords_3d.append(pixel_3d)
 
