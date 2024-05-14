@@ -24,11 +24,8 @@ def image_pixel_list_to_3d(image_path, pixels_coordinates: list[list[int,int]]):
     image_pixels_to_depth(image_path, depth_npy_path)
     points_3d = []
     for x, y in pixels_coordinates:
-        print("POINT being processed: ", x, y)
         point_3d = transform_to_blender_xyz(*pixel_to_3d(x, y, image_path, depth_npy_path))
-        print(f"{x, y} -> {point_3d}")
         points_3d.append(point_3d)
-    print("POINTS TO GET 3D TOP ANGLE from: ", points_3d)
     return points_3d
 
 
@@ -53,6 +50,7 @@ def get_pixel_3d_coords(image_path, depth_npy_path):
         for x in range(w):
             # Calculate 3D coordinates for each pixel
             pixel_3d = transform_to_blender_xyz(*pixel_to_3d(x, y, image_path, depth_npy_path))
+            print(f"Iterating the image: {x, y} -> {pixel_3d}")
             pixel_coords_3d.append(pixel_3d)
 
     return pixel_coords_3d
