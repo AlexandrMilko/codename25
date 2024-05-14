@@ -33,12 +33,12 @@ import cv2
 import torch
 import torch.nn as nn
 import torch.utils.data.distributed
-from zoedepth.utils.easydict import EasyDict as edict
+from disruptor.stage.DepthAnything.zoedepth.utils.easydict import EasyDict as edict
 from PIL import Image, ImageOps
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
-from zoedepth.utils.config import change_dataset
+from disruptor.stage.DepthAnything.zoedepth.utils.config import change_dataset
 
 from .ddad import get_ddad_loader
 from .diml_indoor_test import get_diml_indoor_loader
