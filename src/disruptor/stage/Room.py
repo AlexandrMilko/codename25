@@ -100,15 +100,13 @@ class Room:
 
     def estimate_camera_height(self, compensate_angles: tuple[float, float], current_user_id):
         compensate_pitch, compensate_roll = compensate_angles
-        points_filepath = f'disruptor/static/images/{current_user_id}/preprocessed/3d_coords.txt'
-        rotated_points_filepath = f'disruptor/static/images/{current_user_id}/preprocessed/3d_coords_rotated.txt'
-        from disruptor.stage.DepthAnything.depth_estimation import rotate_3d_points, image_pixels_to_3d
-        from disruptor.tools import find_abs_min_z
-        image_pixels_to_3d(self.original_image_path,
-                           f'disruptor/static/images/{current_user_id}/preprocessed/3d_coords.txt')
-        rotated_points = rotate_3d_points(points_filepath, rotated_points_filepath, compensate_pitch, compensate_roll)
-        camera_height = find_abs_min_z(rotated_points)
-        return camera_height
+        from disruptor.stage.DepthAnything.depth_estimation import rotate_3d_point, image_pixel_to_3d
+        from disruptor.stage.Floor import Floor
+        floor_pixel = Floor.find_centroid(f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png')
+        point_3d = image_pixel_to_3d(*floor_pixel, self.original_image_path)
+        rotated_point = rotate_3d_point(point_3d, compensate_pitch, compensate_roll)
+        z_coordinate = rotated_point[2]
+        return abs(z_coordinate)
 
     @staticmethod
     def find_number_of_windows(windows_mask_path: str) -> int:
