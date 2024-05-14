@@ -6,12 +6,14 @@ import torchvision.transforms as transforms
 import torch
 import gc
 import numpy as np
+from disruptor.tools import get_image_size
 
 depth_npy_path = 'disruptor/stage/DepthAnything/zoedepth/depth.npy'
 
 def image_pixel_to_3d(x, y, image_path):
     image_pixels_to_depth(image_path, depth_npy_path)
-    return transform_to_blender_xyz(*pixel_to_3d(x, y, image_path, depth_npy_path))
+    w, h = get_image_size(image_path)
+    return transform_to_blender_xyz(*pixel_to_3d(x, y, w, h, depth_npy_path))
 
 def image_pixels_to_3d(image_path, output_path):
     image_pixels_to_depth(image_path, depth_npy_path)
@@ -23,8 +25,9 @@ def image_pixels_to_3d(image_path, output_path):
 def image_pixel_list_to_3d(image_path, pixels_coordinates: list[list[int,int]]):
     image_pixels_to_depth(image_path, depth_npy_path)
     points_3d = []
+    w, h = get_image_size(image_path)
     for x, y in pixels_coordinates:
-        point_3d = transform_to_blender_xyz(*pixel_to_3d(x, y, image_path, depth_npy_path))
+        point_3d = transform_to_blender_xyz(*pixel_to_3d(x, y, w, h, depth_npy_path))
         points_3d.append(point_3d)
     return points_3d
 
@@ -40,8 +43,7 @@ def get_pixel_3d_coords(image_path, depth_npy_path):
     Returns:
         List of 3D coordinates for each pixel.
     """
-    color_image = Image.open(image_path).convert('RGB')
-    w, h = color_image.size
+    w, h = get_image_size(image_path)
 
     # Create arrays to store 3D coordinates
     pixel_coords_3d = []
@@ -49,7 +51,7 @@ def get_pixel_3d_coords(image_path, depth_npy_path):
     for y in range(h):
         for x in range(w):
             # Calculate 3D coordinates for each pixel
-            pixel_3d = transform_to_blender_xyz(*pixel_to_3d(x, y, image_path, depth_npy_path))
+            pixel_3d = transform_to_blender_xyz(*pixel_to_3d(x, y, w, h, depth_npy_path))
             print(f"Iterating the image: {x, y} -> {pixel_3d}")
             pixel_coords_3d.append(pixel_3d)
 
@@ -62,37 +64,31 @@ def transform_to_blender_xyz(x, y, z):  # TODO test it and visualize the whole d
     return x, z, -y
 
 
-def pixel_to_3d(x, y, image_path, depth_npy_path):
+def pixel_to_3d(x, y, w, h, depth_npy_path):
     """
     Args:
         x: x coordinate of the pixel
         y: y coordinate of the pixel
-        image_path: path to the image which was used as input
+        w, h: original width and height of the image which was used as input
         depth_npy_path: path to the output created by image_pixels_to_depth()
 
     Returns:
         X_3D, Y_3D, Z_3D: 3D coordinates of pixel
     """
     import time
-    start_time_image = time.time()
-    color_image = Image.open(image_path).convert('RGB')
-    original_width, original_height = color_image.size
-    end_time_image = time.time()
-    print("Image loading time to calculate height:", end_time_image - start_time_image)
-
-    FY = original_width * 0.6
-    FX = original_height * 0.6
+    FY = w * 0.6
+    FX = h * 0.6
 
     start_time_line = time.time()
     depth_image = np.load(depth_npy_path)
     end_time_line = time.time()
     print("Depth image loading time:", end_time_line - start_time_line)
-    resized_pred = Image.fromarray(depth_image).resize((original_width, original_height), Image.NEAREST)
+    resized_pred = Image.fromarray(depth_image).resize((w, h), Image.NEAREST)
 
     start_time_calc = time.time()
     Z_depth = np.array(resized_pred)[y, x]
-    X_3D = (x - original_width / 2) * Z_depth / FX
-    Y_3D = (y - original_height / 2) * Z_depth / FY
+    X_3D = (x - w / 2) * Z_depth / FX
+    Y_3D = (y - h / 2) * Z_depth / FY
     Z_3D = Z_depth
     X_3D *= -1
     Y_3D *= -1
