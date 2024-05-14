@@ -19,8 +19,7 @@ class Floor:
         bw_mask = cv2.inRange(image, lower_bound, upper_bound)
 
         # Apply additional actions to the mask
-        gray = cv2.cvtColor(bw_mask, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        blurred = cv2.GaussianBlur(bw_mask, (5, 5), 0)
         _, thresh = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
         kernel = np.ones((3, 3), np.uint8)
         erosion = cv2.erode(thresh, kernel, iterations=1)
