@@ -26,8 +26,7 @@ def pixel_to_3d(camera_intrinsics, depth_image, pixel_coord):
 
     # Convert NDC to 3D point in camera space (with depth)
     camera_point = np.array([pixel_ndc[0], pixel_ndc[1], 1.0]) * depth
-    # z_offset = 2.5
-    # camera_point[2] -= z_offset
+
     # x - points to the right
     # y - bigger it is the lower is our point compared to camera y
     # z - shows the distance from camera
