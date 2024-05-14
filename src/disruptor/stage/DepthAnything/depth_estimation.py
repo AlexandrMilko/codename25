@@ -61,7 +61,8 @@ def get_pixel_3d_coords(image_path, depth_npy_path):
 def transform_to_blender_xyz(x, y, z):  # TODO test it and visualize the whole depth estimation
     # 1. Invert the y
     # 2. Swap the z and y
-    return x, z, -y
+    # 3. Invert x
+    return -x, z, -y
 
 
 def pixel_to_3d(x, y, w, h, depth_npy_path):
