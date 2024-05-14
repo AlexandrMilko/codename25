@@ -20,9 +20,7 @@ class Bedroom(Room):
         render_directory = f'disruptor/static/images/{current_user_id}/preprocessed/furniture_render'
         wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
         pixels_for_placing = bed.find_placement_pixel(os.path.join(render_directory, 'wall_mask.png'))
-        print(f"BED pixels_for_placing: {pixels_for_placing}")
         yaw_angle = wall.find_angle_from_3d(self, compensate_pitch, compensate_roll)
-        print(f"ANGLE FROM 3D: {yaw_angle}")
         for pixel in pixels_for_placing:
             bed.calculate_rendering_parameters(self, pixel, yaw_angle, (roll, pitch), current_user_id)
 

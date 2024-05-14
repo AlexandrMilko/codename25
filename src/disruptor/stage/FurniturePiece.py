@@ -72,7 +72,9 @@ class Bed(FurniturePiece):
         # We set opposite
         camera_angles = radians(
             90) + compensate_pitch, -compensate_roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+        print("Started estimating camera height")
         camera_height = room.estimate_camera_height((compensate_pitch, compensate_roll), current_user_id)
+        print(f"Camera height: {camera_height}")
         camera_location = 0, 0, camera_height
         obj_offsets_floor = obj_offsets.copy()
         obj_offsets_floor[2] = 0
