@@ -66,14 +66,29 @@ def save_render(path):
     bpy.ops.render.render(write_still=True)
 
 if __name__ == "__main__":
-    obj_offsets = 0.89264309, 4.07660634, 0.
-    obj_angles = 0.0, 0.0, 0.371277267400237
-    obj_scale = 0.01, 0.01, 0.01
-    camera_angles = 1.6597176418922286, -0.00024912030799756606, 0
-    camera_location = 0, 0, 1.3629773865303363
+#    Bed coords
+#    obj_offsets = -0.94909685, 4.55885511, 0.
+#    obj_angles = 0.0, 0.0, 2.6489501990544757
+#    obj_scale = 0.01, 0.01, 0.01
+#    camera_angles = 1.4692491078160261, -0.008696630954646168, 0
+#    camera_location = 0, 0, 1.2335162241818667
+    
+#   Curtain 1
+#    obj_offsets = 0.64584764, 7.01940528, -0.20853237
+#    obj_angles = 0.0, 0.0, -1
+#    obj_scale = 0.0005, 0.001, 0.001
+#    camera_angles = 1.4692491078160261, -0.008696630954646168, 0
+#    camera_location = 0, 0, 1.2335162241818667
+    
+#   Curtain 2
+    obj_offsets =1.83548097 ,5.19841515, -0.20853237
+    obj_angles = 0.0, 0.0, -1
+    obj_scale = 0.0005, 0.001, 0.001
+    camera_angles = 1.4692491078160261, -0.008696630954646168, 0
+    camera_location = 0, 0, 1.2335162241818667
     
     render_path = os.path.join(os.path.expanduser('~'), 'Desktop', 'render.png')
-    obj_path = os.path.join(os.path.expanduser('~'), 'Desktop', 'bed_back_centroid.obj')
+    obj_path = os.path.join(os.path.expanduser('~'), 'Desktop', 'curtain.obj')
     setup_camera(camera_angles, camera_location)
     setup_light()
     add_obj_model(obj_path, obj_offsets, obj_angles, obj_scale)

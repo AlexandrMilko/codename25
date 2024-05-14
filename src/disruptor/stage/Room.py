@@ -91,9 +91,9 @@ class Room:
     #     # # write a function that positions it properly
 
     def infer_3d(self, pixel: tuple[int, int], compensate_pitch_rad: float, compensate_roll_rad: float):
-        from disruptor.stage.depth_estimation import image_pixel_to_3d, rotate_3d_point
+        from disruptor.stage.DepthAnything.depth_estimation import image_pixel_to_3d, rotate_3d_point
         print(self.original_image_path, pixel, "IMAGE PATH and PIXEL")
-        target_point = image_pixel_to_3d(self.original_image_path, pixel)
+        target_point = image_pixel_to_3d(*pixel, self.original_image_path)
         # We rotate it back to compensate our camera rotation
         offset_relative_to_camera = rotate_3d_point(target_point, compensate_pitch_rad, compensate_roll_rad)
         return offset_relative_to_camera
@@ -102,7 +102,7 @@ class Room:
         compensate_pitch, compensate_roll = compensate_angles
         points_filepath = f'disruptor/static/images/{current_user_id}/preprocessed/3d_coords.txt'
         rotated_points_filepath = f'disruptor/static/images/{current_user_id}/preprocessed/3d_coords_rotated.txt'
-        from disruptor.stage.depth_estimation import rotate_3d_points, image_pixels_to_3d
+        from disruptor.stage.DepthAnything.depth_estimation import rotate_3d_points, image_pixels_to_3d
         from disruptor.tools import find_abs_min_z
         image_pixels_to_3d(self.original_image_path,
                            f'disruptor/static/images/{current_user_id}/preprocessed/3d_coords.txt')
