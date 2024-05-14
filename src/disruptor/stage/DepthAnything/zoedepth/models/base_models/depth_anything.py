@@ -338,7 +338,7 @@ class DepthAnythingCore(nn.Module):
         
         depth_anything = DPT_DINOv2(out_channels=[256, 512, 1024, 1024], use_clstoken=False)
 
-        state_dict = torch.load('./checkpoints/depth_anything_metric_depth_indoor.pt', map_location='cpu')
+        state_dict = torch.load('disruptor/stage/DepthAnything/zoedepth/checkpoints/depth_anything_metric_depth_indoor.pt', map_location='cpu')
 
         corrected_state_dict = {key.replace('core.core.', ''): value for key, value in state_dict['model'].items()}
         keys_to_remove = [
