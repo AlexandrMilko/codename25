@@ -27,15 +27,15 @@ import itertools
 import torch
 import torch.nn as nn
 
-from zoedepth.models.depth_model import DepthModel
-from zoedepth.models.base_models.midas import MidasCore
-from zoedepth.models.base_models.depth_anything import DepthAnythingCore
-from zoedepth.models.layers.attractor import AttractorLayer, AttractorLayerUnnormed
-from zoedepth.models.layers.dist_layers import ConditionalLogBinomial
-from zoedepth.models.layers.localbins_layers import (Projector, SeedBinRegressor,
+from disruptor.stage.DepthAnything.zoedepth.models.depth_model import DepthModel
+from disruptor.stage.DepthAnything.zoedepth.models.base_models.midas import MidasCore
+from disruptor.stage.DepthAnything.zoedepth.models.base_models.depth_anything import DepthAnythingCore
+from disruptor.stage.DepthAnything.zoedepth.models.layers.attractor import AttractorLayer, AttractorLayerUnnormed
+from disruptor.stage.DepthAnything.zoedepth.models.layers.dist_layers import ConditionalLogBinomial
+from disruptor.stage.DepthAnything.zoedepth.models.layers.localbins_layers import (Projector, SeedBinRegressor,
                                             SeedBinRegressorUnnormed)
-from zoedepth.models.layers.patch_transformer import PatchTransformerEncoder
-from zoedepth.models.model_io import load_state_from_resource
+from disruptor.stage.DepthAnything.zoedepth.models.layers.patch_transformer import PatchTransformerEncoder
+from disruptor.stage.DepthAnything.zoedepth.models.model_io import load_state_from_resource
 
 
 class ZoeDepthNK(DepthModel):

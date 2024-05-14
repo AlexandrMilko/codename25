@@ -26,7 +26,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from torchvision.transforms import Normalize
-from zoedepth.models.base_models.dpt_dinov2.dpt import DPT_DINOv2
+from disruptor.stage.DepthAnything.zoedepth.models.base_models.dpt_dinov2.dpt import DPT_DINOv2
 
 
 def denormalize(x):
