@@ -40,12 +40,8 @@ def get_pixel_3d_coords(image_path, depth_npy_path):
     Returns:
         List of 3D coordinates for each pixel.
     """
-    import time
-    start_time_image = time.time()
     color_image = Image.open(image_path).convert('RGB')
     w, h = color_image.size
-    end_time_image = time.time()
-    print("Image loading time:", end_time_image - start_time_image)
 
     # Create arrays to store 3D coordinates
     pixel_coords_3d = []
@@ -53,10 +49,7 @@ def get_pixel_3d_coords(image_path, depth_npy_path):
     for y in range(h):
         for x in range(w):
             # Calculate 3D coordinates for each pixel
-            start_time_line = time.time()
             pixel_3d = transform_to_blender_xyz(*pixel_to_3d(x, y, image_path, depth_npy_path))
-            end_time_line = time.time()
-            print("Line execution time:", end_time_line - start_time_line)
             print(f"Iterating the image: {x, y} -> {pixel_3d}")
             pixel_coords_3d.append(pixel_3d)
 
@@ -80,22 +73,31 @@ def pixel_to_3d(x, y, image_path, depth_npy_path):
     Returns:
         X_3D, Y_3D, Z_3D: 3D coordinates of pixel
     """
-
+    import time
+    start_time_image = time.time()
     color_image = Image.open(image_path).convert('RGB')
     original_width, original_height = color_image.size
+    end_time_image = time.time()
+    print("Image loading time to calculate height:", end_time_image - start_time_image)
 
     FY = original_width * 0.6
     FX = original_height * 0.6
 
+    start_time_line = time.time()
     depth_image = np.load(depth_npy_path)
+    end_time_line = time.time()
+    print("Depth image loading time:", end_time_line - start_time_line)
     resized_pred = Image.fromarray(depth_image).resize((original_width, original_height), Image.NEAREST)
 
+    start_time_calc = time.time()
     Z_depth = np.array(resized_pred)[y, x]
     X_3D = (x - original_width / 2) * Z_depth / FX
     Y_3D = (y - original_height / 2) * Z_depth / FY
     Z_3D = Z_depth
     X_3D *= -1
     Y_3D *= -1
+    end_time_calc = time.time()
+    print("Calculation time:", end_time_calc - start_time_calc)
     return X_3D, Y_3D, Z_3D
 
 
