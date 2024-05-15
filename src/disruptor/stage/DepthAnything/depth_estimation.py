@@ -76,28 +76,18 @@ def pixel_to_3d(x, y, w, h, depth_npy_path):
     Returns:
         X_3D, Y_3D, Z_3D: 3D coordinates of pixel
     """
-    import time
-    # FY = w * 0.6
-    # FX = h * 0.6
+    FY = 0.5 * w / np.tan(0.5 * 38 * np.pi / 180.0)
+    FX = 0.5 * h / np.tan(0.5 * 38 * np.pi / 180.0)
 
-    FY = 500
-    FX = 500
-
-    start_time_line = time.time()
     depth_image = np.load(depth_npy_path)
-    end_time_line = time.time()
-    print("Depth image loading time:", end_time_line - start_time_line)
     resized_pred = Image.fromarray(depth_image).resize((w, h), Image.NEAREST)
 
-    start_time_calc = time.time()
     Z_depth = np.array(resized_pred)[y, x]
     X_3D = (x - w / 2) * Z_depth / FX
     Y_3D = (y - h / 2) * Z_depth / FY
     Z_3D = Z_depth
     X_3D *= -1
     Y_3D *= -1
-    end_time_calc = time.time()
-    print("Calculation time:", end_time_calc - start_time_calc)
     return X_3D, Y_3D, Z_3D
 
 
