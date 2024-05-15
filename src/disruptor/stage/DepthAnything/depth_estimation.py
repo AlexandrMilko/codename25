@@ -128,7 +128,7 @@ def image_pixels_to_depth(image_path, depth_npy_path):
     del model
     del parser
     del color_image
-    del image_tensor
+    # del image_tensor
     del pred
     gc.collect()
     torch.cuda.empty_cache()
