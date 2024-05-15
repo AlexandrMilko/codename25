@@ -19,7 +19,7 @@ def setup_camera(angles, location):
     # Set the camera's rotation (in radians)
     cam_obj.rotation_euler = angles
 
-    cam_obj.data.lens = 14
+    cam_obj.data.lens = 38
     scene.camera = cam_obj
 
 def setup_light():
