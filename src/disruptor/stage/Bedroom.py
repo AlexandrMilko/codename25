@@ -14,6 +14,9 @@ class Bedroom(Room):
         compensate_pitch = -radians(pitch)
         compensate_roll = -radians(roll)
 
+        from disruptor.stage.DepthAnything.depth_estimation import image_pixels_to_3d
+        image_pixels_to_3d(self.original_image_path, "my_3d_space.txt")
+
         # Add Bed
         bed = Bed()
         wall = walls[0]
