@@ -48,8 +48,8 @@ def get_pixel_3d_coords(image_path, depth_npy_path):
     # Create arrays to store 3D coordinates
     pixel_coords_3d = []
 
-    for y in range(h):
-        for x in range(w):
+    for y in range(0, h, 10): # TODO WARNING! Iterating each 10th pixel only to speed up the debug
+        for x in range(0, w, 20):
             # Calculate 3D coordinates for each pixel
             pixel_3d = transform_to_blender_xyz(*pixel_to_3d(x, y, w, h, depth_npy_path))
             print(f"Iterating the image: {x, y} -> {pixel_3d}")
