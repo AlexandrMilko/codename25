@@ -107,11 +107,6 @@ def image_pixels_to_depth(image_path, depth_npy_path):
 
     try:
         color_image = Image.open(image_path).convert('RGB')
-
-        # Resize the image with keep_aspect_ratio=True
-        transform = transforms.Resize((518, 392), keep_aspect_ratio=True)
-        color_image = transform(color_image)
-
         image_tensor = transforms.ToTensor()(color_image).unsqueeze(0).to(
             'cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -128,7 +123,7 @@ def image_pixels_to_depth(image_path, depth_npy_path):
     del model
     del parser
     del color_image
-    # del image_tensor
+    del image_tensor
     del pred
     gc.collect()
     torch.cuda.empty_cache()

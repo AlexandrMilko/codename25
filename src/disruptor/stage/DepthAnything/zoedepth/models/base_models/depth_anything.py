@@ -94,7 +94,8 @@ class Resize(object):
         self.__width = width
         self.__height = height
 
-        self.__keep_aspect_ratio = keep_aspect_ratio
+        # self.__keep_aspect_ratio = keep_aspect_ratio
+        self.__keep_aspect_ratio = True
         self.__multiple_of = ensure_multiple_of
         self.__resize_method = resize_method
 
