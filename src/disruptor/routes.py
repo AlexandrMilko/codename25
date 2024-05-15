@@ -1,20 +1,23 @@
+import pandas as pd
 from flask import redirect, render_template, url_for, flash, request, jsonify
-from disruptor.forms import RegistrationForm, LoginForm
-from disruptor import app, db
+from disruptor.forms import RegistrationForm, LoginForm, RequestPasswordResetForm, PasswordResetForm
+from disruptor import app, db, mail
 from flask_bcrypt import generate_password_hash, check_password_hash
 from disruptor.models import User, load_user
 from flask_login import (
     login_required,
     login_user,
     logout_user,
+    current_user
 )
 from disruptor.google_auth import *
 from disruptor.sdquery import TextQuery, ImageQuery, ControlNetImageQuery, apply_style
 import base64
 import json
 import uuid
+import os
 from sqlalchemy.exc import IntegrityError
-
+from flask_mail import Message
 
 @app.route("/")
 @app.route("/home")
@@ -23,8 +26,10 @@ def home():
 
 @app.route("/register", methods=["GET", "POST"])
 #TODO: remove to be able to register
-@login_required
+# @login_required
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
     form = RegistrationForm()
     if form.validate_on_submit():
         password_hash = generate_password_hash(form.password.data).decode("utf-8")
@@ -44,14 +49,47 @@ def register():
                 email=form.email.data,
                 password=password_hash
             )
-        db.session.add(user)
-        db.session.commit()
-        flash(f"Account created for {form.username.data}!", 'success')
+        send_verification_email(user)
+        flash("An email has been sent with instructions to verify your account.", "info")
         return redirect(url_for('login'))
     return render_template('register.html', title="Register", form=form)
 
+def send_verification_email(user):
+    token = user.get_email_verification_token()
+    msg = Message(
+        "Codename25: Email Verification",
+                  sender='milkoaleksandr21@gmail.com',
+                  recipients=[user.email]
+                )
+    msg.body = f'''To verify your account, visit the following link:
+{url_for('verify_email', token=token, _external=True)}
+If you did not make this request, then simply ignore this email and no changes will be made.
+    '''
+    mail.send(msg)
+@app.route("/verify_email/<token>", methods=["GET", "POST"])
+def verify_email(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    user_data = User.verify_email_token(token)
+    if user_data is None:
+        flash('That is an expired or invalid token.', 'warning')
+        return redirect(url_for('home'))
+    else:
+        user = User(
+                id=user_data["user_id"],
+                username=user_data["username"],
+                email=user_data["email"],
+                password=user_data["password"]
+            )
+        db.session.add(user)
+        db.session.commit()
+        flash(f"Your account has been verified!", 'success')
+        return redirect(url_for('login'))
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -70,7 +108,7 @@ def login():
 
 @app.route("/login-google")
 #TODO: remove to be able to register
-@login_required
+# @login_required
 def login_google():
     # Find out what URL to hit for Google login
     google_provider_cfg = get_google_provider_cfg()
@@ -140,7 +178,6 @@ def callback():
     )
 
     # Doesn't exist? Add it to the database.
-    #TODO make password nullable
     if not load_user(user.id):
         db.session.add(user)
         try:
@@ -198,12 +235,13 @@ def favourites():
         # Generate images from image + text
         generate_image(text, "current_image.jpg", image_url, denoising_strength=0.5)
         # Update the left-side image
-        image_url = url_for('static', filename="images/current_image.jpg")
+        image_url = url_for('static', filename=f"images/{current_user.id}/current_image.jpg")
         generate_favourites(text, image_url)
     else:# If we chose go to favorites from style page
         # Generate option images from text
         generate_favourites(text)
-    return render_template('favourites.html', title="Favourites", text=text, image_url=image_url, chosen_favourite=chosen_favourite)
+    image_paths = [f'images/{current_user.id}/fav{i}.jpg' for i in range(6)]
+    return render_template('favourites.html', title="Favourites", text=text, image_url=image_url, chosen_favourite=chosen_favourite, image_paths=image_paths)
 
 @app.route("/style")
 @login_required
@@ -223,8 +261,6 @@ def budget():
 def room():
     image_url = request.args.get("image_url")
     text = request.args.get("text")
-    print(image_url, "IMAGE_URL")
-    print(text, "TEXT")
     return render_template('room.html', title="Room", image_url=image_url, text=text)
 
 @app.route("/space")
@@ -253,14 +289,91 @@ def save_image():
     if file:
         # Save the uploaded image to the specified folder on the server
         filename = file.filename
-        print(url_for('static', filename=f'images/{filename}'))
-        file_path = "disruptor/static/images/" + filename
+        directory = f"disruptor/static/images/{current_user.id}/"
+        from disruptor.tools import create_directory_if_not_exists
+        create_directory_if_not_exists(directory)
+        file_path = directory + filename
         file.save(file_path)
 
-        apply_style(filename)
-
-        # Return the URL of the saved image
-        return jsonify({'url': url_for('static', filename=f'images/applied.jpg')})
-        # return jsonify({'url': file_path})
+        apply_style(filename, text)
+        return jsonify({'url': url_for('static', filename=f'images/{current_user.id}/applied.jpg')})
+        # try:
+        #     apply_style(filename, text)
+        #     # Return the URL of the saved image
+        #     return jsonify({'url': url_for('static', filename=f'images/{current_user.id}/applied.jpg')})
+        #     # return jsonify({'url': file_path})
+        # except Exception as e:
+        #     import traceback
+        #     traceback.print_exc()
+        #     return jsonify({'url': url_for('static', filename=f'images/incorrect_image_message.png')})
 
     return jsonify({'error': 'Unknown error'})
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    msg = Message(
+        "Codename25: Password Reset Request",
+                  sender='milkoaleksandr21@gmail.com',
+                  recipients=[user.email]
+                )
+    msg.body = f'''To reset your password, visit the following link:
+{url_for('reset_password', token=token, _external=True)}
+If you did not make this request, then simply ignore this email and no changes will be made.
+    '''
+    mail.send(msg)
+
+@app.route("/request_password_reset", methods=["GET", "POST"])
+def request_password_reset():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = RequestPasswordResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        send_reset_email(user)
+        flash("An email has been sent with instructions to reset your password.", "info")
+        return redirect(url_for('login'))
+    return render_template('request_password_reset.html', title="Reset Password", form=form)
+
+@app.route("/request_password_reset/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    user = User.verify_reset_token(token)
+    if user is None:
+        flash('That is an expired or invalid token.', 'warning')
+        return redirect(url_for('request_password_reset'))
+    form = PasswordResetForm()
+    if form.validate_on_submit():
+        password_hash = generate_password_hash(form.password.data).decode("utf-8")
+        user.password = password_hash
+        db.session.commit()
+        flash(f"Password has been successfully updated!", 'success')
+        return redirect(url_for('login'))
+    return render_template('password_reset.html', title="Reset Password", form=form)
+
+# @app.route("/test", methods=["GET"])
+# def test():
+#     from disruptor.staging_ml import Room, AttributesAdder
+#     segmented_dir = r"C:\Users\Sasha\Desktop\Projects\codename25\src\disruptor\green_screen\find_similar\dataset\bedroom\es_segmented"
+#     # df = Room.create_paired_dataframe(segmented_dir)
+#     # Room.save_stratified_dataset("bedroom_dataset.csv")
+#     # Room.visualize_dataset("train.csv")
+#     # Room.plot_predictions("train.csv")
+#     # Room.visualize_polynomial_features("train.csv")
+#     # Room.visualize_all_vanishing_points(segmented_dir, "right")
+#     # Room.visualize_pairs(segmented_dir, "train.csv", "right")
+#     # Room.visualize_box_plots("train.csv")
+#     Room.train()
+#     # Room.train_dt()
+#     # Room.test()
+#     Room.perform_cross_val_score("train.csv", "clf.pkl")
+#     # Room.draw_roc_curve("train.csv", "clf.pkl")
+#     # Room.draw_precision_recall_vs_threshold("train.csv", "clf.pkl")
+#     # Room.clear_datasets()
+#
+#     # attradd = AttributesAdder(segmented_directory=segmented_dir, update_vp=True, update_iou=True, update_wall_center=True)
+#     # df = attradd.fit_transform(pd.read_csv("train.csv"))
+#     # df.to_csv("train.csv", index=False)
+#
+#     # Room.find_best_ml_parameters()
+#     return redirect(url_for('home'))
