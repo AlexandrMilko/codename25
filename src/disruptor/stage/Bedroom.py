@@ -5,6 +5,8 @@ import numpy as np
 import os
 from math import radians
 
+from src.disruptor.tools import image_overlay
+
 
 class Bedroom(Room):
 
@@ -26,7 +28,10 @@ class Bedroom(Room):
         print(f"BED placement pixel: {pixels_for_placing}")
         yaw_angle = wall.find_angle_from_3d(self, compensate_pitch, compensate_roll)
         for pixel in pixels_for_placing:
-            bed.calculate_rendering_parameters(self, pixel, yaw_angle, (roll, pitch), current_user_id)
+            render_parameters = (bed.calculate_rendering_parameters(self, pixel, yaw_angle, (roll, pitch), current_user_id))
+            furniture_image, background_image = bed.request_blender_render(render_parameters)
+            combined_image = image_overlay(furniture_image, self.original_image_path)
+            combined_image.save("combined_image.png")
 
         # Add curtains
         curtain = Curtain()

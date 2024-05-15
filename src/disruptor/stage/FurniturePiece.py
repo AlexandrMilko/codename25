@@ -1,7 +1,12 @@
+import base64
 import math
 import os.path
+from io import BytesIO
+
 import cv2
 import numpy as np
+import requests
+from PIL import Image
 
 from disruptor.stage import Room
 from sklearn.cluster import KMeans
@@ -54,6 +59,35 @@ class Bed(FurniturePiece):
         pixel_y = wall_centroid[1]
 
         return [[int(pixel_x), int(pixel_y)]]
+
+    @staticmethod
+    def request_blender_render(render_parameters, background_image_path):
+        # URL for blender_server
+        server_url = 'http://localhost:5002/render_image'
+
+        data = {
+            'obj_angles': render_parameters[0],
+            'obj_scale': render_parameters[1],
+            'camera_angles': render_parameters[2],
+            'camera_location': render_parameters[3],
+            'resolution_x': render_parameters[4],
+            'resolution_y': render_parameters[5]
+        }
+
+        # Send the HTTP request to the server
+        response = requests.post(server_url, json=data)
+
+        if response.status_code == 200:
+            # Decode the base64 encoded image
+            encoded_furniture_image = response.json()['image_base64']
+            furniture_image = Image.open(BytesIO(base64.b64decode(encoded_furniture_image)))
+
+            # Load another image from the folder
+            background_image = Image.open(background_image_path)
+
+            return furniture_image, background_image
+        else:
+            print("Error:", response.status_code, response.text)
 
     def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
                                        yaw_angle: float,
