@@ -413,3 +413,14 @@ def calculate_angle_from_top_view(point1, point2):
     if angle_pos_degrees < angle_neg_degrees:
         return -angle_pos_degrees * rotation_direction_pos
     return -angle_neg_degrees * rotation_direction_neg
+
+
+def image_overlay(furniture_image, background_image):
+    # Assume that both images are in PNG format
+    # Resize the fist_image to match the size of the second_image
+    furniture_image = furniture_image.resize(background_image.size)
+
+    # Overlay the decoded image on top of the background image
+    combined_image = Image.alpha_composite(background_image.convert('RGBA'), furniture_image.convert('RGBA'))
+
+    return combined_image
