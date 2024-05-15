@@ -8,22 +8,9 @@
 {% endblock header %}
 
 {% block options_fav %}
-        <a href="{{ url_for('favourites', image_url=url_for('static', filename='images/fav0.jpg'), text=text, chosen_favourite=True) }}">
-            <img src="{{ url_for('static', filename='images/fav0.jpg') }}" /> <!-- change your image here -->
-        </a>
-        <a href="{{ url_for('favourites', image_url=url_for('static', filename='images/fav1.jpg'), text=text, chosen_favourite=True) }}">
-            <img src="{{ url_for('static', filename='images/fav1.jpg') }}" /> <!-- change your image here -->
-        </a>
-        <a href="{{ url_for('favourites', image_url=url_for('static', filename='images/fav2.jpg'), text=text, chosen_favourite=True) }}">
-            <img src="{{ url_for('static', filename='images/fav2.jpg') }}" /> <!-- change your image here -->
-        </a>
-        <a href="{{ url_for('favourites', image_url=url_for('static', filename='images/fav3.jpg'), text=text, chosen_favourite=True) }}">
-            <img src="{{ url_for('static', filename='images/fav3.jpg') }}" /> <!-- change your image here -->
-        </a>
-        <a href="{{ url_for('favourites', image_url=url_for('static', filename='images/fav4.jpg'), text=text, chosen_favourite=True) }}">
-            <img src="{{ url_for('static', filename='images/fav4.jpg') }}" /> <!-- change your image here -->
-        </a>
-        <a href="{{ url_for('favourites', image_url=url_for('static', filename='images/fav5.jpg'), text=text, chosen_favourite=True) }}">
-            <img src="{{ url_for('static', filename='images/fav5.jpg') }}" /> <!-- change your image here -->
-        </a>
+{% for image_path in image_paths %}
+    <a href="{{ url_for('favourites', image_url=url_for('static', filename=image_path), text=text, chosen_favourite=True) }}">
+        <img src="{{ url_for('static', filename=image_path) }}" /> <!-- change your image here -->
+    </a>
+{% endfor %}
 {% endblock options_fav %}
