@@ -37,7 +37,7 @@ class Bedroom(Room):
             furniture_image = bed.request_blender_render(render_parameters)
             background_image = Image.open(self.original_image_path)
             combined_image = image_overlay(furniture_image, background_image)
-            combined_image.save(f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.jpg')
+            combined_image.save(f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.png')
 
         # Add curtains
         curtain = Curtain()
