@@ -1,6 +1,6 @@
 from disruptor.stage.Room import Room
 from disruptor.stage.FurniturePiece import FurniturePiece, Bed, Curtain
-from disruptor.tools import calculate_angle_from_top_view
+from disruptor.tools import calculate_angle_from_top_view, get_image_size
 import numpy as np
 import os
 from math import radians
@@ -16,9 +16,9 @@ class Bedroom(Room):
         compensate_pitch = -radians(pitch)
         compensate_roll = -radians(roll)
 
-        from disruptor.stage.DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
-        image_pixels_to_3d(self.original_image_path, "my_3d_space.txt")
-        rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", compensate_pitch, compensate_roll)
+        # from disruptor.stage.DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
+        # image_pixels_to_3d(self.original_image_path, "my_3d_space.txt")
+        # rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", compensate_pitch, compensate_roll)
 
         # Add Bed
         bed = Bed()
@@ -30,9 +30,12 @@ class Bedroom(Room):
         yaw_angle = wall.find_angle_from_3d(self, compensate_pitch, compensate_roll)
         for pixel in pixels_for_placing:
             render_parameters = (bed.calculate_rendering_parameters(self, pixel, yaw_angle, (roll, pitch), current_user_id))
-            # furniture_image, background_image = bed.request_blender_render(render_parameters)
-            # combined_image = image_overlay(furniture_image, self.original_image_path)
-            # combined_image.save("combined_image.png")
+            width, height = get_image_size(self.original_image_path)
+            render_parameters['resolution_x'] = width
+            render_parameters['resolution_y'] = height
+            furniture_image, background_image = bed.request_blender_render(render_parameters)
+            combined_image = image_overlay(furniture_image, self.original_image_path)
+            combined_image.save(f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.jpg')
 
         # Add curtains
         curtain = Curtain()
