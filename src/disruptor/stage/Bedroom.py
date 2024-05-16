@@ -33,7 +33,7 @@ class Bedroom(Room):
             width, height = get_image_size(self.original_image_path)
             render_parameters['resolution_x'] = width
             render_parameters['resolution_y'] = height
-            furniture_image, background_image = bed.request_blender_render(render_parameters)
+            furniture_image = bed.request_blender_render(render_parameters)
             combined_image = image_overlay(furniture_image, self.original_image_path)
             combined_image.save(f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.jpg')
 
