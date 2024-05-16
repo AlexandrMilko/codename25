@@ -633,8 +633,8 @@ def apply_style(empty_space, text):
     from disruptor.stage.Bedroom import Bedroom
     room = Bedroom(es_path)
     room.stage(current_user.id)
-    # query = GreenScreenImageQuery(text)
-    # query.run()
+    query = GreenScreenImageQuery(text)
+    query.run()
 
 # def apply_style(empty_space, text):
 #     import os
