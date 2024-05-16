@@ -76,8 +76,8 @@ def pixel_to_3d(x, y, w, h, depth_npy_path):
     Returns:
         X_3D, Y_3D, Z_3D: 3D coordinates of pixel
     """
-    FY = 0.5 * w / np.tan(0.5 * 55 * np.pi / 180.0)
-    FX = 0.5 * h / np.tan(0.5 * 55 * np.pi / 180.0)
+    FY = w * 0.6
+    FX = h * 0.6
 
     depth_image = np.load(depth_npy_path)
     resized_pred = Image.fromarray(depth_image).resize((w, h), Image.NEAREST)

@@ -94,10 +94,12 @@ class Resize(object):
         self.__width = width
         self.__height = height
 
-        # self.__keep_aspect_ratio = keep_aspect_ratio
-        self.__keep_aspect_ratio = True
+        self.__keep_aspect_ratio = keep_aspect_ratio
         self.__multiple_of = ensure_multiple_of
         self.__resize_method = resize_method
+
+        # self.__keep_aspect_ratio = True
+        # self.__resize_method = "upper_bound"
 
     def constrain_to_multiple_of(self, x, min_val=0, max_val=None):
         y = (np.round(x / self.__multiple_of) * self.__multiple_of).astype(int)
