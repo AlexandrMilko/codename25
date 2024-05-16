@@ -5,7 +5,7 @@ import numpy as np
 import os
 from math import radians
 
-from src.disruptor.tools import image_overlay
+from disruptor.tools import image_overlay
 
 
 class Bedroom(Room):
