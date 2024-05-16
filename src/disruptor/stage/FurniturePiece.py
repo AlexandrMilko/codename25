@@ -110,11 +110,11 @@ class Bed(FurniturePiece):
         print(camera_location, "camera_location")
 
         params = {
-            'obj_offsets': obj_offsets_floor,
-            'obj_angles': obj_angles,
-            'obj_scale': obj_scale,
-            'camera_angles': camera_angles,
-            'camera_location': camera_location
+            'obj_offsets': tuple(obj_offsets_floor), # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
+            'obj_angles': tuple(obj_angles),
+            'obj_scale': tuple(obj_scale),
+            'camera_angles': tuple(camera_angles),
+            'camera_location': tuple(camera_location)
         }
 
         return params
@@ -246,11 +246,11 @@ class Curtain(FurniturePiece):
         print(camera_location, "camera_location")
 
         params = {
-            'obj_offsets': obj_offsets,
-            'obj_angles': obj_angles,
-            'obj_scale': obj_scale,
-            'camera_angles': camera_angles,
-            'camera_location': camera_location
+            'obj_offsets': tuple(obj_offsets), # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
+            'obj_angles': tuple(obj_angles),
+            'obj_scale': tuple(obj_scale),
+            'camera_angles': tuple(camera_angles),
+            'camera_location': tuple(camera_location)
         }
 
         return params
