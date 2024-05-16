@@ -5,6 +5,7 @@ import numpy as np
 import os
 from math import radians
 
+from PIL import Image
 from disruptor.tools import image_overlay
 
 
@@ -34,7 +35,8 @@ class Bedroom(Room):
             render_parameters['resolution_x'] = width
             render_parameters['resolution_y'] = height
             furniture_image = bed.request_blender_render(render_parameters)
-            combined_image = image_overlay(furniture_image, self.original_image_path)
+            background_image = Image.open(self.original_image_path)
+            combined_image = image_overlay(furniture_image, background_image)
             combined_image.save(f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.jpg')
 
         # Add curtains
