@@ -39,17 +39,8 @@ class FurniturePiece:
         # URL for blender_server
         server_url = 'http://localhost:5002/render_image'
 
-        data = {
-            'obj_angles': render_parameters[0],
-            'obj_scale': render_parameters[1],
-            'camera_angles': render_parameters[2],
-            'camera_location': render_parameters[3],
-            'resolution_x': render_parameters[4],
-            'resolution_y': render_parameters[5]
-        }
-
         # Send the HTTP request to the server
-        response = requests.post(server_url, json=data)
+        response = requests.post(server_url, json=render_parameters)
 
         if response.status_code == 200:
             # Decode the base64 encoded image
