@@ -34,32 +34,6 @@ class FurniturePiece:
     def get_default_angles(self):
         return self.default_angles
 
-
-class Bed(FurniturePiece):
-    # We use it to scale the model to metric units
-    scale = 0.01, 0.01, 0.01
-    # We use it to compensate the angle if the model is originally rotated in a wrong way
-    default_angles = 0, 0, 90
-
-    def __init__(self, model_path='disruptor/stage/3Ds/bedroom/bed/bed.obj',
-                 wall_projection_model_path='disruptor/stage/3Ds/bedroom/bed/bed_back.obj',
-                 floor_projection_model_path='disruptor/stage/3Ds/bedroom/bed/bed_bottom.obj',
-                 ):
-        super().__init__(model_path, wall_projection_model_path, floor_projection_model_path)
-
-    @staticmethod
-    def find_placement_pixel(wall_mask_path) -> list[list[
-        int]]:  # list[list[int]] We return list of coordinates, because some of the furniture pieces, like curtains have numerous copies in the room
-        wall_mask = cv2.imread(wall_mask_path, cv2.IMREAD_GRAYSCALE)
-        wall_contours, _ = cv2.findContours(wall_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        # Calculate offset from bed centroid to wall centroid
-        wall_centroid = np.mean(wall_contours[0], axis=0)[0]
-        pixel_x = wall_centroid[0]
-        pixel_y = wall_centroid[1]
-
-        return [[int(pixel_x), int(pixel_y)]]
-
     @staticmethod
     def request_blender_render(render_parameters, background_image_path):
         # URL for blender_server
@@ -88,6 +62,32 @@ class Bed(FurniturePiece):
             return furniture_image, background_image
         else:
             print("Error:", response.status_code, response.text)
+
+
+class Bed(FurniturePiece):
+    # We use it to scale the model to metric units
+    scale = 0.01, 0.01, 0.01
+    # We use it to compensate the angle if the model is originally rotated in a wrong way
+    default_angles = 0, 0, 90
+
+    def __init__(self, model_path='disruptor/stage/3Ds/bedroom/bed/bed.obj',
+                 wall_projection_model_path='disruptor/stage/3Ds/bedroom/bed/bed_back.obj',
+                 floor_projection_model_path='disruptor/stage/3Ds/bedroom/bed/bed_bottom.obj',
+                 ):
+        super().__init__(model_path, wall_projection_model_path, floor_projection_model_path)
+
+    @staticmethod
+    def find_placement_pixel(wall_mask_path) -> list[list[
+        int]]:  # list[list[int]] We return list of coordinates, because some of the furniture pieces, like curtains have numerous copies in the room
+        wall_mask = cv2.imread(wall_mask_path, cv2.IMREAD_GRAYSCALE)
+        wall_contours, _ = cv2.findContours(wall_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Calculate offset from bed centroid to wall centroid
+        wall_centroid = np.mean(wall_contours[0], axis=0)[0]
+        pixel_x = wall_centroid[0]
+        pixel_y = wall_centroid[1]
+
+        return [[int(pixel_x), int(pixel_y)]]
 
     def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
                                        yaw_angle: float,
@@ -121,6 +121,14 @@ class Bed(FurniturePiece):
         print(obj_scale, "obj_scale")
         print(camera_angles, "camera_angles")
         print(camera_location, "camera_location")
+
+        params = {
+            'obj_offsets': obj_offsets_floor,
+            'obj_angles': obj_angles,
+            'obj_scale': obj_scale,
+            'camera_angles': camera_angles,
+            'camera_location': camera_location
+        }
 
 
 class Curtain(FurniturePiece):
@@ -248,3 +256,11 @@ class Curtain(FurniturePiece):
         print(obj_scale, "obj_scale")
         print(camera_angles, "camera_angles")
         print(camera_location, "camera_location")
+
+        params = {
+            'obj_offsets': obj_offsets,
+            'obj_angles': obj_angles,
+            'obj_scale': obj_scale,
+            'camera_angles': camera_angles,
+            'camera_location': camera_location
+        }
