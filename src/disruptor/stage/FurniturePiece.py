@@ -35,7 +35,7 @@ class FurniturePiece:
         return self.default_angles
 
     @staticmethod
-    def request_blender_render(render_parameters, background_image_path):
+    def request_blender_render(render_parameters):
         # URL for blender_server
         server_url = 'http://localhost:5002/render_image'
 
@@ -55,11 +55,7 @@ class FurniturePiece:
             # Decode the base64 encoded image
             encoded_furniture_image = response.json()['image_base64']
             furniture_image = Image.open(BytesIO(base64.b64decode(encoded_furniture_image)))
-
-            # Load another image from the folder
-            background_image = Image.open(background_image_path)
-
-            return furniture_image, background_image
+            return furniture_image
         else:
             print("Error:", response.status_code, response.text)
 
