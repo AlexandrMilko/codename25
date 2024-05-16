@@ -69,7 +69,7 @@ class Wall:
         image = cv2.inRange(image, lower_color, upper_color)
 
         distance = ndimage.distance_transform_edt(image)
-        coords = peak_local_max(distance, footprint=np.ones((3, 3)), labels=image)
+        coords = peak_local_max(distance, footprint=np.ones((300, 300)), labels=image)
         mask = np.zeros(distance.shape, dtype=bool)
         mask[tuple(coords.T)] = True
         markers, _ = ndimage.label(mask)
