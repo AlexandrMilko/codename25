@@ -130,6 +130,7 @@ class Bed(FurniturePiece):
             'camera_location': camera_location
         }
 
+        return params
 
 class Curtain(FurniturePiece):
     scale = 0.005, 0.01, 0.01
@@ -264,3 +265,5 @@ class Curtain(FurniturePiece):
             'camera_angles': camera_angles,
             'camera_location': camera_location
         }
+
+        return params
