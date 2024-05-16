@@ -243,7 +243,7 @@ class GreenScreenImageQuery(Query):
     cfg_scale = 7
     steps = 20
 
-    def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.jpg",
+    def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.png",
                  inpainting_mask="inpainting_mask.png"):
         # We will use result image to transform it into new space of user image
         self.prerequisite_path = "disruptor" + url_for('static',
@@ -288,8 +288,8 @@ class GreenScreenImageQuery(Query):
             "width": self.width,
             "height": self.height,
             # "seed": 123, # TODO add seed, before testing
-            "mask": self.inpainting_mask_image_b64,
-            "mask_blur": 3,
+            # "mask": self.inpainting_mask_image_b64,
+            # "mask_blur": 3,
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
