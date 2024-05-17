@@ -169,7 +169,7 @@ class ControlNetImageQuery(Query):
                 "controlnet": {
                     "args": [
                         {
-                            "input_image": self.result_image_b64,
+                            "image": self.result_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
                             "weight": 0.9,
@@ -179,7 +179,7 @@ class ControlNetImageQuery(Query):
                             "processor_res": 512
                         },
                         {
-                            "input_image": self.user_image_b64,
+                            "image": self.user_image_b64,
                             "module": "softedge_hed",
                             "model": "control_sd15_hed [fef5e48e]",
                             "weight": 0.55,
@@ -189,7 +189,7 @@ class ControlNetImageQuery(Query):
                             "processor_res": 512
                         },
                         {
-                            "input_image": self.user_image_b64,
+                            "image": self.user_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
                             "weight": 0.9,
@@ -199,7 +199,7 @@ class ControlNetImageQuery(Query):
                             "processor_res": 512
                         },
                         {
-                            "input_image": self.user_image_b64,
+                            "image": self.user_image_b64,
                             "module": "depth_midas",
                             "model": "control_sd15_depth [fef5e48e]",
                             "weight": 0.4,
@@ -266,8 +266,8 @@ class GreenScreenImageQuery(Query):
         if self.style in ("Modern", "Art Deco"):
             set_xsarchitectural()
         else:
-            set_realistic_vision()
-            # set_deliberate()
+            # set_realistic_vision()
+            set_deliberate()
 
         self.staged_image_b64 = self.stage()
         self.design()
@@ -294,7 +294,7 @@ class GreenScreenImageQuery(Query):
                 "controlnet": {
                     "args": [
                         {
-                            "input_image": self.prerequisite_image_b64,
+                            "image": self.prerequisite_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
                             "weight": 1,
@@ -343,7 +343,7 @@ class GreenScreenImageQuery(Query):
                 "controlnet": {
                     "args": [
                         {
-                            "input_image": self.staged_image_b64,
+                            "image": self.staged_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
                             "weight": 0.9,
@@ -353,7 +353,7 @@ class GreenScreenImageQuery(Query):
                             "processor_res": 512
                         },
                         {
-                            "input_image": self.staged_image_b64,
+                            "image": self.staged_image_b64,
                             "module": "softedge_hed",
                             "model": "control_sd15_hed [fef5e48e]",
                             "weight": 0.55,
@@ -363,7 +363,7 @@ class GreenScreenImageQuery(Query):
                             "processor_res": 512
                         },
                         {
-                            "input_image": self.staged_image_b64,
+                            "image": self.staged_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
                             "weight": 0.9,
@@ -373,7 +373,7 @@ class GreenScreenImageQuery(Query):
                             "processor_res": 512
                         },
                         {
-                            "input_image": self.staged_image_b64,
+                            "image": self.staged_image_b64,
                             "module": "depth_midas",
                             "model": "control_sd15_depth [fef5e48e]",
                             "weight": 0.4,
@@ -402,7 +402,7 @@ class GreenScreenImageQuery(Query):
         #         "controlnet": {
         #             "args": [
         #                 {
-        #                     "input_image": self.staged_image_b64,
+        #                     "image": self.staged_image_b64,
         #                     "module": "seg_ofade20k",
         #                     "model": "control_sd15_seg [fef5e48e]",
         #                     "weight": 1,
@@ -412,7 +412,7 @@ class GreenScreenImageQuery(Query):
         #                     "processor_res": 512
         #                 },
         #                 {
-        #                     "input_image": self.staged_image_b64,
+        #                     "image": self.staged_image_b64,
         #                     "module": "depth_midas",
         #                     "model": "control_sd15_depth [fef5e48e]",
         #                     "weight": 1,
