@@ -354,28 +354,28 @@ class GreenScreenImageQuery(Query):
                             # "control_mode": 1,
                             "processor_res": 512
                         },
-                        {
-                            "enabled": True,
-                            "image": self.staged_image_b64,
-                            "module": "softedge_hed",
-                            "model": "control_sd15_hed [fef5e48e]",
-                            "weight": 0.55,
-                            "guidance_start": 0.1,
-                            "guidance_end": 0.5,
-                            # "control_mode": 0,
-                            "processor_res": 512
-                        },
-                        {
-                            "enabled": True,
-                            "image": self.staged_image_b64,
-                            "module": "seg_ofade20k",
-                            "model": "control_sd15_seg [fef5e48e]",
-                            "weight": 0.9,
-                            "guidance_start": 0,
-                            "guidance_end": 0.5,
-                            # "control_mode": 1,
-                            "processor_res": 512
-                        },
+                        # {
+                        #     "enabled": True,
+                        #     "image": self.staged_image_b64,
+                        #     "module": "softedge_hed",
+                        #     "model": "control_sd15_hed [fef5e48e]",
+                        #     "weight": 0.55,
+                        #     "guidance_start": 0.1,
+                        #     "guidance_end": 0.5,
+                        #     # "control_mode": 0,
+                        #     "processor_res": 512
+                        # },
+                        # {
+                        #     "enabled": True,
+                        #     "image": self.staged_image_b64,
+                        #     "module": "seg_ofade20k",
+                        #     "model": "control_sd15_seg [fef5e48e]",
+                        #     "weight": 0.9,
+                        #     "guidance_start": 0,
+                        #     "guidance_end": 0.5,
+                        #     # "control_mode": 1,
+                        #     "processor_res": 512
+                        # },
                         {
                             "enabled": True,
                             "image": self.staged_image_b64,
