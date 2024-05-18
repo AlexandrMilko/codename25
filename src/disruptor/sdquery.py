@@ -276,8 +276,8 @@ class GreenScreenImageQuery(Query):
         self.denoising_strength = 1
         self.steps = 20
         data = {
-            # "prompt": self.prompt,
-            "prompt": "",
+            "prompt": self.prompt,
+            # "prompt": "",
             "sampler_name": self.sampler_name,
             # "negative_prompt": self.negative_prompt,
             "init_images": [self.prerequisite_image_b64],
@@ -297,11 +297,11 @@ class GreenScreenImageQuery(Query):
                             "image": self.prerequisite_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
-                            "weight": 1,
-                            "guidance_start": 0,
-                            "guidance_end": 1,
-                            # "control_mode": 0,
-                            "processor_res": 512
+                            # "weight": 1,
+                            # "guidance_start": 0,
+                            # "guidance_end": 1,
+                            # # "control_mode": 0,
+                            # "processor_res": 512
                         }
                     ]
                 }
