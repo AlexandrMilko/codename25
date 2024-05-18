@@ -298,11 +298,12 @@ class GreenScreenImageQuery(Query):
                             "image": self.prerequisite_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
+                            "lowvram": True,
                             # "weight": 1,
                             # "guidance_start": 0,
                             # "guidance_end": 1,
                             # # "control_mode": 0,
-                            # "processor_res": 512
+                            # "processor_res": 512 # WARNING: TODO change to image height
                         }
                     ]
                 }
@@ -352,7 +353,8 @@ class GreenScreenImageQuery(Query):
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
                             # "control_mode": 1,
-                            "processor_res": 512
+                            "processor_res": 512, # WARNING: TODO change to image height
+                            "lowvram": True,
                         },
                         # {
                         #     "enabled": True,
@@ -374,7 +376,7 @@ class GreenScreenImageQuery(Query):
                         #     "guidance_start": 0,
                         #     "guidance_end": 0.5,
                         #     # "control_mode": 1,
-                        #     "processor_res": 512
+                        #     "processor_res": 512,
                         # },
                         {
                             "enabled": True,
@@ -385,7 +387,8 @@ class GreenScreenImageQuery(Query):
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
                             # "control_mode": 0,
-                            "processor_res": 512
+                            "processor_res": 512, # WARNING: TODO change to image height
+                            "lowvram": True,
                         }
                     ]
                 }
