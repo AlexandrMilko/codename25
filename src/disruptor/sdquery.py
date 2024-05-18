@@ -344,6 +344,7 @@ class GreenScreenImageQuery(Query):
                 "controlnet": {
                     "args": [
                         {
+                            "enabled": True,
                             "image": self.staged_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
@@ -354,6 +355,7 @@ class GreenScreenImageQuery(Query):
                             "processor_res": 512
                         },
                         {
+                            "enabled": True,
                             "image": self.staged_image_b64,
                             "module": "softedge_hed",
                             "model": "control_sd15_hed [fef5e48e]",
@@ -364,6 +366,7 @@ class GreenScreenImageQuery(Query):
                             "processor_res": 512
                         },
                         {
+                            "enabled": True,
                             "image": self.staged_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
@@ -374,6 +377,7 @@ class GreenScreenImageQuery(Query):
                             "processor_res": 512
                         },
                         {
+                            "enabled": True,
                             "image": self.staged_image_b64,
                             "module": "depth_midas",
                             "model": "control_sd15_depth [fef5e48e]",
