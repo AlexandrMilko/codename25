@@ -263,11 +263,12 @@ class GreenScreenImageQuery(Query):
         # We run segmentation for our prerequisite image to see if segmentation was done correctly
         run_preprocessor("seg_ofade20k", self.prerequisite_path, current_user.id, "seg_prerequisite.jpg")
 
-        if self.style in ("Modern", "Art Deco"):
-            set_xsarchitectural()
-        else:
-            # set_realistic_vision()
-            set_deliberate()
+        # if self.style in ("Modern", "Art Deco"):
+        #     set_xsarchitectural()
+        # else:
+        #     # set_realistic_vision()
+        #     set_deliberate()
+        set_realistic_vision()
 
         self.staged_image_b64 = self.stage()
         self.design()
