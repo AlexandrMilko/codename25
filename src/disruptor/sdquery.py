@@ -303,7 +303,7 @@ class GreenScreenImageQuery(Query):
                             "weight": 1,
                             "guidance_start": 0,
                             "guidance_end": 1,
-                            "control_mode": 0,
+                            "control_mode": "Balanced",
                             "processor_res": 512 # WARNING: TODO change to image height
                         }
                     ]
@@ -353,7 +353,7 @@ class GreenScreenImageQuery(Query):
                             "weight": 0.9,
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
-                            "control_mode": 1,
+                            "control_mode": "Balanced",
                             "processor_res": 512, # WARNING: TODO change to image height
                             "lowvram": True,
                         },
@@ -387,7 +387,7 @@ class GreenScreenImageQuery(Query):
                             "weight": 0.4,
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
-                            "control_mode": 0,
+                            "control_mode": "Balanced",
                             "processor_res": 512, # WARNING: TODO change to image height
                             "lowvram": True,
                         }
