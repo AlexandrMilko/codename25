@@ -295,7 +295,7 @@ class GreenScreenImageQuery(Query):
                 "controlnet": {
                     "args": [
                         {
-                            "enabled": True,
+                            "enabled": False,
                             "image": self.prerequisite_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_seg-fp16 [b9c1cc12]",
@@ -346,7 +346,7 @@ class GreenScreenImageQuery(Query):
                 "controlnet": {
                     "args": [
                         {
-                            # "enabled": True,
+                            "enabled": False,
                             "image": self.staged_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_seg-fp16 [b9c1cc12]",
@@ -380,7 +380,7 @@ class GreenScreenImageQuery(Query):
                         #     "processor_res": 512,
                         # },
                         {
-                            # "enabled": True,
+                            "enabled": False,
                             "image": self.staged_image_b64,
                             "module": "depth_midas",
                             "model": "control_depth-fp16 [400750f6]",
