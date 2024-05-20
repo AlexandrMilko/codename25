@@ -298,13 +298,13 @@ class GreenScreenImageQuery(Query):
                             "enabled": True,
                             "image": self.prerequisite_image_b64,
                             "module": "seg_ofade20k",
-                            "model": "control_sd15_seg [fef5e48e]",
+                            "model": "control_seg-fp16 [b9c1cc12]",
                             "lowvram": True,
-                            # "weight": 1,
-                            # "guidance_start": 0,
-                            # "guidance_end": 1,
-                            # # "control_mode": 0,
-                            # "processor_res": 512 # WARNING: TODO change to image height
+                            "weight": 1,
+                            "guidance_start": 0,
+                            "guidance_end": 1,
+                            "control_mode": 0,
+                            "processor_res": 512 # WARNING: TODO change to image height
                         }
                     ]
                 }
@@ -349,11 +349,11 @@ class GreenScreenImageQuery(Query):
                             "enabled": True,
                             "image": self.staged_image_b64,
                             "module": "seg_ofade20k",
-                            "model": "control_sd15_seg [fef5e48e]",
+                            "model": "control_seg-fp16 [b9c1cc12]",
                             "weight": 0.9,
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
-                            # "control_mode": 1,
+                            "control_mode": 1,
                             "processor_res": 512, # WARNING: TODO change to image height
                             "lowvram": True,
                         },
@@ -372,7 +372,7 @@ class GreenScreenImageQuery(Query):
                         #     "enabled": True,
                         #     "image": self.staged_image_b64,
                         #     "module": "seg_ofade20k",
-                        #     "model": "control_sd15_seg [fef5e48e]",
+                        #     "model": "control_seg-fp16 [b9c1cc12]",
                         #     "weight": 0.9,
                         #     "guidance_start": 0,
                         #     "guidance_end": 0.5,
@@ -383,11 +383,11 @@ class GreenScreenImageQuery(Query):
                             "enabled": True,
                             "image": self.staged_image_b64,
                             "module": "depth_midas",
-                            "model": "control_sd15_depth [fef5e48e]",
+                            "model": "control_depth-fp16 [400750f6]",
                             "weight": 0.4,
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
-                            # "control_mode": 0,
+                            "control_mode": 0,
                             "processor_res": 512, # WARNING: TODO change to image height
                             "lowvram": True,
                         }
@@ -413,7 +413,7 @@ class GreenScreenImageQuery(Query):
         #                 {
         #                     "image": self.staged_image_b64,
         #                     "module": "seg_ofade20k",
-        #                     "model": "control_sd15_seg [fef5e48e]",
+        #                     "model": "control_seg-fp16 [b9c1cc12]",
         #                     "weight": 1,
         #                     "guidance_start": 0,
         #                     "guidance_end": 1,
@@ -423,7 +423,7 @@ class GreenScreenImageQuery(Query):
         #                 {
         #                     "image": self.staged_image_b64,
         #                     "module": "depth_midas",
-        #                     "model": "control_sd15_depth [fef5e48e]",
+        #                     "model": "control_depth-fp16 [400750f6]",
         #                     "weight": 1,
         #                     "guidance_start": 0,
         #                     "guidance_end": 1,
