@@ -295,12 +295,35 @@ class GreenScreenImageQuery(Query):
                 "controlnet": {
                     "args": [
                         {
+                            "advanced_weighting": None,
+                            "animatediff_batch": False,
+                            "batch_image_files": [],
+                            "batch_images": "",
+                            "batch_mask_dir": None,
+                            "batch_modifiers": [],
+                            "effective_region_mask": None,
+                            "hr_option": "Both",
+                            "inpaint_crop_input_image": False,
+                            "input_mode": "simple",
+                            "ipadapter_input": None,
+                            "is_ui": False,
+                            "loopback": False,
+                            "low_vram": False,
+                            "mask": None,
+                            "output_dir": "",
+                            "pixel_perfect": False,
+                            "pulid_mode": "Fidelity",
+                            "resize_mode": "Crop and Resize",
+                            "save_detected_map": True,
+                            "threshold_a": 0.5,
+                            "threshold_b": 0.5,
+
                             "enabled": True,
                             "image": self.prerequisite_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_seg-fp16 [b9c1cc12]",
-                            "low_vram": True,
-                            "weight": 1,
+                            # "low_vram": True,
+                            "weight": 1.0,
                             "guidance_start": 0,
                             "guidance_end": 1,
                             "control_mode": "Balanced",
@@ -342,58 +365,104 @@ class GreenScreenImageQuery(Query):
             "width": self.width * 2,
             "height": self.height * 2,
             # "seed": 123, # TODO add seed, before testing
-            # "alwayson_scripts": {
-            #     "controlnet": {
-            #         "args": [
-            #             {
-            #                 "enabled": False,
-            #                 "image": self.staged_image_b64,
-            #                 "module": "seg_ofade20k",
-            #                 "model": "control_seg-fp16 [b9c1cc12]",
-            #                 "weight": 0.9,
-            #                 "guidance_start": 0.1,
-            #                 "guidance_end": 0.5,
-            #                 "control_mode": "Balanced",
-            #                 "processor_res": 512, # WARNING: TODO change to image height
-            #                 "low_vram": True,
-            #             },
-            #             # {
-            #             #     "enabled": True,
-            #             #     "image": self.staged_image_b64,
-            #             #     "module": "softedge_hed",
-            #             #     "model": "control_sd15_hed [fef5e48e]",
-            #             #     "weight": 0.55,
-            #             #     "guidance_start": 0.1,
-            #             #     "guidance_end": 0.5,
-            #             #     # "control_mode": 0,
-            #             #     "processor_res": 512
-            #             # },
-            #             # {
-            #             #     "enabled": True,
-            #             #     "image": self.staged_image_b64,
-            #             #     "module": "seg_ofade20k",
-            #             #     "model": "control_seg-fp16 [b9c1cc12]",
-            #             #     "weight": 0.9,
-            #             #     "guidance_start": 0,
-            #             #     "guidance_end": 0.5,
-            #             #     # "control_mode": 1,
-            #             #     "processor_res": 512,
-            #             # },
-            #             {
-            #                 "enabled": False,
-            #                 "image": self.staged_image_b64,
-            #                 "module": "depth_midas",
-            #                 "model": "control_depth-fp16 [400750f6]",
-            #                 "weight": 0.4,
-            #                 "guidance_start": 0.1,
-            #                 "guidance_end": 0.5,
-            #                 "control_mode": "Balanced",
-            #                 "processor_res": 512, # WARNING: TODO change to image height
-            #                 "low_vram": True,
-            #             }
-            #         ]
-            #     }
-            # }
+            "alwayson_scripts": {
+                "controlnet": {
+                    "args": [
+                        {
+                            "advanced_weighting": None,
+                            "animatediff_batch": False,
+                            "batch_image_files": [],
+                            "batch_images": "",
+                            "batch_mask_dir": None,
+                            "batch_modifiers": [],
+                            "effective_region_mask": None,
+                            "hr_option": "Both",
+                            "inpaint_crop_input_image": False,
+                            "input_mode": "simple",
+                            "ipadapter_input": None,
+                            "is_ui": False,
+                            "loopback": False,
+                            "low_vram": False,
+                            "mask": None,
+                            "output_dir": "",
+                            "pixel_perfect": False,
+                            "pulid_mode": "Fidelity",
+                            "resize_mode": "Crop and Resize",
+                            "save_detected_map": True,
+                            "threshold_a": 0.5,
+                            "threshold_b": 0.5,
+
+                            "enabled": True,
+                            "image": self.staged_image_b64,
+                            "module": "seg_ofade20k",
+                            "model": "control_seg-fp16 [b9c1cc12]",
+                            "weight": 0.9,
+                            "guidance_start": 0.1,
+                            "guidance_end": 0.5,
+                            "control_mode": "Balanced",
+                            "processor_res": 512, # WARNING: TODO change to image height
+                            # "low_vram": True,
+                        },
+                        # {
+                        #     "enabled": True,
+                        #     "image": self.staged_image_b64,
+                        #     "module": "softedge_hed",
+                        #     "model": "control_sd15_hed [fef5e48e]",
+                        #     "weight": 0.55,
+                        #     "guidance_start": 0.1,
+                        #     "guidance_end": 0.5,
+                        #     # "control_mode": 0,
+                        #     "processor_res": 512
+                        # },
+                        # {
+                        #     "enabled": True,
+                        #     "image": self.staged_image_b64,
+                        #     "module": "seg_ofade20k",
+                        #     "model": "control_seg-fp16 [b9c1cc12]",
+                        #     "weight": 0.9,
+                        #     "guidance_start": 0,
+                        #     "guidance_end": 0.5,
+                        #     # "control_mode": 1,
+                        #     "processor_res": 512,
+                        # },
+                        {
+                            "advanced_weighting": None,
+                            "animatediff_batch": False,
+                            "batch_image_files": [],
+                            "batch_images": "",
+                            "batch_mask_dir": None,
+                            "batch_modifiers": [],
+                            "effective_region_mask": None,
+                            "hr_option": "Both",
+                            "inpaint_crop_input_image": False,
+                            "input_mode": "simple",
+                            "ipadapter_input": None,
+                            "is_ui": False,
+                            "loopback": False,
+                            "low_vram": False,
+                            "mask": None,
+                            "output_dir": "",
+                            "pixel_perfect": False,
+                            "pulid_mode": "Fidelity",
+                            "resize_mode": "Crop and Resize",
+                            "save_detected_map": True,
+                            "threshold_a": 0.5,
+                            "threshold_b": 0.5,
+
+                            "enabled": True,
+                            "image": self.staged_image_b64,
+                            "module": "depth_midas",
+                            "model": "control_depth-fp16 [400750f6]",
+                            "weight": 0.4,
+                            "guidance_start": 0.1,
+                            "guidance_end": 0.5,
+                            "control_mode": "Balanced",
+                            "processor_res": 512, # WARNING: TODO change to image height
+                            # "low_vram": True,
+                        }
+                    ]
+                }
+            }
         }
         # data = {
         #     "prompt": self.prompt,
