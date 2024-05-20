@@ -295,11 +295,11 @@ class GreenScreenImageQuery(Query):
                 "controlnet": {
                     "args": [
                         {
-                            "enabled": False,
+                            "enabled": True,
                             "image": self.prerequisite_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_seg-fp16 [b9c1cc12]",
-                            "lowvram": True,
+                            "low_vram": True,
                             "weight": 1,
                             "guidance_start": 0,
                             "guidance_end": 1,
@@ -355,7 +355,7 @@ class GreenScreenImageQuery(Query):
                             "guidance_end": 0.5,
                             "control_mode": "Balanced",
                             "processor_res": 512, # WARNING: TODO change to image height
-                            "lowvram": True,
+                            "low_vram": True,
                         },
                         # {
                         #     "enabled": True,
@@ -389,7 +389,7 @@ class GreenScreenImageQuery(Query):
                             "guidance_end": 0.5,
                             "control_mode": "Balanced",
                             "processor_res": 512, # WARNING: TODO change to image height
-                            "lowvram": True,
+                            "low_vram": True,
                         }
                     ]
                 }
