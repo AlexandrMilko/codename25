@@ -4,6 +4,7 @@ from disruptor.tools import calculate_angle_from_top_view, get_image_size
 import numpy as np
 import os
 from math import radians
+import time
 
 from PIL import Image
 from disruptor.tools import image_overlay
@@ -17,6 +18,9 @@ class Bedroom(Room):
         roll, pitch = 0, 0 # WARNING, remove it to use camera angle estimation
         compensate_pitch = -radians(pitch)
         compensate_roll = -radians(roll)
+
+        # Add time for Garbage Collector
+        time.sleep(5)
 
         # from disruptor.stage.DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
         # image_pixels_to_3d(self.original_image_path, "my_3d_space.txt")
@@ -39,6 +43,9 @@ class Bedroom(Room):
             background_image = Image.open(self.original_image_path)
             combined_image = image_overlay(furniture_image, background_image)
             combined_image.save(f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.png')
+
+        # Add time for Garbage Collector
+        time.sleep(5)
 
         # Add curtains
         curtain = Curtain()

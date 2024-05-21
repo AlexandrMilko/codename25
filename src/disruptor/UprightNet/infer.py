@@ -1,4 +1,6 @@
 from __future__ import division
+
+import gc
 import time
 import torch
 import numpy as np
@@ -69,6 +71,14 @@ def get_roll_pitch():
             from disruptor.UprightNet.models.networks import JointLoss
             pred_roll, pred_pitch = JointLoss.compute_angle_from_pred(pred_cam_geo_unit, pred_up_geo_unit, pred_weights)
             os.chdir('../..')
+
+            del model
+            del dataset
+            del pred_cam_geo_unit
+            del pred_up_geo_unit
+            del pred_weights
+            gc.collect()
+            torch.cuda.empty_cache()
             return pred_roll, pred_pitch
 
     return infer(model, test_dataset, global_step)
