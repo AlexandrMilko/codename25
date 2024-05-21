@@ -20,18 +20,12 @@ class Bedroom(Room):
         compensate_roll = -radians(roll)
 
         # Add time for Garbage Collector
-        import gc
-        import torch
-        gc.collect()
-        torch.cuda.empty_cache()
         time.sleep(5)
 
         from disruptor.stage.DepthAnything.depth_estimation import image_pixels_to_depth
         image_pixels_to_depth(self.original_image_path)
 
         # Add time for Garbage Collector
-        gc.collect()
-        torch.cuda.empty_cache()
         time.sleep(5)
 
         # from disruptor.stage.DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
