@@ -711,6 +711,11 @@ def apply_style(empty_space, text):
     from disruptor.stage.Bedroom import Bedroom
     room = Bedroom(es_path)
     room.stage(current_user.id)
+
+    # Add time for Garbage Collector
+    import time
+    time.sleep(5)
+
     query = GreenScreenImageQuery(text)
     query.run()
 
