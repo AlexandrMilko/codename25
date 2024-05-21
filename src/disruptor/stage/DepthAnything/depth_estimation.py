@@ -1,4 +1,6 @@
 import argparse
+import time
+
 from PIL import Image
 from disruptor.stage.DepthAnything.zoedepth.models.builder import build_model
 from disruptor.stage.DepthAnything.zoedepth.utils.config import get_config
@@ -127,6 +129,8 @@ def image_pixels_to_depth(image_path, depth_npy_path):
     del pred
     gc.collect()
     torch.cuda.empty_cache()
+    # Add time for Garbage Collector
+    time.sleep(5)
 
 
 def rotate_3d_points(input_fname, output_fname, pitch_rad, roll_rad): # We rotate them to restore the original global coordinates which were moved due to camera rotation
