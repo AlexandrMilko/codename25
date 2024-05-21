@@ -12,20 +12,17 @@ from disruptor.tools import get_image_size
 
 depth_npy_path = 'disruptor/stage/DepthAnything/zoedepth/depth.npy'
 
-def image_pixel_to_3d(x, y, image_path):
-    image_pixels_to_depth(image_path, depth_npy_path)
+def image_pixel_to_3d(x, y, image_path, depth_npy_path=depth_npy_path):
     w, h = get_image_size(image_path)
     return transform_to_blender_xyz(*pixel_to_3d(x, y, w, h, depth_npy_path))
 
-def image_pixels_to_3d(image_path, output_path):
-    image_pixels_to_depth(image_path, depth_npy_path)
+def image_pixels_to_3d(image_path, output_path, depth_npy_path=depth_npy_path):
     pixel_coords_3d = get_pixel_3d_coords(image_path, depth_npy_path)
     with open(output_path, "w") as f:
         for coord in pixel_coords_3d:
             f.write(f"{coord[0]},{coord[1]},{coord[2]}\n")
 
-def image_pixel_list_to_3d(image_path, pixels_coordinates: list[list[int,int]]):
-    image_pixels_to_depth(image_path, depth_npy_path)
+def image_pixel_list_to_3d(image_path, pixels_coordinates: list[list[int,int]], depth_npy_path=depth_npy_path):
     points_3d = []
     w, h = get_image_size(image_path)
     for x, y in pixels_coordinates:
@@ -93,7 +90,7 @@ def pixel_to_3d(x, y, w, h, depth_npy_path):
     return X_3D, Y_3D, Z_3D
 
 
-def image_pixels_to_depth(image_path, depth_npy_path):
+def image_pixels_to_depth(image_path, depth_npy_path=depth_npy_path):
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--model", type=str, default='zoedepth', help="Name of the model to test")
     parser.add_argument("-p", "--pretrained_resource", type=str,
