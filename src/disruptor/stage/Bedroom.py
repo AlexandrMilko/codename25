@@ -13,7 +13,7 @@ from disruptor.tools import image_overlay
 class Bedroom(Room):
 
     def stage(self, current_user_id):
-        roll, pitch = np.negative(np.degrees(self.find_roll_pitch(current_user_id)))
+        roll, pitch = np.degrees(self.find_roll_pitch(current_user_id))
         walls = self.get_walls(current_user_id)
         compensate_pitch = -radians(pitch)
         compensate_roll = -radians(roll)
