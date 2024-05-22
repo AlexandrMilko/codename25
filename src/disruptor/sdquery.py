@@ -15,7 +15,7 @@ from PIL import Image
 import math
 import shutil
 
-from disruptor.tools import create_directory_if_not_exists, min_max_scale, move_file, submit_post, save_encoded_image, get_encoded_image, run_preprocessor
+from disruptor.tools import create_directory_if_not_exists, min_max_scale, move_file, submit_post, save_encoded_image, get_encoded_image, run_preprocessor, restart_stable_diffusion
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 MAX_CONTROLNET_IMAGE_RESOLUTION = 600
@@ -718,6 +718,9 @@ def apply_style(empty_space, text):
 
     query = GreenScreenImageQuery(text)
     query.run()
+
+    # We restart it to deallocate memory. TODO fix it.
+    restart_stable_diffusion('http://127.0.0.1:7861')
 
 # def apply_style(empty_space, text):
 #     import os
