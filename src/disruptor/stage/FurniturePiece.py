@@ -78,23 +78,21 @@ class Bed(FurniturePiece):
 
     def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
                                        yaw_angle: float,
-                                       camera_angles: tuple[float, float], current_user_id):
+                                       camera_angles_rad: tuple[float, float], current_user_id):
         from math import radians
-        roll, pitch = camera_angles
-        compensate_pitch = -radians(pitch)
-        compensate_roll = -radians(roll)
+        roll, pitch = camera_angles_rad
         default_angles = self.get_default_angles()
 
-        obj_offsets = room.infer_3d(placement_pixel, compensate_pitch,
-                                    compensate_roll)  # We set negative rotation to compensate
+        obj_offsets = room.infer_3d(placement_pixel, pitch,
+                                    roll)  # We set negative rotation to compensate
         obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(
             default_angles[2] + yaw_angle)  # In blender, yaw angle is around z axis. z axis is to the top
         obj_scale = self.get_scale()
         # We set opposite
         camera_angles = radians(
-            90) - compensate_pitch, +compensate_roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+            90) + pitch, -roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
         print("Started estimating camera height")
-        camera_height = room.estimate_camera_height((compensate_pitch, compensate_roll), current_user_id)
+        camera_height = room.estimate_camera_height((pitch, roll), current_user_id)
         print(f"Camera height: {camera_height}")
         camera_location = 0, 0, camera_height
         obj_offsets_floor = obj_offsets.copy()
@@ -218,23 +216,21 @@ class Curtain(FurniturePiece):
 
     def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
                                        yaw_angle: float,
-                                       camera_angles: tuple[float, float], current_user_id):
+                                       camera_angles_rad: tuple[float, float], current_user_id):
         from math import radians
-        roll, pitch = camera_angles
-        compensate_pitch = -radians(pitch)
-        compensate_roll = -radians(roll)
+        roll, pitch = camera_angles_rad
         default_angles = self.get_default_angles()
 
-        obj_offsets = room.infer_3d(placement_pixel, compensate_pitch,
-                                    compensate_roll)  # We set negative rotation to compensate
+        obj_offsets = room.infer_3d(placement_pixel, pitch,
+                                    roll)  # We set negative rotation to compensate
         obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(
             default_angles[2] + yaw_angle)  # In blender, yaw angle is around z axis. z axis is to the top
         obj_scale = self.get_scale()
         # We set opposite
         camera_angles = radians(
-            90) - compensate_pitch, compensate_roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+            90) + pitch, -roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
         # TODO Perform camera height estimation not here, but in stage() function to save computing power
-        camera_height = room.estimate_camera_height((compensate_pitch, compensate_roll), current_user_id)
+        camera_height = room.estimate_camera_height((pitch, roll), current_user_id)
         camera_location = 0, 0, camera_height
 
         print("Curtain coords")

@@ -14,9 +14,9 @@ class Bedroom(Room):
 
     def stage(self, current_user_id):
         roll, pitch = np.degrees(self.find_roll_pitch(current_user_id))
+        print(roll, pitch, "ROLL and PITCH of the CAMERA")
+        pitch_rad, roll_rad = radians(pitch), radians(roll)
         walls = self.get_walls(current_user_id)
-        compensate_pitch = -radians(pitch)
-        compensate_roll = -radians(roll)
 
         # Add time for Garbage Collector
         time.sleep(5)
@@ -38,9 +38,9 @@ class Bedroom(Room):
         wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
         pixels_for_placing = bed.find_placement_pixel(os.path.join(render_directory, 'wall_mask.png'))
         print(f"BED placement pixel: {pixels_for_placing}")
-        yaw_angle = wall.find_angle_from_3d(self, compensate_pitch, compensate_roll)
+        yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
         for pixel in pixels_for_placing:
-            render_parameters = (bed.calculate_rendering_parameters(self, pixel, yaw_angle, (roll, pitch), current_user_id))
+            render_parameters = (bed.calculate_rendering_parameters(self, pixel, yaw_angle, (roll_rad, pitch_rad), current_user_id))
             width, height = get_image_size(self.original_image_path)
             render_parameters['resolution_x'] = width
             render_parameters['resolution_y'] = height
@@ -61,7 +61,7 @@ class Bedroom(Room):
         print(f"CURTAINS placement pixels: {pixels_for_placing}")
         for window in pixels_for_placing:
             left_top_point, right_top_point = window
-            yaw_angle = calculate_angle_from_top_view(*[self.infer_3d(pixel, compensate_pitch, compensate_roll) for
+            yaw_angle = calculate_angle_from_top_view(*[self.infer_3d(pixel, pitch_rad, roll_rad) for
                                                         pixel in (left_top_point, right_top_point)])
             for pixel in (left_top_point, right_top_point):
-                curtain.calculate_rendering_parameters(self, pixel, yaw_angle, (roll, pitch), current_user_id)
+                curtain.calculate_rendering_parameters(self, pixel, yaw_angle, (roll_rad, pitch_rad), current_user_id)

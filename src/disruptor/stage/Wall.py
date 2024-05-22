@@ -14,7 +14,7 @@ class Wall:
         yaw = four_point_transform(np.array(self.corners), self.image_path)[1]
         return yaw
 
-    def find_angle_from_3d(self, room, compensate_pitch_rad, compensate_roll_rad):
+    def find_angle_from_3d(self, room, pitch_rad, roll_rad):
         # # We consider only top corners. Taking bottom corners additionally doesnt give us any more useful info
         # top_left, top_right = self.corners[:2]
 
@@ -26,7 +26,7 @@ class Wall:
         try:
             from disruptor.stage.DepthAnything.depth_estimation import image_pixel_list_to_3d, rotate_3d_point
             points_3d = image_pixel_list_to_3d(room.original_image_path, [self.left_centroid, self.right_centroid])
-            points_3d_before_camera_rotation = [rotate_3d_point(point, compensate_pitch_rad, compensate_roll_rad) for point in points_3d]
+            points_3d_before_camera_rotation = [rotate_3d_point(point, -pitch_rad, -roll_rad) for point in points_3d]
         except Exception as e:
             raise e
 

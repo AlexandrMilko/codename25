@@ -90,22 +90,22 @@ class Room:
     #     # # add render onto your prerequisite which is original_image_copy in the beginning
     #     # # write a function that positions it properly
 
-    def infer_3d(self, pixel: tuple[int, int], compensate_pitch_rad: float, compensate_roll_rad: float):
+    def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
         from disruptor.stage.DepthAnything.depth_estimation import image_pixel_to_3d, rotate_3d_point
         print(self.original_image_path, pixel, "IMAGE PATH and PIXEL")
         target_point = image_pixel_to_3d(*pixel, self.original_image_path)
         # We rotate it back to compensate our camera rotation
-        offset_relative_to_camera = rotate_3d_point(target_point, compensate_pitch_rad, compensate_roll_rad)
+        offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
         return offset_relative_to_camera
 
-    def estimate_camera_height(self, compensate_angles: tuple[float, float], current_user_id):
-        compensate_pitch, compensate_roll = compensate_angles
+    def estimate_camera_height(self, camera_angles: tuple[float, float], current_user_id):
+        pitch, roll = camera_angles
         from disruptor.stage.DepthAnything.depth_estimation import rotate_3d_point, image_pixel_to_3d
         from disruptor.stage.Floor import Floor
         floor_pixel = Floor.find_centroid(f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png')
         point_3d = image_pixel_to_3d(*floor_pixel, self.original_image_path)
         print(f"Floor Centroid: {floor_pixel} -> {point_3d}")
-        rotated_point = rotate_3d_point(point_3d, compensate_pitch, compensate_roll)
+        rotated_point = rotate_3d_point(point_3d, -pitch, -roll)
         z_coordinate = rotated_point[2]
         return abs(z_coordinate)
 
