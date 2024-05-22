@@ -18,7 +18,7 @@ class Room:
         es_img = Image.open(self.original_image_path)
         width, height = es_img.size
         es_img.close()
-        run_preprocessor("normal_bae", self.original_image_path, current_user_id, "users.png", height)
+        run_preprocessor("normal_dsine", self.original_image_path, current_user_id, "users.png", height)
         copy_file(self.original_image_path, "disruptor/UprightNet/imgs/rgb/users.png") # We copy it because we will use it later in get_wall method and we want to have access to the image
         move_file(f"disruptor/static/images/{current_user_id}/preprocessed/users.png",
                   "disruptor/UprightNet/imgs/normal_pair/users.png")
