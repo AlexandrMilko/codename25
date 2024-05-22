@@ -173,6 +173,4 @@ def rotate_3d_point(point: tuple[float, float, float], pitch_rad, roll_rad):
 
     point = np.array(point)
     rotated_point = point.dot(rotation_matrix_x(pitch_rad).T).dot(rotation_matrix_y(roll_rad).T)
-    print(f"Pitch {pitch_rad}, Roll {roll_rad}")
-    print(f"Original point {point} -> Rotated point {rotated_point}")
     return rotated_point
