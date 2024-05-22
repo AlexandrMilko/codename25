@@ -95,7 +95,7 @@ class Room:
         print(self.original_image_path, pixel, "IMAGE PATH and PIXEL")
         target_point = image_pixel_to_3d(*pixel, self.original_image_path)
         # We rotate it back to compensate our camera rotation
-        offset_relative_to_camera = rotate_3d_point(target_point, pitch_rad, roll_rad)
+        offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
         return offset_relative_to_camera
 
     def estimate_camera_height(self, camera_angles: tuple[float, float], current_user_id):
