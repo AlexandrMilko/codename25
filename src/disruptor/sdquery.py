@@ -720,8 +720,10 @@ def apply_style(empty_space, text):
     query.run()
 
     # We restart it to deallocate memory. TODO fix it.
-    restart_stable_diffusion('http://127.0.0.1:7861')
-
+    try:
+        restart_stable_diffusion('http://127.0.0.1:7861')
+    except requests.exceptions.ConnectionError:
+        print("Stable Diffusion restarting")
 # def apply_style(empty_space, text):
 #     import os
 #     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
