@@ -105,7 +105,7 @@ class Room:
         floor_pixel = Floor.find_centroid(f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png')
         point_3d = image_pixel_to_3d(*floor_pixel, self.original_image_path)
         print(f"Floor Centroid: {floor_pixel} -> {point_3d}")
-        rotated_point = rotate_3d_point(point_3d, pitch, roll)
+        rotated_point = rotate_3d_point(point_3d, 0, 0)
         z_coordinate = rotated_point[2]
         return abs(z_coordinate)
 
