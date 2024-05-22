@@ -1,7 +1,12 @@
+import base64
 import math
 import os.path
+from io import BytesIO
+
 import cv2
 import numpy as np
+import requests
+from PIL import Image
 
 from disruptor.stage import Room
 from sklearn.cluster import KMeans
@@ -29,10 +34,26 @@ class FurniturePiece:
     def get_default_angles(self):
         return self.default_angles
 
+    @staticmethod
+    def request_blender_render(render_parameters):
+        # URL for blender_server
+        server_url = 'http://localhost:5002/render_image'
+
+        # Send the HTTP request to the server
+        response = requests.post(server_url, json=render_parameters)
+
+        if response.status_code == 200:
+            # Decode the base64 encoded image
+            encoded_furniture_image = response.json()['image_base64']
+            furniture_image = Image.open(BytesIO(base64.b64decode(encoded_furniture_image)))
+            return furniture_image
+        else:
+            print("Error:", response.status_code, response.text)
+
 
 class Bed(FurniturePiece):
     # We use it to scale the model to metric units
-    scale = 0.01, 0.01, 0.01
+    scale = 0.015, 0.015, 0.015
     # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 90
 
@@ -72,7 +93,9 @@ class Bed(FurniturePiece):
         # We set opposite
         camera_angles = radians(
             90) + compensate_pitch, -compensate_roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+        print("Started estimating camera height")
         camera_height = room.estimate_camera_height((compensate_pitch, compensate_roll), current_user_id)
+        print(f"Camera height: {camera_height}")
         camera_location = 0, 0, camera_height
         obj_offsets_floor = obj_offsets.copy()
         obj_offsets_floor[2] = 0
@@ -86,6 +109,15 @@ class Bed(FurniturePiece):
         print(camera_angles, "camera_angles")
         print(camera_location, "camera_location")
 
+        params = {
+            'obj_offsets': tuple(obj_offsets_floor), # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
+            'obj_angles': tuple(obj_angles),
+            'obj_scale': tuple(obj_scale),
+            'camera_angles': tuple(camera_angles),
+            'camera_location': tuple(camera_location)
+        }
+
+        return params
 
 class Curtain(FurniturePiece):
     scale = 0.005, 0.01, 0.01
@@ -201,6 +233,7 @@ class Curtain(FurniturePiece):
         # We set opposite
         camera_angles = radians(
             90) + compensate_pitch, -compensate_roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+        # TODO Perform camera height estimation not here, but in stage() function to save computing power
         camera_height = room.estimate_camera_height((compensate_pitch, compensate_roll), current_user_id)
         camera_location = 0, 0, camera_height
 
@@ -211,3 +244,13 @@ class Curtain(FurniturePiece):
         print(obj_scale, "obj_scale")
         print(camera_angles, "camera_angles")
         print(camera_location, "camera_location")
+
+        params = {
+            'obj_offsets': tuple(obj_offsets), # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
+            'obj_angles': tuple(obj_angles),
+            'obj_scale': tuple(obj_scale),
+            'camera_angles': tuple(camera_angles),
+            'camera_location': tuple(camera_location)
+        }
+
+        return params
