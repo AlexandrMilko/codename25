@@ -169,43 +169,43 @@ class ControlNetImageQuery(Query):
                 "controlnet": {
                     "args": [
                         {
-                            "input_image": self.result_image_b64,
+                            "image": self.result_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
                             "weight": 0.9,
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
-                            "control_mode": 1,
+                            # "control_mode": 1,
                             "processor_res": 512
                         },
                         {
-                            "input_image": self.user_image_b64,
+                            "image": self.user_image_b64,
                             "module": "softedge_hed",
                             "model": "control_sd15_hed [fef5e48e]",
                             "weight": 0.55,
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
-                            "control_mode": 0,
+                            # "control_mode": 0,
                             "processor_res": 512
                         },
                         {
-                            "input_image": self.user_image_b64,
+                            "image": self.user_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_sd15_seg [fef5e48e]",
                             "weight": 0.9,
                             "guidance_start": 0,
                             "guidance_end": 0.5,
-                            "control_mode": 1,
+                            # "control_mode": 1,
                             "processor_res": 512
                         },
                         {
-                            "input_image": self.user_image_b64,
+                            "image": self.user_image_b64,
                             "module": "depth_midas",
                             "model": "control_sd15_depth [fef5e48e]",
                             "weight": 0.4,
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
-                            "control_mode": 0,
+                            # "control_mode": 0,
                             "processor_res": 512
                         }
                     ]
@@ -243,7 +243,7 @@ class GreenScreenImageQuery(Query):
     cfg_scale = 7
     steps = 20
 
-    def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.jpg",
+    def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.png",
                  inpainting_mask="inpainting_mask.png"):
         # We will use result image to transform it into new space of user image
         self.prerequisite_path = "disruptor" + url_for('static',
@@ -263,11 +263,12 @@ class GreenScreenImageQuery(Query):
         # We run segmentation for our prerequisite image to see if segmentation was done correctly
         run_preprocessor("seg_ofade20k", self.prerequisite_path, current_user.id, "seg_prerequisite.jpg")
 
-        if self.style in ("Modern", "Art Deco"):
-            set_xsarchitectural()
-        else:
-            set_realistic_vision()
-            # set_deliberate()
+        # if self.style in ("Modern", "Art Deco"):
+        #     set_xsarchitectural()
+        # else:
+        #     # set_realistic_vision()
+        #     set_deliberate()
+        set_realistic_vision()
 
         self.staged_image_b64 = self.stage()
         self.design()
@@ -288,20 +289,45 @@ class GreenScreenImageQuery(Query):
             "width": self.width,
             "height": self.height,
             # "seed": 123, # TODO add seed, before testing
-            "mask": self.inpainting_mask_image_b64,
-            "mask_blur": 3,
+            # "mask": self.inpainting_mask_image_b64,
+            # "mask_blur": 3,
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
                         {
-                            "input_image": self.prerequisite_image_b64,
+                            "advanced_weighting": None,
+                            "animatediff_batch": False,
+                            "batch_image_files": [],
+                            "batch_images": "",
+                            "batch_mask_dir": None,
+                            "batch_modifiers": [],
+                            "effective_region_mask": None,
+                            "hr_option": "Both",
+                            "inpaint_crop_input_image": False,
+                            "input_mode": "simple",
+                            "ipadapter_input": None,
+                            "is_ui": False,
+                            "loopback": False,
+                            "low_vram": False,
+                            "mask": None,
+                            "output_dir": "",
+                            "pixel_perfect": False,
+                            "pulid_mode": "Fidelity",
+                            "resize_mode": "Crop and Resize",
+                            "save_detected_map": True,
+                            "threshold_a": 0.5,
+                            "threshold_b": 0.5,
+
+                            "enabled": True,
+                            "image": self.prerequisite_image_b64,
                             "module": "seg_ofade20k",
-                            "model": "control_sd15_seg [fef5e48e]",
-                            "weight": 1,
+                            "model": "control_seg-fp16 [b9c1cc12]",
+                            # "low_vram": True,
+                            "weight": 1.0,
                             "guidance_start": 0,
                             "guidance_end": 1,
-                            "control_mode": 0,
-                            "processor_res": 512
+                            "control_mode": "Balanced",
+                            "processor_res": 512 # WARNING: TODO change to image height
                         }
                     ]
                 }
@@ -343,44 +369,96 @@ class GreenScreenImageQuery(Query):
                 "controlnet": {
                     "args": [
                         {
-                            "input_image": self.staged_image_b64,
+                            "advanced_weighting": None,
+                            "animatediff_batch": False,
+                            "batch_image_files": [],
+                            "batch_images": "",
+                            "batch_mask_dir": None,
+                            "batch_modifiers": [],
+                            "effective_region_mask": None,
+                            "hr_option": "Both",
+                            "inpaint_crop_input_image": False,
+                            "input_mode": "simple",
+                            "ipadapter_input": None,
+                            "is_ui": False,
+                            "loopback": False,
+                            "low_vram": False,
+                            "mask": None,
+                            "output_dir": "",
+                            "pixel_perfect": False,
+                            "pulid_mode": "Fidelity",
+                            "resize_mode": "Crop and Resize",
+                            "save_detected_map": True,
+                            "threshold_a": 0.5,
+                            "threshold_b": 0.5,
+
+                            "enabled": True,
+                            "image": self.staged_image_b64,
                             "module": "seg_ofade20k",
-                            "model": "control_sd15_seg [fef5e48e]",
+                            "model": "control_seg-fp16 [b9c1cc12]",
                             "weight": 0.9,
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
-                            "control_mode": 1,
-                            "processor_res": 512
+                            "control_mode": "Balanced",
+                            "processor_res": 512, # WARNING: TODO change to image height
+                            # "low_vram": True,
                         },
+                        # {
+                        #     "enabled": True,
+                        #     "image": self.staged_image_b64,
+                        #     "module": "softedge_hed",
+                        #     "model": "control_sd15_hed [fef5e48e]",
+                        #     "weight": 0.55,
+                        #     "guidance_start": 0.1,
+                        #     "guidance_end": 0.5,
+                        #     # "control_mode": 0,
+                        #     "processor_res": 512
+                        # },
+                        # {
+                        #     "enabled": True,
+                        #     "image": self.staged_image_b64,
+                        #     "module": "seg_ofade20k",
+                        #     "model": "control_seg-fp16 [b9c1cc12]",
+                        #     "weight": 0.9,
+                        #     "guidance_start": 0,
+                        #     "guidance_end": 0.5,
+                        #     # "control_mode": 1,
+                        #     "processor_res": 512,
+                        # },
                         {
-                            "input_image": self.staged_image_b64,
-                            "module": "softedge_hed",
-                            "model": "control_sd15_hed [fef5e48e]",
-                            "weight": 0.55,
-                            "guidance_start": 0.1,
-                            "guidance_end": 0.5,
-                            "control_mode": 0,
-                            "processor_res": 512
-                        },
-                        {
-                            "input_image": self.staged_image_b64,
-                            "module": "seg_ofade20k",
-                            "model": "control_sd15_seg [fef5e48e]",
-                            "weight": 0.9,
-                            "guidance_start": 0,
-                            "guidance_end": 0.5,
-                            "control_mode": 1,
-                            "processor_res": 512
-                        },
-                        {
-                            "input_image": self.staged_image_b64,
+                            "advanced_weighting": None,
+                            "animatediff_batch": False,
+                            "batch_image_files": [],
+                            "batch_images": "",
+                            "batch_mask_dir": None,
+                            "batch_modifiers": [],
+                            "effective_region_mask": None,
+                            "hr_option": "Both",
+                            "inpaint_crop_input_image": False,
+                            "input_mode": "simple",
+                            "ipadapter_input": None,
+                            "is_ui": False,
+                            "loopback": False,
+                            "low_vram": False,
+                            "mask": None,
+                            "output_dir": "",
+                            "pixel_perfect": False,
+                            "pulid_mode": "Fidelity",
+                            "resize_mode": "Crop and Resize",
+                            "save_detected_map": True,
+                            "threshold_a": 0.5,
+                            "threshold_b": 0.5,
+
+                            "enabled": True,
+                            "image": self.staged_image_b64,
                             "module": "depth_midas",
-                            "model": "control_sd15_depth [fef5e48e]",
+                            "model": "control_depth-fp16 [400750f6]",
                             "weight": 0.4,
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
-                            "control_mode": 0,
-                            "processor_res": 512
+                            "control_mode": "Balanced",
+                            "processor_res": 512, # WARNING: TODO change to image height
+                            # "low_vram": True,
                         }
                     ]
                 }
@@ -402,9 +480,9 @@ class GreenScreenImageQuery(Query):
         #         "controlnet": {
         #             "args": [
         #                 {
-        #                     "input_image": self.staged_image_b64,
+        #                     "image": self.staged_image_b64,
         #                     "module": "seg_ofade20k",
-        #                     "model": "control_sd15_seg [fef5e48e]",
+        #                     "model": "control_seg-fp16 [b9c1cc12]",
         #                     "weight": 1,
         #                     "guidance_start": 0,
         #                     "guidance_end": 1,
@@ -412,9 +490,9 @@ class GreenScreenImageQuery(Query):
         #                     "processor_res": 512
         #                 },
         #                 {
-        #                     "input_image": self.staged_image_b64,
+        #                     "image": self.staged_image_b64,
         #                     "module": "depth_midas",
-        #                     "model": "control_sd15_depth [fef5e48e]",
+        #                     "model": "control_depth-fp16 [400750f6]",
         #                     "weight": 1,
         #                     "guidance_start": 0,
         #                     "guidance_end": 1,
@@ -633,8 +711,13 @@ def apply_style(empty_space, text):
     from disruptor.stage.Bedroom import Bedroom
     room = Bedroom(es_path)
     room.stage(current_user.id)
-    # query = GreenScreenImageQuery(text)
-    # query.run()
+
+    # Add time for Garbage Collector
+    import time
+    time.sleep(5)
+
+    query = GreenScreenImageQuery(text)
+    query.run()
 
 # def apply_style(empty_space, text):
 #     import os
