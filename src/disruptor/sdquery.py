@@ -721,6 +721,7 @@ def apply_style(empty_space, text):
 
     # We restart it to deallocate memory. TODO fix it.
     try:
+        time.sleep(3)
         restart_stable_diffusion('http://127.0.0.1:7861')
     except requests.exceptions.ConnectionError:
         print("Stable Diffusion restarting")
