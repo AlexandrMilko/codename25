@@ -17,16 +17,8 @@ class FurniturePiece:
     scale = 1, 1, 1
     default_angles = 0, 0, 0
 
-    def __init__(self, model_path, wall_projection_model_path, floor_projection_model_path):
-        (
-            self.model_path,
-            self.wall_projection_model_path,
-            self.floor_projection_model_path,
-        ) = (
-            model_path,
-            wall_projection_model_path,
-            floor_projection_model_path,
-        )
+    def __init__(self, model_path):
+        self.model_path = model_path
 
     def get_scale(self):
         return self.scale
@@ -57,11 +49,8 @@ class Bed(FurniturePiece):
     # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 90
 
-    def __init__(self, model_path='disruptor/stage/3Ds/bedroom/bed/bed.obj',
-                 wall_projection_model_path='disruptor/stage/3Ds/bedroom/bed/bed_back.obj',
-                 floor_projection_model_path='disruptor/stage/3Ds/bedroom/bed/bed_bottom.obj',
-                 ):
-        super().__init__(model_path, wall_projection_model_path, floor_projection_model_path)
+    def __init__(self, model_path='3Ds/bedroom/bed.obj'):
+        super().__init__(model_path)
 
     @staticmethod
     def find_placement_pixel(wall_mask_path) -> list[list[
@@ -106,13 +95,15 @@ class Bed(FurniturePiece):
         print(obj_scale, "obj_scale")
         print(camera_angles, "camera_angles")
         print(camera_location, "camera_location")
+        print(self.model_path, "model_path")
 
         params = {
             'obj_offsets': tuple(obj_offsets_floor), # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
             'obj_angles': tuple(obj_angles),
             'obj_scale': tuple(obj_scale),
             'camera_angles': tuple(camera_angles),
-            'camera_location': tuple(camera_location)
+            'camera_location': tuple(camera_location),
+            'model_path': self.model_path
         }
 
         return params
@@ -122,11 +113,8 @@ class Curtain(FurniturePiece):
     # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 0
 
-    def __init__(self, model_path='disruptor/stage/3Ds/bedroom/curtain/curtain.obj',
-                 wall_projection_model_path='disruptor/stage/3Ds/bedroom/curtain/curtain.obj',
-                 floor_projection_model_path='disruptor/stage/3Ds/bedroom/curtain/curtain.obj',
-                 ):
-        super().__init__(model_path, wall_projection_model_path, floor_projection_model_path)
+    def __init__(self, model_path='3Ds/other/curtain.obj'):
+        super().__init__(model_path)
 
     @staticmethod
     def find_perspective_angle(x1, y1, x2, y2):
@@ -240,13 +228,15 @@ class Curtain(FurniturePiece):
         print(obj_scale, "obj_scale")
         print(camera_angles, "camera_angles")
         print(camera_location, "camera_location")
+        print(self.model_path, "model_path")
 
         params = {
             'obj_offsets': tuple(obj_offsets), # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
             'obj_angles': tuple(obj_angles),
             'obj_scale': tuple(obj_scale),
             'camera_angles': tuple(camera_angles),
-            'camera_location': tuple(camera_location)
+            'camera_location': tuple(camera_location),
+            'model_path': self.model_path
         }
 
         return params
