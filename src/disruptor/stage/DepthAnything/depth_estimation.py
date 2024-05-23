@@ -21,7 +21,6 @@ def image_pixels_to_3d(image_path, output_path, depth_npy_path=depth_npy_path):
     pixel_coords_3d = get_pixel_3d_coords(image_path, depth_npy_path)
     with open(output_path, "w") as f:
         for coord in pixel_coords_3d:
-            coord = transform_to_blender_xyz(*coord)
             f.write(f"{coord[0]},{coord[1]},{coord[2]}\n")
 
 def image_pixel_list_to_3d(image_path, pixels_coordinates: list[list[int,int]], depth_npy_path=depth_npy_path):
