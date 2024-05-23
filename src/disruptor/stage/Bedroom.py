@@ -53,23 +53,23 @@ class Bedroom(Room):
         # Add time for Garbage Collector
         time.sleep(5)
 
-        # Add curtains
-        curtain = Curtain()
-        Room.save_windows_mask(f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png',
-                               current_user_id)
-        pixels_for_placing = curtain.find_placement_pixel(
-            f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png')
-        print(f"CURTAINS placement pixels: {pixels_for_placing}")
-        for window in pixels_for_placing:
-            left_top_point, right_top_point = window
-            yaw_angle = calculate_angle_from_top_view(*[self.infer_3d(pixel, pitch_rad, roll_rad) for
-                                                        pixel in (left_top_point, right_top_point)])
-            for pixel in (left_top_point, right_top_point):
-                render_parameters = curtain.calculate_rendering_parameters(self, pixel, yaw_angle, (roll_rad, pitch_rad), current_user_id)
-                width, height = get_image_size(self.original_image_path)
-                render_parameters['resolution_x'] = width
-                render_parameters['resolution_y'] = height
-                curtain_image = curtain.request_blender_render(render_parameters)
-                background_image = Image.open(prerequisite_path)
-                combined_image = image_overlay(curtain_image, background_image)
-                combined_image.save(prerequisite_path)
+        # # Add curtains
+        # curtain = Curtain()
+        # Room.save_windows_mask(f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png',
+        #                        current_user_id)
+        # pixels_for_placing = curtain.find_placement_pixel(
+        #     f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png')
+        # print(f"CURTAINS placement pixels: {pixels_for_placing}")
+        # for window in pixels_for_placing:
+        #     left_top_point, right_top_point = window
+        #     yaw_angle = calculate_angle_from_top_view(*[self.infer_3d(pixel, pitch_rad, roll_rad) for
+        #                                                 pixel in (left_top_point, right_top_point)])
+        #     for pixel in (left_top_point, right_top_point):
+        #         render_parameters = curtain.calculate_rendering_parameters(self, pixel, yaw_angle, (roll_rad, pitch_rad), current_user_id)
+        #         width, height = get_image_size(self.original_image_path)
+        #         render_parameters['resolution_x'] = width
+        #         render_parameters['resolution_y'] = height
+        #         curtain_image = curtain.request_blender_render(render_parameters)
+        #         background_image = Image.open(prerequisite_path)
+        #         combined_image = image_overlay(curtain_image, background_image)
+        #         combined_image.save(prerequisite_path)
