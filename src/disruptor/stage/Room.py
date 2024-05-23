@@ -107,7 +107,7 @@ class Room:
         print(f"Floor Centroid: {floor_pixel} -> {point_3d}")
         rotated_point = rotate_3d_point(point_3d, -pitch, -roll)
         z_coordinate = rotated_point[2]
-        return abs(z_coordinate)
+        return abs(z_coordinate) + 1
 
     @staticmethod
     def find_number_of_windows(windows_mask_path: str) -> int:
