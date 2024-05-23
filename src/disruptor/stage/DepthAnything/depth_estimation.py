@@ -62,7 +62,7 @@ def transform_to_blender_xyz(x, y, z):  # TODO test it and visualize the whole d
     # 1. Invert the y
     # 2. Swap the z and y
     # 3. Invert x
-    return -x, z, -y
+    return -x, z, y
 
 
 def pixel_to_3d(x, y, w, h, depth_npy_path):
