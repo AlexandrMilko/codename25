@@ -218,8 +218,7 @@ class Curtain(FurniturePiece):
         camera_angles = radians(
             90) + pitch, -roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
         # TODO Perform camera height estimation not here, but in stage() function to save computing power
-        camera_height = room.estimate_camera_height((pitch, roll), current_user_id)
-        camera_location = 0, 0, camera_height
+        camera_location = 0, 0, 0
 
         print("Curtain coords")
         print(obj_offsets, "obj_offsets")
