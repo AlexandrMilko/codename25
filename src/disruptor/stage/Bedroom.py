@@ -27,9 +27,9 @@ class Bedroom(Room):
         # Add time for Garbage Collector
         time.sleep(5)
 
-        # from disruptor.stage.DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
-        # image_pixels_to_3d(self.original_image_path, "my_3d_space.txt")
-        # rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", compensate_pitch, compensate_roll)
+        from disruptor.stage.DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
+        image_pixels_to_3d(self.original_image_path, "my_3d_space.txt")
+        rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", -pitch_rad, -roll_rad)
 
         # Add Bed
         bed = Bed()
