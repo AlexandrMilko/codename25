@@ -50,7 +50,7 @@ class Bedroom(Room):
                 render_parameters['resolution_x'] = width
                 render_parameters['resolution_y'] = height
                 curtain_image = curtain.request_blender_render(render_parameters)
-                background_image = Image.open(prerequisite_path)
+                background_image = Image.open(self.original_image)
                 combined_image = image_overlay(curtain_image, background_image)
                 combined_image.save(prerequisite_path)
 
@@ -71,6 +71,6 @@ class Bedroom(Room):
             render_parameters['resolution_x'] = width
             render_parameters['resolution_y'] = height
             bed_image = bed.request_blender_render(render_parameters)
-            background_image = Image.open(self.original_image_path)
+            background_image = Image.open(prerequisite_path)
             combined_image = image_overlay(bed_image, background_image)
             combined_image.save(prerequisite_path)
