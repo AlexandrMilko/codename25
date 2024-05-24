@@ -146,11 +146,13 @@ class Wall:
         labels = watershed(-distance, markers, mask=image)
 
         biggest_wall_class = Wall.get_biggest_wall_class(labels)
+        print(biggest_wall_class, "biggest_wall_class")
 
         walls_corners, walls_centroids = Wall.find_corners_of_labeled_regions(labels, [biggest_wall_class])
 
         walls = []
         for label in walls_corners.keys():
+            print(label, "wall label")
             wall_corners = walls_corners[label]
             wall_centroids = walls_centroids[label]
             walls.append(Wall(wall_corners, seg_img_path, wall_centroids))
