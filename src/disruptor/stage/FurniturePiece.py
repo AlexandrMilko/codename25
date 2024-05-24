@@ -143,6 +143,9 @@ class Curtain(FurniturePiece):
         """
         img = cv2.imread(window_mask_path)  # Замените на ваш путь к файлу
 
+        # Convert the image to grayscale
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
         number_of_windows = Room.Room.find_number_of_windows(window_mask_path)
 
         corners = cv2.goodFeaturesToTrack(img, number_of_windows * 4, 0.01, 40)
