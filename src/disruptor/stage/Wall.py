@@ -114,6 +114,50 @@ class Wall:
         return filtered_classes
 
     @staticmethod
+    def get_biggest_wall_class(label_array):
+        unique_classes, counts = np.unique(label_array, return_counts=True)
+        max_count_index = np.argmax(counts)
+        class_with_max_count = unique_classes[max_count_index]
+        return class_with_max_count
+
+    @staticmethod
+    def find_biggest_wall(seg_img_path):
+        # We separate the walls from each other from a segmented image
+        from scipy import ndimage
+        from skimage.feature import peak_local_max
+        # import matplotlib.pyplot as plt
+        from skimage.segmentation import watershed
+
+        # Read the image
+        image = cv2.imread(seg_img_path)
+
+        # Define the color range to filter
+        lower_color = np.array([110, 110, 110])  # Wall colors
+        upper_color = np.array([130, 130, 130])
+
+        # Mask the image to extract pixels within the specified color range
+        image = cv2.inRange(image, lower_color, upper_color)
+
+        distance = ndimage.distance_transform_edt(image)
+        coords = peak_local_max(distance, footprint=np.ones((300, 300)), labels=image)
+        mask = np.zeros(distance.shape, dtype=bool)
+        mask[tuple(coords.T)] = True
+        markers, _ = ndimage.label(mask)
+        labels = watershed(-distance, markers, mask=image)
+
+        biggest_wall_class = Wall.get_biggest_wall_class(labels)
+
+        walls_corners, walls_centroids = Wall.find_corners_of_labeled_regions(labels, [biggest_wall_class])
+
+        walls = []
+        for label in walls_corners.keys():
+            wall_corners = walls_corners[label]
+            wall_centroids = walls_centroids[label]
+            walls.append(Wall(wall_corners, seg_img_path, wall_centroids))
+
+        return walls[0]
+
+    @staticmethod
     def find_corners_of_labeled_regions(label_array, filtered_classes):
         walls_corners = dict()
         walls_centroids = dict()

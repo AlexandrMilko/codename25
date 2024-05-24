@@ -16,7 +16,6 @@ class Bedroom(Room):
         roll, pitch = np.negative(np.degrees(self.find_roll_pitch(current_user_id)))
         print(roll, pitch, "ROLL and PITCH of the CAMERA")
         pitch_rad, roll_rad = radians(pitch), radians(roll)
-        walls = self.get_walls(current_user_id)
 
         # Add time for Garbage Collector
         time.sleep(5)
@@ -60,7 +59,7 @@ class Bedroom(Room):
 
         # Add Bed
         bed = Bed()
-        wall = walls[0]
+        wall = self.get_biggest_wall(current_user_id)
         render_directory = f'disruptor/static/images/{current_user_id}/preprocessed/furniture_render'
         wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
         pixels_for_placing = bed.find_placement_pixel(os.path.join(render_directory, 'wall_mask.png'))
