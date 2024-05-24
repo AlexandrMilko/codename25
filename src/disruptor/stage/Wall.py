@@ -116,8 +116,18 @@ class Wall:
     @staticmethod
     def get_biggest_wall_class(label_array):
         unique_classes, counts = np.unique(label_array, return_counts=True)
-        max_count_index = np.argmax(counts)
-        class_with_max_count = unique_classes[max_count_index]
+        # Filter out the class 0
+        mask = unique_classes != 0
+        filtered_classes = unique_classes[mask]
+        filtered_counts = counts[mask]
+
+        # Find the class with the highest count among the filtered classes
+        if filtered_counts.size == 0:
+            return None  # Or handle the case where there are no valid classes
+
+        max_count_index = np.argmax(filtered_counts)
+        class_with_max_count = filtered_classes[max_count_index]
+
         return class_with_max_count
 
     @staticmethod
