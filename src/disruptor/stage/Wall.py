@@ -151,14 +151,7 @@ class Wall:
 
         walls_corners, walls_centroids = Wall.find_corners_of_labeled_regions(labels, [biggest_wall_class])
 
-        walls = []
-        for label in walls_corners.keys():
-            print(label, "wall label")
-            wall_corners = walls_corners[label]
-            wall_centroids = walls_centroids[label]
-            walls.append(Wall(wall_corners, seg_img_path, wall_centroids))
-
-        return walls[0]
+        return Wall(walls_corners[biggest_wall_class], seg_img_path, walls_centroids[biggest_wall_class])
 
     @staticmethod
     def find_corners_of_labeled_regions(label_array, filtered_classes):
