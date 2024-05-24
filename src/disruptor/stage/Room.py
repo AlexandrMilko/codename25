@@ -155,7 +155,7 @@ class Room:
         color_mask = cv2.inRange(image, lower_color, upper_color)
 
         _, thresh = cv2.threshold(color_mask, 127, 255, cv2.THRESH_BINARY)
-        kernel = np.ones((3, 3), np.uint8)
+        kernel = np.ones((9, 9), np.uint8)
         erosion = cv2.erode(thresh, kernel, iterations=1)
         color_mask = cv2.dilate(erosion, kernel, iterations=1)
         # cv2.imshow('gray', img)
