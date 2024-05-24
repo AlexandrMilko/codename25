@@ -43,6 +43,7 @@ class Bedroom(Room):
             left_top_point, right_top_point = window
             yaw_angle = calculate_angle_from_top_view(*[self.infer_3d(pixel, pitch_rad, roll_rad) for
                                                         pixel in (left_top_point, right_top_point)])
+            Image.open(self.original_image_path).save(prerequisite_path)
             for pixel in (left_top_point, right_top_point):
                 render_parameters = curtain.calculate_rendering_parameters(self, pixel, yaw_angle,
                                                                            (roll_rad, pitch_rad), current_user_id)
@@ -50,7 +51,7 @@ class Bedroom(Room):
                 render_parameters['resolution_x'] = width
                 render_parameters['resolution_y'] = height
                 curtain_image = curtain.request_blender_render(render_parameters)
-                background_image = Image.open(self.original_image_path)
+                background_image = Image.open(prerequisite_path)
                 combined_image = image_overlay(curtain_image, background_image)
                 combined_image.save(prerequisite_path)
 
