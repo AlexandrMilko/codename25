@@ -143,18 +143,6 @@ class Curtain(FurniturePiece):
         """
         img = cv2.imread(window_mask_path)  # Замените на ваш путь к файлу
 
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-
-        _, thresh = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
-        kernel = np.ones((3, 3), np.uint8)
-        erosion = cv2.erode(thresh, kernel, iterations=1)
-        img = cv2.dilate(erosion, kernel, iterations=1)
-        # cv2.imshow('gray', img)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-
-
         number_of_windows = Room.Room.find_number_of_windows(window_mask_path)
 
         corners = cv2.goodFeaturesToTrack(img, number_of_windows * 4, 0.01, 40)

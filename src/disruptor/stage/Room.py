@@ -154,6 +154,14 @@ class Room:
         # Create a mask for the color
         color_mask = cv2.inRange(image, lower_color, upper_color)
 
+        _, thresh = cv2.threshold(color_mask, 127, 255, cv2.THRESH_BINARY)
+        kernel = np.ones((3, 3), np.uint8)
+        erosion = cv2.erode(thresh, kernel, iterations=1)
+        color_mask = cv2.dilate(erosion, kernel, iterations=1)
+        # cv2.imshow('gray', img)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
         # Create a black and white mask
         bw_mask = np.zeros_like(color_mask)
         bw_mask[color_mask != 0] = 255
