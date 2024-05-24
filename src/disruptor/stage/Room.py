@@ -33,6 +33,14 @@ class Room:
         from disruptor.stage.Wall import Wall
         return Wall.find_walls(f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png')
 
+    def get_biggest_wall(self, current_user_id):
+        es_img = Image.open(self.original_image_path)
+        width, height = es_img.size
+        es_img.close()
+        run_preprocessor("seg_ofade20k", self.original_image_path, current_user_id, "segmented_es.png", height)
+        from disruptor.stage.Wall import Wall
+        return Wall.find_biggest_wall(f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png')
+
     # def stage(self, text_parameters, current_user_id):
     #     room_type = text_parameters.split(", ")[1].lower()
     #     roll, pitch = np.negative(np.degrees(self.find_roll_pitch(current_user_id)))
