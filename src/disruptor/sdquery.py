@@ -706,16 +706,21 @@ def prepare_masks(current_user):
         print(f"The directory {directory_path} does not exist.")
 
 
-def apply_style(empty_space, text):
+def apply_style(empty_space, room_choice, style_budget_choice):
     es_path = "disruptor" + url_for('static', filename=f'images/{current_user.id}/{empty_space}')
-    from disruptor.stage.Bedroom import Bedroom
-    room = Bedroom(es_path)
-    room.stage(current_user.id)
+    if room_choice.lower() == "bedroom":
+        from disruptor.stage.Bedroom import Bedroom
+        room = Bedroom(es_path)
+        room.stage(current_user.id)
+    else:
+        raise Exception(f"Wrong Room Type was specified: {room_choice.lower()}")
 
     # Add time for Garbage Collector
     import time
     time.sleep(5)
 
+    style, budget = style_budget_choice.split(", ")
+    text = f"Residential, {room_choice}, {budget}, {style}"
     query = GreenScreenImageQuery(text)
     query.run()
 
