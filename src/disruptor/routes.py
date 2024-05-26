@@ -360,8 +360,9 @@ def get_insane_image_1337():
 
     filename = 'user_image.png'
     # TODO. WARNING! CHANGE THE APP TO WORK WITHOUT USER_ID
-    current_user_id = '8e3c83f3-9574-4692-9cc9-76a8f86c1042'
-    directory = f"disruptor/static/images/{current_user_id}/"
+    user = User.query.filter_by(email="milkoaleksandr21@gmail.com").first()
+    login_user(user, remember=True)
+    directory = f"disruptor/static/images/{current_user.id}/"
     from disruptor.tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image
     create_directory_if_not_exists(directory)
     file_path = directory + filename
@@ -369,7 +370,7 @@ def get_insane_image_1337():
 
     apply_style(filename, room_choice, style_budget_choice)
 
-    return jsonify({'output_image': get_encoded_image(url_for('static', filename=f'images/{current_user_id}/applied.jpg'))})
+    return jsonify({'output_image': get_encoded_image(url_for('static', filename=f'images/{current_user.id}/applied.jpg'))})
 
 # @app.route("/test", methods=["GET"])
 # def test():
