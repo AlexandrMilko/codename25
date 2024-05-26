@@ -370,7 +370,7 @@ def get_insane_image_1337():
 
     apply_style(filename, room_choice, style_budget_choice)
 
-    return jsonify({'output_image': get_encoded_image(url_for('static', filename=f'images/{current_user.id}/applied.jpg'))})
+    return jsonify({'output_image': get_encoded_image('disruptor' + url_for('static', filename=f'images/{current_user.id}/applied.jpg'))})
 
 # @app.route("/test", methods=["GET"])
 # def test():
