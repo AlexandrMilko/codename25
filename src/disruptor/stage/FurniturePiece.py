@@ -127,71 +127,46 @@ class Curtain(FurniturePiece):
         return angle_degrees
 
     @staticmethod
-    def find_placement_pixel(window_mask_path: str) -> list[list[tuple[int, int]]]: # We can have many windows, each of them can have 2 points, each point has 2 coords
-        """
-
-        Args:
-            window_mask_path: путь маски окна
-
-        Returns:
-            list[int]: массив коoрдинат точек гардин в формате [[(x1, y1), (x2, y2)]]
-                                                                    |          |
-                                                            левая точка    правая точка
-                                                                    |___________|
-                                                                          |
-                                                                   гардина целиком
-        """
-        img = cv2.imread(window_mask_path)  # Замените на ваш путь к файлу
-
-        # Convert the image to grayscale
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        number_of_windows = Room.Room.find_number_of_windows(window_mask_path)
-
-        corners = cv2.goodFeaturesToTrack(img, number_of_windows * 4, 0.01, 40)
-        corners = np.int0(corners)
-
-        # Кластеризация точек
-        kmeans = KMeans(n_clusters=number_of_windows)
-        points = np.array([i.ravel() for i in corners])
-        kmeans.fit(points)
-        labels = kmeans.labels_
-        saved_points = []
-
-        # Определение и визуализация верхних точек каждого кластера
-        for i in range(number_of_windows):
-            cluster_points = points[labels == i]
-            # Сортировка по Y и выбор двух верхних точек
-            top_points = cluster_points[np.argsort(cluster_points[:, 1])][:2]
-            for point in top_points:
-                saved_points.append(point)
+    def find_placement_pixel(window_mask_path: str) -> list[list[tuple[int, int]]]:
+        img = cv2.imread(window_mask_path, cv2.IMREAD_GRAYSCALE)
+        blurred = cv2.GaussianBlur(img, (5, 5), 0)
+        _, thresh = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
+        kernel = np.ones((3, 3), np.uint8)
+        erosion = cv2.erode(thresh, kernel, iterations=1)
+        img = cv2.dilate(erosion, kernel, iterations=1)
+        contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         final_points = []
+        # img_vis = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        for contour in contours:
+            contour_points = contour[:, 0, :]
 
-        for i in range(0, len(saved_points), 2):
-            top_left_point = saved_points[i]
-            top_right_point = saved_points[i + 1]
-            x1, y1 = top_left_point[0], top_left_point[1]
-            x2, y2 = top_right_point[0], top_right_point[1]
+            # Находим крайние точки
+            top_left = contour_points[np.argmin(contour_points[:, 0] + contour_points[:, 1])]
+            top_right = contour_points[np.argmax(contour_points[:, 0] - contour_points[:, 1])]
 
-            # Вычисление угла в радианах
-            angle_radians = math.radians(Curtain.find_perspective_angle(x1, y1, x2, y2))
+            print("Координаты угловых точек:")
+            print("Верхняя левая:", top_left)
+            print("Верхняя правая:", top_right)
+
+            angle_radians = math.radians(Curtain.find_perspective_angle(top_left[0], top_left[1], top_right[0], top_right[1]))
 
             # Вычисление координат точек слева и справа от верхних углов
             right_top_point = (
-                int(top_left_point[0] - 20 * math.cos(angle_radians)), -10 + int(top_left_point[1] - 130 * math.sin(angle_radians)))
+                int(top_left[0] - 20 * math.cos(angle_radians)), -10 + int(top_left[1] - 20 * math.sin(angle_radians)))
             left_top_point = (
-                int(top_right_point[0] + 20 * math.cos(angle_radians)), -10 + int(top_right_point[1] - 20 * math.sin(angle_radians)))
+                int(top_right[0] + 20 * math.cos(angle_radians)),
+                -10 + int(top_right[1] + 20 * math.sin(angle_radians)))
             point = [left_top_point, right_top_point]
             final_points.append(point)
-            print("Координаты точек слева и справа от верхних углов:")
-            print(left_top_point, right_top_point)
-            # cv2.circle(img, right_top_point, 50, (0, 255, 0), -1)  # зеленая точка - справа
-            # cv2.circle(img, left_top_point, 50, (0, 0, 255), -1)   # красная точка - слева
-        return final_points
-        # cv2.imshow('Image with Points', img)
+
+            # cv2.circle(img_vis, right_top_point, 5, (0, 0, 255), -1)  # красная точка - верхняя левая
+            # cv2.circle(img_vis, left_top_point, 5, (0, 255, 0), -1)  # зеленая точка - верхняя правая
+
+        # cv2.imshow('Image with Points', img_vis)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
+        return final_points
 
     def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
                                        yaw_angle: float,
