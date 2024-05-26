@@ -30,6 +30,11 @@ class Bedroom(Room):
         # image_pixels_to_3d(self.original_image_path, "my_3d_space.txt")
         # rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", -pitch_rad, -roll_rad)
 
+        # Segment our empty space room. It is used in Room.save_windows_mask
+        from disruptor.tools import get_image_size, run_preprocessor
+        width, height = get_image_size(self.original_image_path)
+        run_preprocessor("seg_ofade20k", self.original_image_path, current_user_id, "segmented_es.png", height)
+
         # Add curtains
         prerequisite_path = f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.png'
         curtain = Curtain()
