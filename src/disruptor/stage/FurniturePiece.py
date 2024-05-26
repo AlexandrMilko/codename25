@@ -53,8 +53,7 @@ class Bed(FurniturePiece):
         super().__init__(model_path)
 
     @staticmethod
-    def find_placement_pixel(wall_mask_path) -> list[list[
-        int]]:  # list[list[int]] We return list of coordinates, because some of the furniture pieces, like curtains have numerous copies in the room
+    def find_placement_pixel(wall_mask_path) -> tuple[int, int]:
         wall_mask = cv2.imread(wall_mask_path, cv2.IMREAD_GRAYSCALE)
         wall_contours, _ = cv2.findContours(wall_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -63,7 +62,7 @@ class Bed(FurniturePiece):
         pixel_x = wall_centroid[0]
         pixel_y = wall_centroid[1]
 
-        return [[int(pixel_x), int(pixel_y)]]
+        return int(pixel_x), int(pixel_y)
 
     def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
                                        yaw_angle: float,
@@ -197,6 +196,105 @@ class Curtain(FurniturePiece):
 
         params = {
             'obj_offsets': tuple(obj_offsets), # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
+            'obj_angles': tuple(obj_angles),
+            'obj_scale': tuple(obj_scale),
+            'camera_angles': tuple(camera_angles),
+            'camera_location': tuple(camera_location),
+            'model_path': self.model_path
+        }
+
+        return params
+
+class Plant(FurniturePiece):
+    # We use it to scale the model to metric units
+    scale = 1, 1, 1
+    # We use it to compensate the angle if the model is originally rotated in a wrong way
+    default_angles = 0, 0, 0
+
+    def __init__(self, model_path='3Ds/other/plant.obj'):
+        super().__init__(model_path)
+
+    @staticmethod
+    def is_near_border(x, y, margin, width, height):
+        return x < margin or x > width - margin or y < margin or y > height - margin
+
+    @staticmethod
+    def find_placement_pixel(floor_mask_path: str) -> list[list[int, int]]:
+        # Load the image
+        img = cv2.imread(floor_mask_path)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # WARNING useful only when shape has gray borders
+        # _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU)
+
+        # Apply erosion to move points inside
+        erosion = 40
+        kernel = np.ones((erosion, erosion), np.uint8)  # Adjust the kernel size as needed
+        eroded = cv2.erode(gray, kernel, iterations=1)
+
+        # Find contours               (thresh,..
+        contours, _ = cv2.findContours(eroded, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contour = contours[0]
+
+        # Approximate the contour
+        contour_precision = 0.01
+        perimeter = cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, contour_precision * perimeter, True)
+
+        # Set margin from border
+        margin = 10 + erosion
+        # Get image dimensions
+        height, width = img.shape[:2]
+
+        points = []
+        # Draw points and contours
+        for point in approx:
+            x, y = point[0]
+            if not Plant.is_near_border(x, y, margin, width, height):
+                points.append(point[0])
+                # cv2.circle(img, (x, y), 5, (0, 255, 0), -1)
+
+        # cv2.drawContours(img, [approx], -1, (0, 255, 0))
+
+        # cv2.imshow('Contour Approximation', img)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
+        return points
+
+    def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
+                                       camera_angles_rad: tuple[float, float], current_user_id):
+        from math import radians
+        roll, pitch = camera_angles_rad
+        default_angles = self.get_default_angles()
+
+        obj_offsets = room.infer_3d(placement_pixel, pitch,
+                                    roll)  # We set negative rotation to compensate
+        obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(
+            default_angles[2])  # In blender, yaw angle is around z axis. z axis is to the top
+        obj_scale = self.get_scale()
+        # We set opposite
+        camera_angles = radians(
+            90) - pitch, +roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+        print("Started estimating camera height")
+        camera_height = room.estimate_camera_height((pitch, roll), current_user_id)
+        print(f"Camera height: {camera_height}")
+        camera_location = 0, 0, camera_height
+        obj_offsets_floor = obj_offsets.copy()
+        obj_offsets_floor[2] = 0
+
+        print("Bed coords")
+        print(obj_offsets, "obj_offsets")
+        print(obj_offsets_floor, "obj_offsets for blender with floor z axis")
+        print(obj_angles, "obj_angles")
+        print(obj_scale, "obj_scale")
+        print(camera_angles, "camera_angles")
+        print(camera_location, "camera_location")
+        print(self.model_path, "model_path")
+
+        params = {
+            'obj_offsets': tuple(obj_offsets_floor),
+            # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
             'obj_angles': tuple(obj_angles),
             'obj_scale': tuple(obj_scale),
             'camera_angles': tuple(camera_angles),
