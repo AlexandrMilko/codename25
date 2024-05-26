@@ -351,11 +351,12 @@ def reset_password(token):
         return redirect(url_for('login'))
     return render_template('password_reset.html', title="Reset Password", form=form)
 
-@app.route("/get_insane_image_1337", methods=["GET"])
+@app.route("/get_insane_image_1337", methods=['POST'])
 def get_insane_image_1337():
-    room_choice = request.args.get('room_choice')
-    style_budget_choice = request.args.get('style_budget_choice')
-    input_image = request.args.get('input_image')
+    data = request.get_json()
+    room_choice = data.get('room_choice')
+    style_budget_choice = data.get('style_budget_choice')
+    input_image = data.get('input_image')
 
     filename = 'user_image.png'
     directory = f"disruptor/static/images/{current_user.id}/"
