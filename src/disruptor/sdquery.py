@@ -728,7 +728,8 @@ def apply_style(empty_space, room_choice, style_budget_choice):
     time.sleep(5)
 
     style, budget = style_budget_choice.split(", ")
-    text = f"Residential, {room_choice}, {budget}, {style}"
+    # text = f"Residential space, {room_choice}, {budget}, {style}"
+    text = f"Residential space, {budget}, {style}"
     query = GreenScreenImageQuery(text)
     query.run()
 
