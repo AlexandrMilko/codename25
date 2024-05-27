@@ -303,7 +303,7 @@ class Plant(FurniturePiece):
 
 class KitchenTableWithChairs(FurniturePiece):
     # We use it to scale the model to metric units
-    scale = 0.01, 0.01, 0.01
+    scale = 1, 1, 1
     # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 0
 
