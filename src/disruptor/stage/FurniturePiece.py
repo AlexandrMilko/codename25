@@ -86,7 +86,6 @@ class Bed(FurniturePiece):
         obj_offsets_floor = obj_offsets.copy()
         obj_offsets_floor[2] = 0
 
-        print("Bed coords")
         print(obj_offsets, "obj_offsets")
         print(obj_offsets_floor, "obj_offsets for blender with floor z axis")
         print(obj_angles, "obj_angles")
@@ -185,7 +184,6 @@ class Curtain(FurniturePiece):
         # TODO Perform camera height estimation not here, but in stage() function to save computing power
         camera_location = 0, 0, 0
 
-        print("Curtain coords")
         print(obj_offsets, "obj_offsets")
         print(obj_angles, "obj_angles")
         print(yaw_angle, "yaw_angle")
@@ -283,7 +281,6 @@ class Plant(FurniturePiece):
         obj_offsets_floor = obj_offsets.copy()
         obj_offsets_floor[2] = 0
 
-        print("Bed coords")
         print(obj_offsets, "obj_offsets")
         print(obj_offsets_floor, "obj_offsets for blender with floor z axis")
         print(obj_angles, "obj_angles")
@@ -392,7 +389,7 @@ class KitchenTableWithChairs(FurniturePiece):
 
         return centers
 
-    def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
+    def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int], yaw_angle,
                                        camera_angles_rad: tuple[float, float], current_user_id):
         from math import radians
         roll, pitch = camera_angles_rad
@@ -401,7 +398,7 @@ class KitchenTableWithChairs(FurniturePiece):
         obj_offsets = room.infer_3d(placement_pixel, pitch,
                                     roll)  # We set negative rotation to compensate
         obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(
-            default_angles[2])  # In blender, yaw angle is around z axis. z axis is to the top
+            default_angles[2] + yaw_angle)  # In blender, yaw angle is around z axis. z axis is to the top
         obj_scale = self.get_scale()
         # We set opposite
         camera_angles = radians(
@@ -413,10 +410,10 @@ class KitchenTableWithChairs(FurniturePiece):
         obj_offsets_floor = obj_offsets.copy()
         obj_offsets_floor[2] = 0
 
-        print("Bed coords")
         print(obj_offsets, "obj_offsets")
         print(obj_offsets_floor, "obj_offsets for blender with floor z axis")
         print(obj_angles, "obj_angles")
+        print(yaw_angle, "yaw_angle")
         print(obj_scale, "obj_scale")
         print(camera_angles, "camera_angles")
         print(camera_location, "camera_location")
