@@ -351,6 +351,27 @@ def reset_password(token):
         return redirect(url_for('login'))
     return render_template('password_reset.html', title="Reset Password", form=form)
 
+@app.route("/get_insane_image_1337", methods=['POST'])
+def get_insane_image_1337():
+    data = request.get_json()
+    room_choice = data.get('room_choice')
+    style_budget_choice = data.get('style_budget_choice')
+    input_image = data.get('input_image')
+
+    filename = 'user_image.png'
+    # TODO. WARNING! CHANGE THE APP TO WORK WITHOUT USER_ID
+    user = User.query.filter_by(email="milkoaleksandr21@gmail.com").first()
+    login_user(user, remember=True)
+    directory = f"disruptor/static/images/{current_user.id}/"
+    from disruptor.tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image
+    create_directory_if_not_exists(directory)
+    file_path = directory + filename
+    save_encoded_image(input_image, file_path)
+
+    apply_style(filename, room_choice, style_budget_choice)
+
+    return jsonify({'output_image': get_encoded_image('disruptor' + url_for('static', filename=f'images/{current_user.id}/applied.jpg'))})
+
 # @app.route("/test", methods=["GET"])
 # def test():
 #     from disruptor.staging_ml import Room, AttributesAdder
