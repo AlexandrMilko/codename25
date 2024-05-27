@@ -107,7 +107,7 @@ class Bed(FurniturePiece):
         return params
 
 class Curtain(FurniturePiece):
-    scale = 1, 0.3, 1
+    scale = 1, 0.3, 0.5
     # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 90
 
