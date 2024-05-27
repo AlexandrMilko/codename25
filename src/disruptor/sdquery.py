@@ -256,7 +256,7 @@ class GreenScreenImageQuery(Query):
 
         space, room, budget, self.style = text.split(", ")
         # self.prompt = f'interior design, {room.lower()}, {self.style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
-        self.prompt = f'interior design, {room.lower()}, {self.style.lower()} style, RAW photo, subject, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3, <lora:epi_noiseoffset2:1>'
+        self.prompt = f'interior design, {self.style.lower()} style, RAW photo, subject, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3, <lora:epi_noiseoffset2:1>'
         self.output_filename = output_filename
 
     def run(self):
@@ -728,8 +728,7 @@ def apply_style(empty_space, room_choice, style_budget_choice):
     time.sleep(5)
 
     style, budget = style_budget_choice.split(", ")
-    # text = f"Residential space, {room_choice}, {budget}, {style}"
-    text = f"Residential space, {budget}, {style}"
+    text = f"Residential, {room_choice}, {budget}, {style}"
     query = GreenScreenImageQuery(text)
     query.run()
 
