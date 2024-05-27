@@ -303,3 +303,133 @@ class Plant(FurniturePiece):
         }
 
         return params
+
+class KitchenTableWithChairs(FurniturePiece):
+    # We use it to scale the model to metric units
+    scale = 0.01, 0.01, 0.01
+    # We use it to compensate the angle if the model is originally rotated in a wrong way
+    default_angles = 0, 0, 0
+
+    def __init__(self, model_path='3Ds/kitchen/kitchen_table_with_chairs.obj'):
+        super().__init__(model_path)
+
+    @staticmethod
+    def find_centers(segments):
+        centers = []
+        for segment in segments:
+            M = cv2.moments(segment)
+            if M["m00"] != 0:
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                centers.append([cX, cY])
+
+        return centers
+
+    @staticmethod
+    def choose_bigger_segments(segments, total_area):
+        segments.sort(key=lambda x: x[1], reverse=True)
+
+        chosen_segments = []
+        cumulative_area = 0
+        # Change value in order to change the number of places where to put the table
+        max_area = 0.9 * total_area
+        for segment, area in segments:
+            if cumulative_area + area <= max_area:
+                chosen_segments.append(segment)
+                cumulative_area += area
+            else:
+                break
+
+        return chosen_segments
+
+    @staticmethod
+    def find_segments(contours, bottom_point):
+        segments = []
+        for i in range(len(contours)):
+            start_point = tuple(contours[i][0])
+            end_point = tuple(contours[(i + 1) % len(contours)][0])
+            # (i + 1) % len(approx) Ensuring it wraps around to
+            # the first vertex when processing the last vertex
+
+            segment = np.array([
+                start_point,  # Left upper point
+                end_point,  # Right upper point
+                (end_point[0], bottom_point),  # Right bottom point
+                (start_point[0], bottom_point)  # Left bottom point
+            ], np.int32)
+
+            area = cv2.contourArea(segment)
+            segments.append((segment, area))
+
+        return segments
+
+    @staticmethod
+    def find_placement_pixel(floor_mask_path: str) -> list[list[int, int]]:
+        image = cv2.imread(floor_mask_path)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        contours, _ = cv2.findContours(gray, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        contour = contours[0]
+
+        total_area = cv2.contourArea(contour)
+
+        epsilon = 0.01 * cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+
+        segments = KitchenTableWithChairs.find_segments(approx, image.shape[0])
+        chosen_segments = KitchenTableWithChairs.choose_bigger_segments(segments, total_area)
+        centers = KitchenTableWithChairs.find_centers(chosen_segments)
+
+        # # Draw the segments and centers on the original image
+        # for segment in chosen_segments:
+        #     cv2.polylines(image, [segment], isClosed=True, color=(0, 255, 0), thickness=2)
+        # for center in centers:
+        #     cv2.circle(image, center, 5, (0, 0, 255), -1)
+        #
+        # cv2.imshow('Segments and Centers', image)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
+        return centers
+
+    def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
+                                       camera_angles_rad: tuple[float, float], current_user_id):
+        from math import radians
+        roll, pitch = camera_angles_rad
+        default_angles = self.get_default_angles()
+
+        obj_offsets = room.infer_3d(placement_pixel, pitch,
+                                    roll)  # We set negative rotation to compensate
+        obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(
+            default_angles[2])  # In blender, yaw angle is around z axis. z axis is to the top
+        obj_scale = self.get_scale()
+        # We set opposite
+        camera_angles = radians(
+            90) - pitch, +roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+        print("Started estimating camera height")
+        camera_height = room.estimate_camera_height((pitch, roll), current_user_id)
+        print(f"Camera height: {camera_height}")
+        camera_location = 0, 0, camera_height
+        obj_offsets_floor = obj_offsets.copy()
+        obj_offsets_floor[2] = 0
+
+        print("Bed coords")
+        print(obj_offsets, "obj_offsets")
+        print(obj_offsets_floor, "obj_offsets for blender with floor z axis")
+        print(obj_angles, "obj_angles")
+        print(obj_scale, "obj_scale")
+        print(camera_angles, "camera_angles")
+        print(camera_location, "camera_location")
+        print(self.model_path, "model_path")
+
+        params = {
+            'obj_offsets': tuple(obj_offsets_floor),
+            # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
+            'obj_angles': tuple(obj_angles),
+            'obj_scale': tuple(obj_scale),
+            'camera_angles': tuple(camera_angles),
+            'camera_location': tuple(camera_location),
+            'model_path': self.model_path
+        }
+
+        return params
