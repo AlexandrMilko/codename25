@@ -712,6 +712,10 @@ def apply_style(empty_space, room_choice, style_budget_choice):
         from disruptor.stage.Bedroom import Bedroom
         room = Bedroom(es_path)
         room.stage(current_user.id)
+    elif room_choice.lower() == "kitchen":
+        from disruptor.stage.Kitchen import Kitchen
+        room = Kitchen(es_path)
+        room.stage(current_user.id)
     else:
         raise Exception(f"Wrong Room Type was specified: {room_choice.lower()}")
 
