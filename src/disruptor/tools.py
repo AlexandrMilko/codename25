@@ -87,7 +87,10 @@ def save_encoded_image(b64_image: str, output_path: str):
 def get_encoded_image(image_path):
     img = cv2.imread(image_path)
     # Encode into PNG and send to ControlNet
-    retval, bytes = cv2.imencode('.png', img)
+    try:
+        retval, bytes = cv2.imencode('.png', img)
+    except cv2.error:
+        retval, bytes = cv2.imencode('.jpg', img)
     return base64.b64encode(bytes).decode('utf-8')
 
 
