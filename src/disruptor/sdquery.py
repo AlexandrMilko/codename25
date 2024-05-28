@@ -309,7 +309,7 @@ class GreenScreenImageQuery(Query):
                         {
                             "enabled": True,
                             "image": self.prerequisite_image_b64,
-                            "module": "depth_midas",
+                            "module": "depth_anything",
                             "model": "control_depth-fp16 [400750f6]",
                             "weight": 0.4,
                             "guidance_start": 0.1,
@@ -394,7 +394,7 @@ class GreenScreenImageQuery(Query):
                         {
                             "enabled": True,
                             "image": self.staged_image_b64,
-                            "module": "depth_midas",
+                            "module": "depth_anything",
                             "model": "control_depth-fp16 [400750f6]",
                             "weight": 0.4,
                             "guidance_start": 0.1,
