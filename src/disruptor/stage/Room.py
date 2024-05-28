@@ -141,9 +141,8 @@ class Room:
         return number_of_windows
 
     @staticmethod
-    def save_windows_mask(windows_mask_path: str, current_user_id):
-        segmented_es_path = f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png'
-        image = cv2.imread(segmented_es_path)
+    def save_windows_mask(segmented_image_path: str, windows_mask_path: str, current_user_id):
+        image = cv2.imread(segmented_image_path)
         rgb_values = Room.window_color
 
         # Define the lower and upper bounds for the color

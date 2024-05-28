@@ -260,8 +260,8 @@ class GreenScreenImageQuery(Query):
         self.output_filename = output_filename
 
     def run(self):
-        # We run segmentation for our prerequisite image to see if segmentation was done correctly
-        run_preprocessor("seg_ofade20k", self.prerequisite_path, current_user.id, "seg_prerequisite.jpg")
+        # We run segmentation for our prerequisite image to see if segmentation was done correctly and to use it to preserve windows views
+        run_preprocessor("seg_ofade20k", self.prerequisite_path, current_user.id, "seg_prerequisite.png")
 
         # if self.style in ("Modern", "Art Deco"):
         #     set_xsarchitectural()
@@ -270,15 +270,16 @@ class GreenScreenImageQuery(Query):
         #     set_deliberate()
         set_realistic_vision()
 
-        self.staged_image_b64 = self.stage()
-        self.design()
+        self.designed_image_b64 = self.design()
+        self.add_shadows_and_light()
 
-    def stage(self):
-        self.denoising_strength = 1
+    def design(self):
+        self.denoising_strength = 0.6
+        self.cfg_scale = 7
         self.steps = 20
+
         data = {
-            # "prompt": self.prompt,
-            "prompt": "",
+            "prompt": self.prompt,
             "sampler_name": self.sampler_name,
             # "negative_prompt": self.negative_prompt,
             "init_images": [self.prerequisite_image_b64],
@@ -290,6 +291,7 @@ class GreenScreenImageQuery(Query):
             "height": self.height,
             # "seed": 123, # TODO add seed, before testing
             "mask": self.furniture_mask_image_b64,
+            "inpainting_mask_invert": 1,
             "mask_blur": 3,
             "alwayson_scripts": {
                 "controlnet": {
@@ -297,6 +299,131 @@ class GreenScreenImageQuery(Query):
                         {
                             "enabled": True,
                             "image": self.prerequisite_image_b64,
+                            "module": "seg_ofade20k",
+                            "model": "control_seg-fp16 [b9c1cc12]",
+                            "weight": 1,
+                            "guidance_start": 0,
+                            "guidance_end": 1,
+                            "control_mode": "Balanced",
+                            "processor_res": 512, # WARNING: TODO change to image height
+                            # "low_vram": True,
+                        },
+                        # {
+                        #     "enabled": True,
+                        #     "image": self.prerequisite_image_b64,
+                        #     "module": "softedge_hed",
+                        #     "model": "control_sd15_hed [fef5e48e]",
+                        #     "weight": 0.55,
+                        #     "guidance_start": 0.1,
+                        #     "guidance_end": 0.5,
+                        #     # "control_mode": 0,
+                        #     "processor_res": 512
+                        # },
+                        # {
+                        #     "enabled": True,
+                        #     "image": self.prerequisite_image_b64,
+                        #     "module": "seg_ofade20k",
+                        #     "model": "control_seg-fp16 [b9c1cc12]",
+                        #     "weight": 0.9,
+                        #     "guidance_start": 0,
+                        #     "guidance_end": 0.5,
+                        #     # "control_mode": 1,
+                        #     "processor_res": 512,
+                        # },
+                        {
+                            "enabled": True,
+                            "image": self.prerequisite_image_b64,
+                            "module": "depth_anything",
+                            "model": "control_depth-fp16 [400750f6]",
+                            "weight": 1,
+                            "guidance_start": 0,
+                            "guidance_end": 1,
+                            "control_mode": "Balanced",
+                            "processor_res": 512, # WARNING: TODO change to image height
+                            # "low_vram": True,
+                        }
+                    ]
+                }
+            }
+        }
+        # data = {
+        #     "prompt": self.prompt,
+        #     "sampler_name": self.sampler_name,
+        #     # "negative_prompt": self.negative_prompt,
+        #     "init_images": [self.prerequisite_image_b64],
+        #     "batch_size": 1,
+        #     "steps": self.steps,
+        #     "cfg_scale": self.cfg_scale,
+        #     "denoising_strength": self.denoising_strength,
+        #     "width": self.width,
+        #     "height": self.height,
+        #     # "seed": 123, # TODO add seed, before testing
+        #     "alwayson_scripts": {
+        #         "controlnet": {
+        #             "args": [
+        #                 {
+        #                     "image": self.prerequisite_image_b64,
+        #                     "module": "seg_ofade20k",
+        #                     "model": "control_seg-fp16 [b9c1cc12]",
+        #                     "weight": 1,
+        #                     "guidance_start": 0,
+        #                     "guidance_end": 1,
+        #                     "control_mode": 0,
+        #                     "processor_res": 512
+        #                 },
+        #                 {
+        #                     "image": self.prerequisite_image_b64,
+        #                     "module": "depth_midas",
+        #                     "model": "control_depth-fp16 [400750f6]",
+        #                     "weight": 1,
+        #                     "guidance_start": 0,
+        #                     "guidance_end": 1,
+        #                     "control_mode": 0,
+        #                     "processor_res": 512
+        #                 }
+        #             ]
+        #         }
+        #     }
+        # }
+
+        img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
+        response = submit_post(img2img_url, data)
+        output_dir = f"disruptor/static/images/{current_user.id}/preprocessed"
+        output_filepath = os.path.join(output_dir, 'designed.png')
+
+        # If there was no such dir, we create it and try again
+        try:
+            save_encoded_image(response.json()['images'][0], output_filepath)
+        except FileNotFoundError as e:
+            create_directory_if_not_exists(output_dir)
+            save_encoded_image(response.json()['images'][0], output_filepath)
+
+        return response.json()['images'][0]
+
+    def add_shadows_and_light(self):
+        self.denoising_strength = 1
+        self.steps = 20
+        data = {
+            # "prompt": self.prompt,
+            "prompt": "",
+            "sampler_name": self.sampler_name,
+            # "negative_prompt": self.negative_prompt,
+            "init_images": [self.designed_image_b64],
+            "batch_size": 1,
+            "steps": self.steps,
+            "cfg_scale": self.cfg_scale,
+            "denoising_strength": self.denoising_strength,
+            "width": self.width * 2,
+            "height": self.height * 2,
+            # "seed": 123, # TODO add seed, before testing
+            # "mask": self.furniture_mask_image_b64,
+            # "mask_blur": 3,
+            "alwayson_scripts": {
+                "controlnet": {
+                    "args": [
+                        {
+                            "enabled": True,
+                            "image": self.designed_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_seg-fp16 [b9c1cc12]",
                             # "low_vram": True,
@@ -308,7 +435,7 @@ class GreenScreenImageQuery(Query):
                         },
                         {
                             "enabled": True,
-                            "image": self.prerequisite_image_b64,
+                            "image": self.designed_image_b64,
                             "module": "depth_anything",
                             "model": "control_depth-fp16 [400750f6]",
                             "weight": 0.4,
@@ -322,130 +449,6 @@ class GreenScreenImageQuery(Query):
                 }
             }
         }
-
-        img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
-        response = submit_post(img2img_url, data)
-        output_dir = f"disruptor/static/images/{current_user.id}/preprocessed"
-        output_filepath = os.path.join(output_dir, 'staged.jpg')
-
-        # If there was no such dir, we create it and try again
-        try:
-            save_encoded_image(response.json()['images'][0], output_filepath)
-        except FileNotFoundError as e:
-            create_directory_if_not_exists(output_dir)
-            save_encoded_image(response.json()['images'][0], output_filepath)
-
-        return response.json()['images'][0]
-
-    def design(self):
-        self.denoising_strength = 0.6
-        self.cfg_scale = 7
-        self.steps = 20
-
-        data = {
-            "prompt": self.prompt,
-            "sampler_name": self.sampler_name,
-            # "negative_prompt": self.negative_prompt,
-            "init_images": [self.staged_image_b64],
-            "batch_size": 1,
-            "steps": self.steps,
-            "cfg_scale": self.cfg_scale,
-            "denoising_strength": self.denoising_strength,
-            "width": self.width * 2,
-            "height": self.height * 2,
-            # "seed": 123, # TODO add seed, before testing
-            "alwayson_scripts": {
-                "controlnet": {
-                    "args": [
-                        {
-                            "enabled": True,
-                            "image": self.staged_image_b64,
-                            "module": "seg_ofade20k",
-                            "model": "control_seg-fp16 [b9c1cc12]",
-                            "weight": 0.9,
-                            "guidance_start": 0.1,
-                            "guidance_end": 0.5,
-                            "control_mode": "Balanced",
-                            "processor_res": 512, # WARNING: TODO change to image height
-                            # "low_vram": True,
-                        },
-                        # {
-                        #     "enabled": True,
-                        #     "image": self.staged_image_b64,
-                        #     "module": "softedge_hed",
-                        #     "model": "control_sd15_hed [fef5e48e]",
-                        #     "weight": 0.55,
-                        #     "guidance_start": 0.1,
-                        #     "guidance_end": 0.5,
-                        #     # "control_mode": 0,
-                        #     "processor_res": 512
-                        # },
-                        # {
-                        #     "enabled": True,
-                        #     "image": self.staged_image_b64,
-                        #     "module": "seg_ofade20k",
-                        #     "model": "control_seg-fp16 [b9c1cc12]",
-                        #     "weight": 0.9,
-                        #     "guidance_start": 0,
-                        #     "guidance_end": 0.5,
-                        #     # "control_mode": 1,
-                        #     "processor_res": 512,
-                        # },
-                        {
-                            "enabled": True,
-                            "image": self.staged_image_b64,
-                            "module": "depth_anything",
-                            "model": "control_depth-fp16 [400750f6]",
-                            "weight": 0.4,
-                            "guidance_start": 0.1,
-                            "guidance_end": 0.5,
-                            "control_mode": "Balanced",
-                            "processor_res": 512, # WARNING: TODO change to image height
-                            # "low_vram": True,
-                        }
-                    ]
-                }
-            }
-        }
-        # data = {
-        #     "prompt": self.prompt,
-        #     "sampler_name": self.sampler_name,
-        #     # "negative_prompt": self.negative_prompt,
-        #     "init_images": [self.staged_image_b64],
-        #     "batch_size": 1,
-        #     "steps": self.steps,
-        #     "cfg_scale": self.cfg_scale,
-        #     "denoising_strength": self.denoising_strength,
-        #     "width": self.width,
-        #     "height": self.height,
-        #     # "seed": 123, # TODO add seed, before testing
-        #     "alwayson_scripts": {
-        #         "controlnet": {
-        #             "args": [
-        #                 {
-        #                     "image": self.staged_image_b64,
-        #                     "module": "seg_ofade20k",
-        #                     "model": "control_seg-fp16 [b9c1cc12]",
-        #                     "weight": 1,
-        #                     "guidance_start": 0,
-        #                     "guidance_end": 1,
-        #                     "control_mode": 0,
-        #                     "processor_res": 512
-        #                 },
-        #                 {
-        #                     "image": self.staged_image_b64,
-        #                     "module": "depth_midas",
-        #                     "model": "control_depth-fp16 [400750f6]",
-        #                     "weight": 1,
-        #                     "guidance_start": 0,
-        #                     "guidance_end": 1,
-        #                     "control_mode": 0,
-        #                     "processor_res": 512
-        #                 }
-        #             ]
-        #         }
-        #     }
-        # }
 
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
