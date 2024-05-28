@@ -48,7 +48,8 @@ class LivingRoom(Room):
         # Add curtains
         prerequisite_path = f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.png'
         curtain = Curtain()
-        Room.save_windows_mask(f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png',
+        segmented_es_path = f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png'
+        Room.save_windows_mask(segmented_es_path, f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png',
                                current_user_id)
         pixels_for_placing = curtain.find_placement_pixel(
             f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png')
@@ -123,3 +124,9 @@ class LivingRoom(Room):
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(sofa_image, background_image)
         combined_image.save(prerequisite_path)
+
+        # Create windows mask for staged room
+        segmented_es_path = f'disruptor/static/images/{current_user_id}/preprocessed/seg_prerequisite.png'
+        Room.save_windows_mask(segmented_es_path,
+                               f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png',
+                               current_user_id)
