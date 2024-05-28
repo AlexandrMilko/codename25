@@ -1,7 +1,7 @@
 from disruptor.stage.Room import Room
 from disruptor.stage.Floor import Floor
 from disruptor.stage.FurniturePiece import FurniturePiece, Curtain, Plant, SofaWithTable
-from disruptor.tools import calculate_angle_from_top_view, get_image_size
+from disruptor.tools import calculate_angle_from_top_view, get_image_size, create_mask_of_size, convert_to_mask, overlay_masks
 import numpy as np
 import os
 from math import radians
@@ -36,6 +36,15 @@ class LivingRoom(Room):
         width, height = get_image_size(self.original_image_path)
         run_preprocessor("seg_ofade20k", self.original_image_path, current_user_id, "segmented_es.png", height)
 
+        # Create an empty mask of same size as image
+        mask_path = f'disruptor/static/images/{current_user_id}/preprocessed/furniture_mask.png'
+        tmp_mask_path = f'disruptor/static/images/{current_user_id}/preprocessed/furniture_piece_mask.png'
+        width, height = get_image_size(self.original_image_path)
+        empty_mask = create_mask_of_size(width, height)
+        print("Saving empty mask to:", mask_path)
+        empty_mask.save(mask_path)
+        print("Empty mask saved successfully!")
+
         # Add curtains
         prerequisite_path = f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.png'
         curtain = Curtain()
@@ -57,6 +66,9 @@ class LivingRoom(Room):
                     render_parameters['resolution_x'] = width
                     render_parameters['resolution_y'] = height
                     curtain_image = curtain.request_blender_render(render_parameters)
+                    curtain_image.save(tmp_mask_path)
+                    convert_to_mask(tmp_mask_path)
+                    overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
                     background_image = Image.open(prerequisite_path)
                     combined_image = image_overlay(curtain_image, background_image)
                     combined_image.save(prerequisite_path)
@@ -82,6 +94,9 @@ class LivingRoom(Room):
         render_parameters['resolution_x'] = width
         render_parameters['resolution_y'] = height
         plant_image = plant.request_blender_render(render_parameters)
+        plant_image.save(tmp_mask_path)
+        convert_to_mask(tmp_mask_path)
+        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(plant_image, background_image)
         combined_image.save(prerequisite_path)
@@ -101,7 +116,10 @@ class LivingRoom(Room):
         width, height = get_image_size(self.original_image_path)
         render_parameters['resolution_x'] = width
         render_parameters['resolution_y'] = height
-        bed_image = sofa_with_table.request_blender_render(render_parameters)
+        sofa_image = sofa_with_table.request_blender_render(render_parameters)
+        sofa_image.save(tmp_mask_path)
+        convert_to_mask(tmp_mask_path)
+        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
         background_image = Image.open(prerequisite_path)
-        combined_image = image_overlay(bed_image, background_image)
+        combined_image = image_overlay(sofa_image, background_image)
         combined_image.save(prerequisite_path)
