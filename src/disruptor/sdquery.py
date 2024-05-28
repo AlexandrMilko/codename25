@@ -244,14 +244,14 @@ class GreenScreenImageQuery(Query):
     steps = 20
 
     def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.png",
-                 inpainting_mask="inpainting_mask.png"):
+                 furniture_mask="furniture_mask.png"):
         # We will use result image to transform it into new space of user image
         self.prerequisite_path = "disruptor" + url_for('static',
                                                        filename=f'images/{current_user.id}/preprocessed/{prerequisite}')
-        self.inpainting_mask_path = "disruptor" + url_for('static',
-                                                          filename=f'images/{current_user.id}/preprocessed/{inpainting_mask}')
+        self.furniture_mask_path = "disruptor" + url_for('static',
+                                                          filename=f'images/{current_user.id}/preprocessed/{furniture_mask}')
         self.prerequisite_image_b64 = get_encoded_image(self.prerequisite_path)
-        self.inpainting_mask_image_b64 = get_encoded_image(self.inpainting_mask_path)
+        self.furniture_mask_image_b64 = get_encoded_image(self.furniture_mask_path)
         self.width, self.height = get_max_possible_size(self.prerequisite_path)
 
         space, room, budget, self.style = text.split(", ")
@@ -289,8 +289,8 @@ class GreenScreenImageQuery(Query):
             "width": self.width,
             "height": self.height,
             # "seed": 123, # TODO add seed, before testing
-            # "mask": self.inpainting_mask_image_b64,
-            # "mask_blur": 3,
+            "mask": self.furniture_mask_image_b64,
+            "mask_blur": 3,
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
