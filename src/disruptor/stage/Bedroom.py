@@ -1,7 +1,7 @@
 from disruptor.stage.Room import Room
 from disruptor.stage.Floor import Floor
 from disruptor.stage.FurniturePiece import FurniturePiece, Bed, Curtain, Plant
-from disruptor.tools import calculate_angle_from_top_view, get_image_size, create_mask_of_size, convert_to_mask, overlay_masks
+from disruptor.tools import calculate_angle_from_top_view, get_image_size, create_mask_of_size, convert_png_to_mask, overlay_masks
 import numpy as np
 import os
 from math import radians
@@ -67,7 +67,7 @@ class Bedroom(Room):
                     render_parameters['resolution_y'] = height
                     curtain_image = curtain.request_blender_render(render_parameters)
                     curtain_image.save(tmp_mask_path)
-                    convert_to_mask(tmp_mask_path)
+                    convert_png_to_mask(tmp_mask_path)
                     overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
                     background_image = Image.open(prerequisite_path)
                     combined_image = image_overlay(curtain_image, background_image)
@@ -95,7 +95,7 @@ class Bedroom(Room):
         render_parameters['resolution_y'] = height
         plant_image = plant.request_blender_render(render_parameters)
         plant_image.save(tmp_mask_path)
-        convert_to_mask(tmp_mask_path)
+        convert_png_to_mask(tmp_mask_path)
         overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(plant_image, background_image)
@@ -118,7 +118,7 @@ class Bedroom(Room):
         render_parameters['resolution_y'] = height
         bed_image = bed.request_blender_render(render_parameters)
         bed_image.save(tmp_mask_path)
-        convert_to_mask(tmp_mask_path)
+        convert_png_to_mask(tmp_mask_path)
         overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(bed_image, background_image)

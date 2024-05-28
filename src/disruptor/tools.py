@@ -133,6 +133,26 @@ def convert_to_mask(image_path, output_path=None):
     else:
         mask.save(output_path)
 
+def convert_png_to_mask(image_path, output_path=None):
+    # Open the image
+    image = Image.open(image_path).convert("RGBA")
+
+    # Create a new image for the mask
+    mask = Image.new("L", image.size, 0)
+
+    # Get the alpha channel
+    alpha = image.split()[-1]
+
+    # Set the mask pixels based on alpha channel
+    for y in range(image.height):
+        for x in range(image.width):
+            mask.putpixel((x, y), 255 if alpha.getpixel((x, y)) > 0 else 0)
+
+    # Save the mask to the specified path or overwrite the original image
+    if output_path is None:
+        output_path = image_path
+    mask.save(output_path)
+
 
 def find_closest_point(contour, reference_point):
     min_distance = float('inf')
