@@ -167,5 +167,4 @@ class Room:
         bw_mask[color_mask != 0] = 255
 
         # Check if the mask contains white pixels
-        if np.any(bw_mask == 255):
-            cv2.imwrite(windows_mask_path, bw_mask)
+        cv2.imwrite(windows_mask_path, bw_mask)
