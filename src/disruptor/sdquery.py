@@ -262,7 +262,7 @@ class GreenScreenImageQuery(Query):
         # Prepare mask for SD
         windows_mask_path = f'disruptor/static/images/{current_user.id}/preprocessed/windows_mask.png'
         inpainting_mask_path = f'disruptor/static/images/{current_user.id}/preprocessed/inpainting_mask.png'
-        overlay_masks(self.furniture_mask_path, windows_mask_path, inpainting_mask_path, [0, 0])
+        overlay_masks(windows_mask_path, self.furniture_mask_path, inpainting_mask_path, [0, 0])
         self.inpainting_mask_image_b64 = get_encoded_image(inpainting_mask_path)
         self.windows_mask_image_b64 = get_encoded_image(windows_mask_path)
 
