@@ -281,7 +281,7 @@ class GreenScreenImageQuery(Query):
         self.add_shadows_and_light()
 
     def design(self):
-        self.denoising_strength = 0.6
+        self.denoising_strength = 1
         self.cfg_scale = 7
         self.steps = 20
 
@@ -299,7 +299,7 @@ class GreenScreenImageQuery(Query):
             # "seed": 123, # TODO add seed, before testing
             "mask": self.inpainting_mask_image_b64,
             "inpainting_mask_invert": 1,
-            "mask_blur": 3,
+            "mask_blur": 1,
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
@@ -424,7 +424,7 @@ class GreenScreenImageQuery(Query):
             "height": self.height * 2,
             # "seed": 123, # TODO add seed, before testing
             "mask": self.windows_mask_image_b64,
-            "mask_blur": 3,
+            "mask_blur": 1,
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
@@ -445,9 +445,9 @@ class GreenScreenImageQuery(Query):
                             "image": self.designed_image_b64,
                             "module": "depth_anything",
                             "model": "control_depth-fp16 [400750f6]",
-                            "weight": 0.4,
-                            "guidance_start": 0.1,
-                            "guidance_end": 0.5,
+                            "weight": 1,
+                            "guidance_start": 0,
+                            "guidance_end": 1,
                             "control_mode": "Balanced",
                             "processor_res": 512,  # WARNING: TODO change to image height
                             # "low_vram": True,
