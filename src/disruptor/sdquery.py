@@ -15,7 +15,7 @@ from PIL import Image
 import math
 import shutil
 
-from disruptor.tools import create_directory_if_not_exists, min_max_scale, move_file, submit_post, save_encoded_image, get_encoded_image, run_preprocessor, restart_stable_diffusion, overlay_masks
+from disruptor.tools import create_directory_if_not_exists, min_max_scale, move_file, submit_post, save_encoded_image, get_encoded_image, run_preprocessor, restart_stable_diffusion, overlay_masks, get_image_size
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 MAX_CONTROLNET_IMAGE_RESOLUTION = 600
@@ -252,7 +252,7 @@ class GreenScreenImageQuery(Query):
                                                           filename=f'images/{current_user.id}/preprocessed/{furniture_mask}')
         self.prerequisite_image_b64 = get_encoded_image(self.prerequisite_path)
         self.furniture_mask_image_b64 = get_encoded_image(self.furniture_mask_path)
-        self.width, self.height = get_max_possible_size(self.prerequisite_path)
+        self.width, self.height = get_image_size(self.prerequisite_path)
 
         space, room, budget, self.style = text.split(", ")
         # self.prompt = f'interior design, {room.lower()}, {self.style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
@@ -294,12 +294,12 @@ class GreenScreenImageQuery(Query):
             "steps": self.steps,
             "cfg_scale": self.cfg_scale,
             "denoising_strength": self.denoising_strength,
-            "width": self.width * 3,
-            "height": self.height * 3,
+            "width": self.width * 2,
+            "height": self.height * 2,
             # "seed": 123, # TODO add seed, before testing
-            # "mask": self.inpainting_mask_image_b64,
-            # "inpainting_mask_invert": 1,
-            # "mask_blur": 1,
+            "mask": self.inpainting_mask_image_b64,
+            "inpainting_mask_invert": 1,
+            "mask_blur": 1,
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
@@ -422,12 +422,12 @@ class GreenScreenImageQuery(Query):
             "steps": self.steps,
             "cfg_scale": self.cfg_scale,
             "denoising_strength": self.denoising_strength,
-            "width": self.width * 3,
-            "height": self.height * 3,
+            "width": self.width * 2,
+            "height": self.height * 2,
             # "seed": 123, # TODO add seed, before testing
-            # "mask": self.windows_mask_image_b64,
-            # "mask_blur": 1,
-            # "inpainting_mask_invert": 1,
+            "mask": self.windows_mask_image_b64,
+            "mask_blur": 1,
+            "inpainting_mask_invert": 1,
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
