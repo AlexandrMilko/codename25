@@ -15,7 +15,7 @@ from PIL import Image
 import math
 import shutil
 
-from disruptor.tools import create_directory_if_not_exists, min_max_scale, move_file, submit_post, save_encoded_image, get_encoded_image, run_preprocessor, restart_stable_diffusion
+from disruptor.tools import create_directory_if_not_exists, min_max_scale, move_file, submit_post, save_encoded_image, get_encoded_image, run_preprocessor, restart_stable_diffusion, overlay_masks
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 MAX_CONTROLNET_IMAGE_RESOLUTION = 600
@@ -259,6 +259,13 @@ class GreenScreenImageQuery(Query):
         self.prompt = f'interior design, {self.style.lower()} style, RAW photo, subject, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3, <lora:epi_noiseoffset2:1>'
         self.output_filename = output_filename
 
+        # Prepare mask for SD
+        windows_mask_path = f'disruptor/static/images/{current_user.id}/preprocessed/windows_mask.png'
+        inpainting_mask_path = f'disruptor/static/images/{current_user.id}/preprocessed/inpainting_mask.png'
+        overlay_masks(self.furniture_mask_path, windows_mask_path, inpainting_mask_path, [0, 0])
+        self.inpainting_mask_image_b64 = get_encoded_image(inpainting_mask_path)
+        self.windows_mask_image_b64 = get_encoded_image(windows_mask_path)
+
     def run(self):
         # We run segmentation for our prerequisite image to see if segmentation was done correctly
         run_preprocessor("seg_ofade20k", self.prerequisite_path, current_user.id, "seg_prerequisite.png")
@@ -287,10 +294,10 @@ class GreenScreenImageQuery(Query):
             "steps": self.steps,
             "cfg_scale": self.cfg_scale,
             "denoising_strength": self.denoising_strength,
-            "width": self.width,
-            "height": self.height,
+            "width": self.width * 2,
+            "height": self.height * 2,
             # "seed": 123, # TODO add seed, before testing
-            "mask": self.furniture_mask_image_b64,
+            "mask": self.inpainting_mask_image_b64,
             "inpainting_mask_invert": 1,
             "mask_blur": 3,
             "alwayson_scripts": {
@@ -416,8 +423,8 @@ class GreenScreenImageQuery(Query):
             "width": self.width * 2,
             "height": self.height * 2,
             # "seed": 123, # TODO add seed, before testing
-            # "mask": self.furniture_mask_image_b64,
-            # "mask_blur": 3,
+            "mask": self.windows_mask_image_b64,
+            "mask_blur": 3,
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
