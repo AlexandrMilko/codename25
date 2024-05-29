@@ -260,7 +260,7 @@ class GreenScreenImageQuery(Query):
         self.output_filename = output_filename
 
     def run(self):
-        # We run segmentation for our prerequisite image to see if segmentation was done correctly and to use it to preserve windows views
+        # We run segmentation for our prerequisite image to see if segmentation was done correctly
         run_preprocessor("seg_ofade20k", self.prerequisite_path, current_user.id, "seg_prerequisite.png")
 
         # if self.style in ("Modern", "Art Deco"):
