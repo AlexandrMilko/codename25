@@ -294,8 +294,8 @@ class GreenScreenImageQuery(Query):
             "steps": self.steps,
             "cfg_scale": self.cfg_scale,
             "denoising_strength": self.denoising_strength,
-            "width": self.width * 2,
-            "height": self.height * 2,
+            "width": self.width * 3,
+            "height": self.height * 3,
             # "seed": 123, # TODO add seed, before testing
             # "mask": self.inpainting_mask_image_b64,
             # "inpainting_mask_invert": 1,
@@ -393,6 +393,8 @@ class GreenScreenImageQuery(Query):
         #     }
         # }
 
+        print(data)
+
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
         output_dir = f"disruptor/static/images/{current_user.id}/preprocessed"
@@ -420,8 +422,8 @@ class GreenScreenImageQuery(Query):
             "steps": self.steps,
             "cfg_scale": self.cfg_scale,
             "denoising_strength": self.denoising_strength,
-            "width": self.width * 2,
-            "height": self.height * 2,
+            "width": self.width * 3,
+            "height": self.height * 3,
             # "seed": 123, # TODO add seed, before testing
             # "mask": self.windows_mask_image_b64,
             # "mask_blur": 1,
@@ -457,6 +459,8 @@ class GreenScreenImageQuery(Query):
                 }
             }
         }
+
+        print(data)
 
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
