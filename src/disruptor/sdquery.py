@@ -286,7 +286,8 @@ class GreenScreenImageQuery(Query):
         self.steps = 20
 
         data = {
-            "prompt": self.prompt,
+            # "prompt": self.prompt,
+            "prompt": "",
             "sampler_name": self.sampler_name,
             # "negative_prompt": self.negative_prompt,
             "init_images": [self.prerequisite_image_b64],
@@ -338,7 +339,7 @@ class GreenScreenImageQuery(Query):
                         #     "processor_res": 512,
                         # },
                         {
-                            "enabled": True,
+                            "enabled": False,
                             "image": self.prerequisite_image_b64,
                             "module": "depth_anything",
                             "model": "control_depth-fp16 [400750f6]",
@@ -408,7 +409,7 @@ class GreenScreenImageQuery(Query):
         return response.json()['images'][0]
 
     def add_shadows_and_light(self):
-        self.denoising_strength = 1
+        self.denoising_strength = 0.6
         self.steps = 20
         data = {
             "prompt": self.prompt,
@@ -435,9 +436,9 @@ class GreenScreenImageQuery(Query):
                             "module": "seg_ofade20k",
                             "model": "control_seg-fp16 [b9c1cc12]",
                             # "low_vram": True,
-                            "weight": 1.0,
-                            "guidance_start": 0,
-                            "guidance_end": 1,
+                            "weight": 0.9,
+                            "guidance_start": 0.1,
+                            "guidance_end": 0.5,
                             "control_mode": "Balanced",
                             "processor_res": 512 # WARNING: TODO change to image height
                         },
@@ -446,9 +447,9 @@ class GreenScreenImageQuery(Query):
                             "image": self.designed_image_b64,
                             "module": "depth_anything",
                             "model": "control_depth-fp16 [400750f6]",
-                            "weight": 1,
-                            "guidance_start": 0,
-                            "guidance_end": 1,
+                            "weight": 0.4,
+                            "guidance_start": 0.1,
+                            "guidance_end": 0.5,
                             "control_mode": "Balanced",
                             "processor_res": 512,  # WARNING: TODO change to image height
                             # "low_vram": True,
