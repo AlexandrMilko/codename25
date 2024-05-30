@@ -351,7 +351,7 @@ def reset_password(token):
         return redirect(url_for('login'))
     return render_template('password_reset.html', title="Reset Password", form=form)
 
-@app.route("/get_insane_image_1337", methods=['POST'])
+@app.route("/ai/get_insane_image_1337", methods=['POST'])
 def get_insane_image_1337():
     data = request.get_json()
     room_choice = data.get('room_choice')
