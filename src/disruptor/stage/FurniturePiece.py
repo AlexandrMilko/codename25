@@ -110,6 +110,7 @@ class Curtain(FurniturePiece):
     scale = 1, 0.3, 0.5
     # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 90
+    default_height = 2.85  # In meters
 
     def __init__(self, model_path='3Ds/other/curtain.obj'):
         super().__init__(model_path)
