@@ -339,7 +339,7 @@ class GreenScreenImageQuery(Query):
                         #     "processor_res": 512,
                         # },
                         {
-                            "enabled": False,
+                            "enabled": True,
                             "image": self.prerequisite_image_b64,
                             "module": "depth_anything",
                             "model": "control_depth-fp16 [400750f6]",
