@@ -70,7 +70,7 @@ class Kitchen(Room):
                     render_parameters['resolution_y'] = height
                     curtains_height = camera_height + render_parameters['obj_offsets'][2]
                     curtains_height_scale = curtains_height / Curtain.default_height
-                    render_parameters['obj_scale'][2] = curtains_height_scale
+                    render_parameters['obj_scale'] = render_parameters['obj_scale'][0], render_parameters['obj_scale'][1], curtains_height_scale
                     curtain_image = curtain.request_blender_render(render_parameters)
                     curtain_image.save(tmp_mask_path)
                     convert_png_to_mask(tmp_mask_path)
