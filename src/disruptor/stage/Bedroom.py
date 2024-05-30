@@ -51,8 +51,7 @@ class Bedroom(Room):
         prerequisite_path = f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.png'
         curtain = Curtain()
         segmented_es_path = f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png'
-        Room.save_windows_mask(segmented_es_path, f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png',
-                               current_user_id)
+        Room.save_windows_mask(segmented_es_path, f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png')
         pixels_for_placing = curtain.find_placement_pixel(
             f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png')
         print(f"CURTAINS placement pixels: {pixels_for_placing}")
@@ -134,5 +133,4 @@ class Bedroom(Room):
         run_preprocessor("seg_ofade20k", prerequisite_path, current_user_id, "seg_prerequisite.png")
         segmented_es_path = f'disruptor/static/images/{current_user_id}/preprocessed/seg_prerequisite.png'
         Room.save_windows_mask(segmented_es_path,
-                               f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png',
-                               current_user_id)
+                               f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png')
