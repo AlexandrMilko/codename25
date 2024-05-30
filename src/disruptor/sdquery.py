@@ -260,7 +260,7 @@ class GreenScreenImageQuery(Query):
         self.output_filename = output_filename
 
         # Prepare mask for SD
-        windows_mask_path = f'disruptor/static/images/{current_user.id}/preprocessed/windows_mask.png'
+        windows_mask_path = f'disruptor/static/images/{current_user.id}/preprocessed/windows_mask_inpainting.png'
         inpainting_mask_path = f'disruptor/static/images/{current_user.id}/preprocessed/inpainting_mask.png'
         overlay_masks(windows_mask_path, self.furniture_mask_path, inpainting_mask_path, [0, 0])
         self.inpainting_mask_image_b64 = get_encoded_image(inpainting_mask_path)
@@ -298,9 +298,9 @@ class GreenScreenImageQuery(Query):
             "width": self.width,
             "height": self.height,
             # "seed": 123, # TODO add seed, before testing
-            "mask": self.inpainting_mask_image_b64,
-            "inpainting_mask_invert": 1,
-            "mask_blur": 5,
+            # "mask": self.inpainting_mask_image_b64,
+            # "inpainting_mask_invert": 1,
+            # "mask_blur": 5,
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
@@ -421,8 +421,8 @@ class GreenScreenImageQuery(Query):
             "steps": self.steps,
             "cfg_scale": self.cfg_scale,
             "denoising_strength": self.denoising_strength,
-            "width": self.width,
-            "height": self.height,
+            "width": self.width * 2,
+            "height": self.height * 2,
             # "seed": 123, # TODO add seed, before testing
             # "mask": self.windows_mask_image_b64,
             # "mask_blur": 2,

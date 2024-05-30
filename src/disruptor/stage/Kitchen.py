@@ -137,4 +137,4 @@ class Kitchen(Room):
         run_preprocessor("seg_ofade20k", prerequisite_path, current_user_id, "seg_prerequisite.png", height)
         segmented_es_path = f'disruptor/static/images/{current_user_id}/preprocessed/seg_prerequisite.png'
         Room.save_windows_mask(segmented_es_path,
-                               f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png')
+                               f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask_inpainting.png')
