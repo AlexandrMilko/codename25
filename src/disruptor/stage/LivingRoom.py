@@ -36,6 +36,8 @@ class LivingRoom(Room):
         width, height = get_image_size(self.original_image_path)
         run_preprocessor("seg_ofade20k", self.original_image_path, current_user_id, "segmented_es.png", height)
 
+        camera_height = self.estimate_camera_height([pitch_rad, roll_rad], current_user_id)
+
         # Create an empty mask of same size as image
         mask_path = f'disruptor/static/images/{current_user_id}/preprocessed/furniture_mask.png'
         tmp_mask_path = f'disruptor/static/images/{current_user_id}/preprocessed/furniture_piece_mask.png'
@@ -66,6 +68,9 @@ class LivingRoom(Room):
                     width, height = get_image_size(self.original_image_path)
                     render_parameters['resolution_x'] = width
                     render_parameters['resolution_y'] = height
+                    curtains_height = camera_height + render_parameters['obj_offsets'][2]
+                    curtains_height_scale = curtains_height / Curtain.default_height
+                    render_parameters['obj_scale'] = render_parameters['obj_scale'][0], render_parameters['obj_scale'][1], curtains_height_scale
                     curtain_image = curtain.request_blender_render(render_parameters)
                     curtain_image.save(tmp_mask_path)
                     convert_png_to_mask(tmp_mask_path)
