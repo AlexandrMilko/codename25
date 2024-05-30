@@ -421,8 +421,8 @@ class GreenScreenImageQuery(Query):
             "steps": self.steps,
             "cfg_scale": self.cfg_scale,
             "denoising_strength": self.denoising_strength,
-            "width": self.width * 2,
-            "height": self.height * 2,
+            "width": self.width,
+            "height": self.height,
             # "seed": 123, # TODO add seed, before testing
             "mask": self.windows_mask_image_b64,
             "mask_blur": 2,
