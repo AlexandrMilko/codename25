@@ -11,6 +11,7 @@ class Room:
     window_color = (230, 230, 230)
     door_color = (51, 255, 8)
     floor_color = (50, 50, 80)
+    blind_color = (255, 61, 0)  # blind that is set on windows, kinda curtains
     def __init__(self, original_image_path): # Original image path is an empty space image
         self.original_image_path = original_image_path
 
@@ -141,19 +142,25 @@ class Room:
         return number_of_windows
 
     @staticmethod
-    def save_windows_mask(segmented_image_path: str, windows_mask_path: str, current_user_id):
+    def save_windows_mask(segmented_image_path: str, windows_mask_path: str):
         image = cv2.imread(segmented_image_path)
-        rgb_values = Room.window_color
+        window_rgb_values = Room.window_color
+        blind_rgb_values = Room.blind_color
 
         # Define the lower and upper bounds for the color
         tolerance = 3
-        lower_color = np.array([x - tolerance for x in rgb_values])
-        upper_color = np.array([x + tolerance for x in rgb_values])
+        window_lower_color = np.array([x - tolerance for x in window_rgb_values])
+        window_upper_color = np.array([x + tolerance for x in window_rgb_values])
+        blind_lower_color = np.array([x - tolerance for x in blind_rgb_values])
+        blind_upper_color = np.array([x + tolerance for x in blind_rgb_values])
 
         # Create a mask for the color
-        color_mask = cv2.inRange(image, lower_color, upper_color)
+        window_color_mask = cv2.inRange(image, window_lower_color, window_upper_color)
+        blind_color_mask = cv2.inRange(image, blind_lower_color, blind_upper_color)
 
-        _, thresh = cv2.threshold(color_mask, 127, 255, cv2.THRESH_BINARY)
+        combined_mask = cv2.bitwise_or(window_color_mask, blind_color_mask)
+
+        _, thresh = cv2.threshold(combined_mask, 127, 255, cv2.THRESH_BINARY)
         kernel = np.ones((9, 9), np.uint8)
         erosion = cv2.erode(thresh, kernel, iterations=1)
         color_mask = cv2.dilate(erosion, kernel, iterations=1)
