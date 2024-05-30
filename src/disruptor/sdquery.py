@@ -424,9 +424,9 @@ class GreenScreenImageQuery(Query):
             "width": self.width,
             "height": self.height,
             # "seed": 123, # TODO add seed, before testing
-            "mask": self.windows_mask_image_b64,
-            "mask_blur": 2,
-            "inpainting_mask_invert": 1,
+            # "mask": self.windows_mask_image_b64,
+            # "mask_blur": 2,
+            # "inpainting_mask_invert": 1,
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
