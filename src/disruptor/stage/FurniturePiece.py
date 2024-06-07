@@ -29,7 +29,8 @@ class FurniturePiece:
     @staticmethod
     def request_blender_render(render_parameters):
         # URL for blender_server
-        server_url = 'http://localhost:5002/render_image'
+        # blender_server has to be on the host system, because it has access to the screen which is likely needed for rendering
+        server_url = 'http://host.docker.internal:5002/render_image'
 
         # Send the HTTP request to the server
         response = requests.post(server_url, json=render_parameters)
