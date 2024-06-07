@@ -313,31 +313,21 @@ class GreenScreenImageQuery(Query):
                             "guidance_start": 0,
                             "guidance_end": 1,
                             "control_mode": "Balanced",
-                            "processor_res": 512, # WARNING: TODO change to image height
+                            "processor_res": 512,  # WARNING: TODO change to image height
                             # "low_vram": True,
                         },
-                        # {
-                        #     "enabled": True,
-                        #     "image": self.prerequisite_image_b64,
-                        #     "module": "softedge_hed",
-                        #     "model": "control_sd15_hed [fef5e48e]",
-                        #     "weight": 0.55,
-                        #     "guidance_start": 0.1,
-                        #     "guidance_end": 0.5,
-                        #     # "control_mode": 0,
-                        #     "processor_res": 512
-                        # },
-                        # {
-                        #     "enabled": True,
-                        #     "image": self.prerequisite_image_b64,
-                        #     "module": "seg_ofade20k",
-                        #     "model": "control_v11p_sd15_seg [e1f51eb9]",
-                        #     "weight": 0.9,
-                        #     "guidance_start": 0,
-                        #     "guidance_end": 0.5,
-                        #     # "control_mode": 1,
-                        #     "processor_res": 512,
-                        # },
+                        {
+                            "enabled": True,
+                            "image": self.prerequisite_image_b64,
+                            "module": "canny",
+                            "model": "control_v11p_sd15_canny [d14c016b]",
+                            "weight": 1,
+                            "guidance_start": 0,
+                            "guidance_end": 1,
+                            "control_mode": "Balanced",
+                            "effective_region_mask": self.inpainting_mask_image_b64,
+                            "processor_res": 512  # WARNING: TODO change to image height
+                        },
                         {
                             "enabled": True,
                             "image": self.prerequisite_image_b64,
@@ -347,7 +337,7 @@ class GreenScreenImageQuery(Query):
                             "guidance_start": 0,
                             "guidance_end": 1,
                             "control_mode": "Balanced",
-                            "processor_res": 512, # WARNING: TODO change to image height
+                            "processor_res": 512,  # WARNING: TODO change to image height
                             # "low_vram": True,
                         }
                     ]
