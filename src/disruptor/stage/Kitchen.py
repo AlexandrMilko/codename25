@@ -39,8 +39,8 @@ class Kitchen(Room):
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad], current_user_id)
 
         # Create an empty mask of same size as image
-        mask_path = f'disruptor/static/images/{current_user_id}/preprocessed/furniture_mask.png'
-        tmp_mask_path = f'disruptor/static/images/{current_user_id}/preprocessed/furniture_piece_mask.png'
+        mask_path = f'disruptor/images/preprocessed/furniture_mask.png'
+        tmp_mask_path = f'disruptor/images/preprocessed/furniture_piece_mask.png'
         width, height = get_image_size(self.original_image_path)
         empty_mask = create_mask_of_size(width, height)
         print("Saving empty mask to:", mask_path)
@@ -48,12 +48,12 @@ class Kitchen(Room):
         print("Empty mask saved successfully!")
 
         # Add curtains
-        prerequisite_path = f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.png'
+        prerequisite_path = f'disruptor/images/preprocessed/prerequisite.png'
         curtain = Curtain()
-        segmented_es_path = f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png'
-        Room.save_windows_mask(segmented_es_path, f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png')
+        segmented_es_path = f'disruptor/images/preprocessed/segmented_es.png'
+        Room.save_windows_mask(segmented_es_path, f'disruptor/images/preprocessed/windows_mask.png')
         pixels_for_placing = curtain.find_placement_pixel(
-            f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask.png')
+            f'disruptor/images/preprocessed/windows_mask.png')
         print(f"CURTAINS placement pixels: {pixels_for_placing}")
         Image.open(self.original_image_path).save(prerequisite_path)
         for window in pixels_for_placing:
@@ -85,7 +85,7 @@ class Kitchen(Room):
 
         # Add plant
         plant = Plant()
-        seg_image_path = f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png'
+        seg_image_path = f'disruptor/images/preprocessed/segmented_es.png'
         save_path = 'disruptor/static/images/floor_mask.png'
         Floor.save_mask(seg_image_path, save_path)
         pixels_for_placing = plant.find_placement_pixel(save_path)
@@ -111,13 +111,13 @@ class Kitchen(Room):
 
         # Add kitchen_table_with_chairs
         kitchen_table_with_chairs = KitchenTableWithChairs()
-        seg_image_path = f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png'
+        seg_image_path = f'disruptor/images/preprocessed/segmented_es.png'
         save_path = 'disruptor/static/images/floor_mask.png'
         Floor.save_mask(seg_image_path, save_path)
         pixels_for_placing = kitchen_table_with_chairs.find_placement_pixel(save_path)
         print(f"KitchenTableWithChairs placement pixel: {pixels_for_placing}")
         wall = self.get_biggest_wall(current_user_id)
-        render_directory = f'disruptor/static/images/{current_user_id}/preprocessed/furniture_render'
+        render_directory = f'disruptor/images/preprocessed/furniture_render'
         wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
         yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
         random_index = random.randint(0, len(pixels_for_placing) - 1)
@@ -135,6 +135,6 @@ class Kitchen(Room):
 
         # Create windows mask for staged room
         run_preprocessor("seg_ofade20k", prerequisite_path, current_user_id, "seg_prerequisite.png", height)
-        segmented_es_path = f'disruptor/static/images/{current_user_id}/preprocessed/seg_prerequisite.png'
+        segmented_es_path = f'disruptor/images/preprocessed/seg_prerequisite.png'
         Room.save_windows_mask(segmented_es_path,
-                               f'disruptor/static/images/{current_user_id}/preprocessed/windows_mask_inpainting.png')
+                               f'disruptor/images/preprocessed/windows_mask_inpainting.png')
