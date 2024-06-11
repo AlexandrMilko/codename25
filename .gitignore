@@ -10,7 +10,6 @@ src/disruptor/staging_ml/__pycache__/
 src/disruptor/green_screen/find_similar/__pycache__/
 src/disruptor/green_screen/find_similar/VanishingPoint/__pycache__/
 premium_feature_roadmap.rtf
-ngrok.exe
 src/disruptor/static/images/118289332104035589700/
 src/disruptor/green_screen/preprocess/__pycache__/
 src/disruptor/static/images/current_image.jpg
@@ -22,6 +21,7 @@ src/disruptor/static/images/fav4.jpg
 src/disruptor/static/images/fav5.jpg
 src/instance/site.db
 src/disruptor/UprightNet/checkpoints
+src/disruptor/UprightNet/.idea
 src/disruptor/stage/DepthAnything/zoedepth/checkpoints
 src/disruptor/UprightNet/imgs/normal_pair/users.png
 src/disruptor/UprightNet/imgs/precomputed_crop_hw/users.txt

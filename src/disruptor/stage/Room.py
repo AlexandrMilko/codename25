@@ -21,7 +21,7 @@ class Room:
         es_img.close()
         run_preprocessor("normal_dsine", self.original_image_path, current_user_id, "users.png", height)
         copy_file(self.original_image_path, "disruptor/UprightNet/imgs/rgb/users.png") # We copy it because we will use it later in get_wall method and we want to have access to the image
-        move_file(f"disruptor/static/images/{current_user_id}/preprocessed/users.png",
+        move_file(f"disruptor/images/preprocessed/users.png",
                   "disruptor/UprightNet/imgs/normal_pair/users.png")
         from disruptor.UprightNet.infer import get_roll_pitch
         return get_roll_pitch()
@@ -32,7 +32,7 @@ class Room:
         es_img.close()
         run_preprocessor("seg_ofade20k", self.original_image_path, current_user_id, "segmented_es.png", height)
         from disruptor.stage.Wall import Wall
-        return Wall.find_walls(f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png')
+        return Wall.find_walls(f'disruptor/images/preprocessed/segmented_es.png')
 
     def get_biggest_wall(self, current_user_id):
         es_img = Image.open(self.original_image_path)
@@ -40,64 +40,7 @@ class Room:
         es_img.close()
         run_preprocessor("seg_ofade20k", self.original_image_path, current_user_id, "segmented_es.png", height)
         from disruptor.stage.Wall import Wall
-        return Wall.find_biggest_wall(f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png')
-
-    # def stage(self, text_parameters, current_user_id):
-    #     room_type = text_parameters.split(", ")[1].lower()
-    #     roll, pitch = np.negative(np.degrees(self.find_roll_pitch(current_user_id)))
-    #     walls = self.get_walls(current_user_id)
-    #     if room_type == "bedroom":
-    #         furniture_pieces = [Bed()]
-    #     elif room_type == "living room":
-    #         pass
-    #     else:
-    #         furniture_pieces = []
-    #
-    #     for i in range(len(walls)):
-    #         try:
-    #             self.add_furniture(furniture_pieces[i], walls[i], (roll, pitch), current_user_id)
-    #         except IndexError:
-    #             break
-
-
-    # def add_furniture(self, furniture: FurniturePiece, placement_pixel: tuple[int, int], yaw_angle: float, camera_angles: tuple[float, float], current_user_id): # Saves corresponding mask and render
-    #     from math import radians
-    #     roll, pitch = camera_angles
-    #     compensate_pitch = -radians(pitch)
-    #     compensate_roll = -radians(roll)
-    #     default_angles = furniture.get_default_angles()
-    #
-    #     obj_offsets = self.infer_3d(placement_pixel, compensate_pitch, compensate_roll) # We set negative rotation to compensate
-    #     obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(default_angles[2] + yaw_angle)  # In blender, yaw angle is around z axis. z axis is to the top
-    #     obj_scale = furniture.get_scale()
-    #     # We set opposite
-    #     camera_angles = radians(90) + compensate_pitch, -compensate_roll, 0 # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
-    #     camera_height = self.estimate_camera_height((compensate_pitch, compensate_roll), current_user_id)
-    #     camera_location = 0, 0, camera_height
-    #     obj_offsets_floor = obj_offsets.copy()
-    #     obj_offsets_floor[2] = 0
-    #
-    #     print("Furniture coords")
-    #     print(obj_offsets, "obj_offsets")
-    #     print(obj_offsets_floor, "obj_offsets for blender with floor z axis")
-    #     print(obj_angles, "obj_angles")
-    #     print(yaw_angle, "yaw_angle")
-    #     print(obj_scale, "obj_scale")
-    #     print(camera_angles, "camera_angles")
-    #     print(camera_location, "camera_location")
-    #     # furniture.render_model(f'disruptor/static/images/{current_user_id}/preprocessed/furniture_render', (roll, yaw, pitch))
-    #     # for filename in os.listdir(render_directory):
-    #     #     if 'back' in filename or 'bottom' in filename:
-    #     #         convert_to_mask(os.path.join(render_directory, filename))
-    #     # # coords_for_placing = find_bed_placement_coordinates(os.path.join(render_directory, 'bed_back.png'), os.path.join(render_directory, 'wall_mask.png'), render_directory)
-    #     # create_furniture_mask(self.original_image_path, [os.path.join(render_directory, 'bed.png')], [coords_for_placing], f'disruptor/static/images/{current_user_id}/preprocessed/inpainting_mask.png')
-    #     # overlay_images(os.path.join(render_directory, 'bed_back.png'), os.path.join(render_directory, 'wall_mask.png'), f'disruptor/static/images/{current_user_id}/preprocessed/test.png', coords_for_placing)
-    #     # overlay_images(os.path.join(render_directory, 'bed.png'), self.original_image_path, f'disruptor/static/images/{current_user_id}/preprocessed/prerequisite.jpg', coords_for_placing)
-    #     # # convert to masks
-    #     # # scale the renders to 0.4 height of wall height(write get_height in Wall)
-    #     # # write a function that adds an image to a specific location in another image (use create_pngs.py and preprocess_for_empty_space.py)
-    #     # # add render onto your prerequisite which is original_image_copy in the beginning
-    #     # # write a function that positions it properly
+        return Wall.find_biggest_wall(f'disruptor/images/preprocessed/segmented_es.png')
 
     def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
         from disruptor.stage.DepthAnything.depth_estimation import image_pixel_to_3d, rotate_3d_point
@@ -111,7 +54,7 @@ class Room:
         pitch, roll = camera_angles
         from disruptor.stage.DepthAnything.depth_estimation import rotate_3d_point, image_pixel_to_3d
         from disruptor.stage.Floor import Floor
-        floor_pixel = Floor.find_centroid(f'disruptor/static/images/{current_user_id}/preprocessed/segmented_es.png')
+        floor_pixel = Floor.find_centroid(f'disruptor/images/preprocessed/segmented_es.png')
         point_3d = image_pixel_to_3d(*floor_pixel, self.original_image_path)
         print(f"Floor Centroid: {floor_pixel} -> {point_3d}")
         rotated_point = rotate_3d_point(point_3d, -pitch, -roll)

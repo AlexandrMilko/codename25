@@ -105,7 +105,7 @@ def run_preprocessor(preprocessor_name, image_path, current_user_id, filename="p
     }
     preprocessor_url = 'http://127.0.0.1:7861/controlnet/detect'
     response = submit_post(preprocessor_url, data)
-    output_dir = f"disruptor/static/images/{current_user_id}/preprocessed"
+    output_dir = f"disruptor/images/preprocessed"
     output_filepath = os.path.join(output_dir, filename)
 
     # If there was no such dir, we create it and try again
@@ -327,6 +327,18 @@ def create_mask_of_size(width, height):
     black_mask = Image.new("RGB", (width, height), color=(0, 0, 0))
     return black_mask
 
+def perform_dilation(input_image_path, output_image_path, kernel_size):
+    # Read the input image
+    image = cv2.imread(input_image_path, cv2.IMREAD_GRAYSCALE)
+
+    # Define a kernel for dilation
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+
+    # Perform dilation
+    dilated_image = cv2.dilate(image, kernel, iterations=1)
+
+    # Save the result
+    cv2.imwrite(output_image_path, dilated_image)
 
 def create_furniture_mask(es_path, furniture_renders_paths: list, furniture_renders_offsets: list, save_path):
     try:
@@ -343,7 +355,6 @@ def create_furniture_mask(es_path, furniture_renders_paths: list, furniture_rend
         mask_path = os.path.join(os.path.dirname(save_path), 'furniture_mask.png')
         convert_to_mask(furniture_renders_paths[i], mask_path)
         overlay_masks(mask_path, save_path, save_path, furniture_renders_offsets[i])
-    from disruptor.preprocess_for_empty_space import perform_dilation
     perform_dilation(save_path, save_path, 32)
 
 
