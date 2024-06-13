@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from sdquery import apply_style
-from src import app
+from __init__ import app
 @app.route("/ai/get_insane_image_1337", methods=['POST'])
 def get_insane_image_1337():
     data = request.get_json()
