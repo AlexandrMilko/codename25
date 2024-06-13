@@ -112,7 +112,7 @@ class Bedroom(Room):
         # Add Bed
         bed = Bed()
         wall = self.get_biggest_wall()
-        render_directory = f'disruptor/images/preprocessed/furniture_render'
+        render_directory = f'disruptor/images/preprocessed'
         wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
         pixel_for_placing = bed.find_placement_pixel(os.path.join(render_directory, 'wall_mask.png'))
         print(f"BED placement pixel: {pixel_for_placing}")
