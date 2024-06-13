@@ -15,30 +15,30 @@ class Room:
     def __init__(self, original_image_path): # Original image path is an empty space image
         self.original_image_path = original_image_path
 
-    def find_roll_pitch(self, current_user_id) -> tuple[float, float]:
+    def find_roll_pitch(self) -> tuple[float, float]:
         es_img = Image.open(self.original_image_path)
         width, height = es_img.size
         es_img.close()
-        run_preprocessor("normal_dsine", self.original_image_path, current_user_id, "users.png", height)
+        run_preprocessor("normal_dsine", self.original_image_path, "users.png", height)
         copy_file(self.original_image_path, "disruptor/UprightNet/imgs/rgb/users.png") # We copy it because we will use it later in get_wall method and we want to have access to the image
         move_file(f"disruptor/images/preprocessed/users.png",
                   "disruptor/UprightNet/imgs/normal_pair/users.png")
         from disruptor.UprightNet.infer import get_roll_pitch
         return get_roll_pitch()
 
-    def get_walls(self, current_user_id):
+    def get_walls(self):
         es_img = Image.open(self.original_image_path)
         width, height = es_img.size
         es_img.close()
-        run_preprocessor("seg_ofade20k", self.original_image_path, current_user_id, "segmented_es.png", height)
+        run_preprocessor("seg_ofade20k", self.original_image_path, "segmented_es.png", height)
         from disruptor.stage.Wall import Wall
         return Wall.find_walls(f'disruptor/images/preprocessed/segmented_es.png')
 
-    def get_biggest_wall(self, current_user_id):
+    def get_biggest_wall(self):
         es_img = Image.open(self.original_image_path)
         width, height = es_img.size
         es_img.close()
-        run_preprocessor("seg_ofade20k", self.original_image_path, current_user_id, "segmented_es.png", height)
+        run_preprocessor("seg_ofade20k", self.original_image_path, "segmented_es.png", height)
         from disruptor.stage.Wall import Wall
         return Wall.find_biggest_wall(f'disruptor/images/preprocessed/segmented_es.png')
 
@@ -50,7 +50,7 @@ class Room:
         offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
         return offset_relative_to_camera
 
-    def estimate_camera_height(self, camera_angles: tuple[float, float], current_user_id):
+    def estimate_camera_height(self, camera_angles: tuple[float, float]):
         pitch, roll = camera_angles
         from disruptor.stage.DepthAnything.depth_estimation import rotate_3d_point, image_pixel_to_3d
         from disruptor.stage.Floor import Floor
