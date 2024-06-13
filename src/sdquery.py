@@ -108,6 +108,8 @@ class GreenScreenImageQuery(Query):
                             "guidance_end": 1,
                             "control_mode": "Balanced",
                             "effective_region_mask": self.inpainting_mask_image_b64,
+                            "threshold_a": 1,
+                            "threshold_b": 90,
                             "processor_res": 512  # WARNING: TODO change to image height
                         },
                         {
