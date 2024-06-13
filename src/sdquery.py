@@ -95,7 +95,7 @@ class GreenScreenImageQuery(Query):
                             "guidance_start": 0,
                             "guidance_end": 1,
                             "control_mode": "Balanced",
-                            "processor_res": 512,  # WARNING: TODO change to image height
+                            "processor_res": 768,  # WARNING: TODO change to image height
                             # "low_vram": True,
                         },
                         {
@@ -109,8 +109,8 @@ class GreenScreenImageQuery(Query):
                             "control_mode": "Balanced",
                             "effective_region_mask": self.inpainting_mask_image_b64,
                             "threshold_a": 1,
-                            "threshold_b": 90,
-                            "processor_res": 512  # WARNING: TODO change to image height
+                            "threshold_b": 150,
+                            "processor_res": 768  # WARNING: TODO change to image height
                         },
                         {
                             "enabled": True,
@@ -121,7 +121,7 @@ class GreenScreenImageQuery(Query):
                             "guidance_start": 0,
                             "guidance_end": 1,
                             "control_mode": "Balanced",
-                            "processor_res": 512,  # WARNING: TODO change to image height
+                            "processor_res": 768,  # WARNING: TODO change to image height
                             # "low_vram": True,
                         }
                     ]
@@ -214,7 +214,7 @@ class GreenScreenImageQuery(Query):
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
                             "control_mode": "Balanced",
-                            "processor_res": 512 # WARNING: TODO change to image height
+                            "processor_res": 768 # WARNING: TODO change to image height
                         },
                         {
                             "enabled": True,
@@ -227,8 +227,8 @@ class GreenScreenImageQuery(Query):
                             "control_mode": "Balanced",
                             "effective_region_mask": self.inpainting_mask_image_b64,
                             "threshold_a": 1,
-                            "threshold_b": 90,
-                            "processor_res": 512  # WARNING: TODO change to image height
+                            "threshold_b": 150,
+                            "processor_res": 768  # WARNING: TODO change to image height
                         },
                         {
                             "enabled": True,
@@ -239,7 +239,7 @@ class GreenScreenImageQuery(Query):
                             "guidance_start": 0.1,
                             "guidance_end": 0.5,
                             "control_mode": "Balanced",
-                            "processor_res": 512,  # WARNING: TODO change to image height
+                            "processor_res": 768,  # WARNING: TODO change to image height
                             # "low_vram": True,
                         }
                     ]
