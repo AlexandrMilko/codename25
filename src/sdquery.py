@@ -33,7 +33,8 @@ class GreenScreenImageQuery(Query):
         self.furniture_mask_path = f'images/preprocessed/{furniture_mask}'
         self.prerequisite_image_b64 = get_encoded_image(self.prerequisite_path)
         self.furniture_mask_image_b64 = get_encoded_image(self.furniture_mask_path)
-        self.width, self.height = get_max_possible_size(self.prerequisite_path)
+        # self.width, self.height = get_max_possible_size(self.prerequisite_path)
+        self.width, self.height = get_image_size(self.prerequisite_path)
 
         space, room, budget, self.style = text.split(", ")
         # self.prompt = f'interior design, {room.lower()}, {self.style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
@@ -192,8 +193,8 @@ class GreenScreenImageQuery(Query):
             "steps": self.steps,
             "cfg_scale": self.cfg_scale,
             "denoising_strength": self.denoising_strength,
-            "width": self.width * 2,
-            "height": self.height * 2,
+            "width": self.width * 1.5,
+            "height": self.height * 1.5,
             # "seed": 123, # TODO add seed, before testing
             # "mask": self.windows_mask_image_b64,
             # "mask_blur": 2,
