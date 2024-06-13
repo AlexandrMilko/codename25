@@ -12,7 +12,7 @@ MAX_CONTROLNET_IMAGE_RESOLUTION = 600
 
 
 class Query:
-    negative_prompt = "ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish, text"
+    negative_prompt = "(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime), text, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
     sampler_name = "DPM2"
 
 class GreenScreenImageQuery(Query):
@@ -38,7 +38,8 @@ class GreenScreenImageQuery(Query):
 
         space, room, budget, self.style = text.split(", ")
         # self.prompt = f'interior design, {room.lower()}, {self.style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
-        self.prompt = f'interior design, {self.style.lower()} style, RAW photo, subject, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3, <lora:epi_noiseoffset2:1>'
+        # self.prompt = f'{self.style.lower()} style, RAW photo, subject, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3, <lora:epi_noiseoffset2:1>'
+        self.prompt = f'{self.style.lower()} {room}'
         self.output_filename = output_filename
 
         # Prepare mask for SD
