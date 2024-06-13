@@ -117,7 +117,7 @@ class Kitchen(Room):
         pixels_for_placing = kitchen_table_with_chairs.find_placement_pixel(save_path)
         print(f"KitchenTableWithChairs placement pixel: {pixels_for_placing}")
         wall = self.get_biggest_wall()
-        render_directory = f'disruptor/images/preprocessed/furniture_render'
+        render_directory = f'disruptor/images/preprocessed/'
         wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
         yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
         random_index = random.randint(0, len(pixels_for_placing) - 1)
