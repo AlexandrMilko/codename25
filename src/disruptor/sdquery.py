@@ -1,4 +1,3 @@
-from flask import url_for
 from flask_login import current_user
 import os
 import requests
@@ -31,10 +30,8 @@ class GreenScreenImageQuery(Query):
     def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.png",
                  furniture_mask="furniture_mask.png"):
         # We will use result image to transform it into new space of user image
-        self.prerequisite_path = "disruptor" + url_for('static',
-                                                       filename=f'images/{current_user.id}/preprocessed/{prerequisite}')
-        self.furniture_mask_path = "disruptor" + url_for('static',
-                                                          filename=f'images/{current_user.id}/preprocessed/{furniture_mask}')
+        self.prerequisite_path = f'disruptor/images/preprocessed/{prerequisite}'
+        self.furniture_mask_path = f'disruptor/images/preprocessed/{furniture_mask}'
         self.prerequisite_image_b64 = get_encoded_image(self.prerequisite_path)
         self.furniture_mask_image_b64 = get_encoded_image(self.furniture_mask_path)
         self.width, self.height = get_max_possible_size(self.prerequisite_path)
@@ -45,8 +42,8 @@ class GreenScreenImageQuery(Query):
         self.output_filename = output_filename
 
         # Prepare mask for SD
-        windows_mask_path = f'disruptor/static/images/{current_user.id}/preprocessed/windows_mask_inpainting.png'
-        inpainting_mask_path = f'disruptor/static/images/{current_user.id}/preprocessed/inpainting_mask.png'
+        windows_mask_path = f'disruptor/images/preprocessed/windows_mask_inpainting.png'
+        inpainting_mask_path = f'disruptor/images/preprocessed/inpainting_mask.png'
         overlay_masks(windows_mask_path, self.furniture_mask_path, inpainting_mask_path, [0, 0])
         self.inpainting_mask_image_b64 = get_encoded_image(inpainting_mask_path)
         self.windows_mask_image_b64 = get_encoded_image(windows_mask_path)
@@ -171,7 +168,7 @@ class GreenScreenImageQuery(Query):
 
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
-        output_dir = f"disruptor/static/images/{current_user.id}/preprocessed"
+        output_dir = f"disruptor/images/preprocessed"
         output_filepath = os.path.join(output_dir, 'designed.png')
 
         # If there was no such dir, we create it and try again
@@ -236,7 +233,7 @@ class GreenScreenImageQuery(Query):
 
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
-        output_dir = f"disruptor/static/images/{current_user.id}"
+        output_dir = f"disruptor/images"
         output_filepath = os.path.join(output_dir, self.output_filename)
 
         # If there was no such dir, we create it and try again
@@ -322,7 +319,7 @@ def get_max_possible_size(input_path, target_resolution=MAX_CONTROLNET_IMAGE_RES
     return width, height
 
 def apply_style(empty_space, room_choice, style_budget_choice):
-    es_path = "disruptor" + url_for('images', filename=f'{empty_space}')
+    es_path = f"disruptor/images/{empty_space}"
     if room_choice.lower() == "bedroom":
         from disruptor.stage.Bedroom import Bedroom
         room = Bedroom(es_path)

@@ -86,7 +86,7 @@ class Kitchen(Room):
         # Add plant
         plant = Plant()
         seg_image_path = f'disruptor/images/preprocessed/segmented_es.png'
-        save_path = 'disruptor/static/images/floor_mask.png'
+        save_path = 'disruptor/images/floor_mask.png'
         Floor.save_mask(seg_image_path, save_path)
         pixels_for_placing = plant.find_placement_pixel(save_path)
         print(f"PLANT placement pixels: {pixels_for_placing}")
@@ -112,7 +112,7 @@ class Kitchen(Room):
         # Add kitchen_table_with_chairs
         kitchen_table_with_chairs = KitchenTableWithChairs()
         seg_image_path = f'disruptor/images/preprocessed/segmented_es.png'
-        save_path = 'disruptor/static/images/floor_mask.png'
+        save_path = 'disruptor/images/floor_mask.png'
         Floor.save_mask(seg_image_path, save_path)
         pixels_for_placing = kitchen_table_with_chairs.find_placement_pixel(save_path)
         print(f"KitchenTableWithChairs placement pixel: {pixels_for_placing}")
