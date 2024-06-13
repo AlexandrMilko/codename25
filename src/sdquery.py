@@ -195,8 +195,8 @@ class GreenScreenImageQuery(Query):
             "steps": self.steps,
             "cfg_scale": self.cfg_scale,
             "denoising_strength": self.denoising_strength,
-            "width": self.width * 1.5,
-            "height": self.height * 1.5,
+            "width": self.width * 2,
+            "height": self.height * 2,
             # "seed": 123, # TODO add seed, before testing
             # "mask": self.windows_mask_image_b64,
             # "mask_blur": 2,
@@ -215,6 +215,20 @@ class GreenScreenImageQuery(Query):
                             "guidance_end": 0.5,
                             "control_mode": "Balanced",
                             "processor_res": 512 # WARNING: TODO change to image height
+                        },
+                        {
+                            "enabled": True,
+                            "image": self.prerequisite_image_b64,
+                            "module": "canny",
+                            "model": "control_v11p_sd15_canny [d14c016b]",
+                            "weight": 1,
+                            "guidance_start": 0,
+                            "guidance_end": 1,
+                            "control_mode": "Balanced",
+                            "effective_region_mask": self.inpainting_mask_image_b64,
+                            "threshold_a": 1,
+                            "threshold_b": 90,
+                            "processor_res": 512  # WARNING: TODO change to image height
                         },
                         {
                             "enabled": True,
