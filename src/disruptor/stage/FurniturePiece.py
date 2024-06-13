@@ -71,7 +71,7 @@ class Bed(FurniturePiece):
 
     def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
                                        yaw_angle: float,
-                                       camera_angles_rad: tuple[float, float], current_user_id):
+                                       camera_angles_rad: tuple[float, float]):
         from math import radians
         roll, pitch = camera_angles_rad
         default_angles = self.get_default_angles()
@@ -85,7 +85,7 @@ class Bed(FurniturePiece):
         camera_angles = radians(
             90) - pitch, +roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
         print("Started estimating camera height")
-        camera_height = room.estimate_camera_height((pitch, roll), current_user_id)
+        camera_height = room.estimate_camera_height((pitch, roll))
         print(f"Camera height: {camera_height}")
         camera_location = 0, 0, camera_height
         obj_offsets_floor = obj_offsets.copy()
@@ -174,7 +174,7 @@ class Curtain(FurniturePiece):
 
     def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
                                        yaw_angle: float,
-                                       camera_angles_rad: tuple[float, float], current_user_id):
+                                       camera_angles_rad: tuple[float, float]):
         from math import radians
         roll, pitch = camera_angles_rad
         default_angles = self.get_default_angles()
@@ -267,7 +267,7 @@ class Plant(FurniturePiece):
         return points
 
     def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
-                                       camera_angles_rad: tuple[float, float], current_user_id):
+                                       camera_angles_rad: tuple[float, float]):
         from math import radians
         roll, pitch = camera_angles_rad
         default_angles = self.get_default_angles()
@@ -281,7 +281,7 @@ class Plant(FurniturePiece):
         camera_angles = radians(
             90) - pitch, +roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
         print("Started estimating camera height")
-        camera_height = room.estimate_camera_height((pitch, roll), current_user_id)
+        camera_height = room.estimate_camera_height((pitch, roll))
         print(f"Camera height: {camera_height}")
         camera_location = 0, 0, camera_height
         obj_offsets_floor = obj_offsets.copy()
@@ -396,7 +396,7 @@ class KitchenTableWithChairs(FurniturePiece):
         return centers
 
     def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int], yaw_angle,
-                                       camera_angles_rad: tuple[float, float], current_user_id):
+                                       camera_angles_rad: tuple[float, float]):
         from math import radians
         roll, pitch = camera_angles_rad
         default_angles = self.get_default_angles()
@@ -410,7 +410,7 @@ class KitchenTableWithChairs(FurniturePiece):
         camera_angles = radians(
             90) - pitch, +roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
         print("Started estimating camera height")
-        camera_height = room.estimate_camera_height((pitch, roll), current_user_id)
+        camera_height = room.estimate_camera_height((pitch, roll))
         print(f"Camera height: {camera_height}")
         camera_location = 0, 0, camera_height
         obj_offsets_floor = obj_offsets.copy()
@@ -460,7 +460,7 @@ class SofaWithTable(FurniturePiece):
 
     def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
                                        yaw_angle: float,
-                                       camera_angles_rad: tuple[float, float], current_user_id):
+                                       camera_angles_rad: tuple[float, float]):
         from math import radians
         roll, pitch = camera_angles_rad
         default_angles = self.get_default_angles()
@@ -474,7 +474,7 @@ class SofaWithTable(FurniturePiece):
         camera_angles = radians(
             90) - pitch, +roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
         print("Started estimating camera height")
-        camera_height = room.estimate_camera_height((pitch, roll), current_user_id)
+        camera_height = room.estimate_camera_height((pitch, roll))
         print(f"Camera height: {camera_height}")
         camera_location = 0, 0, camera_height
         obj_offsets_floor = obj_offsets.copy()

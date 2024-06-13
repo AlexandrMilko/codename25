@@ -94,7 +94,7 @@ def get_encoded_image(image_path):
     return base64.b64encode(bytes).decode('utf-8')
 
 
-def run_preprocessor(preprocessor_name, image_path, current_user_id, filename="preprocessed.jpg", res=512):
+def run_preprocessor(preprocessor_name, image_path, filename="preprocessed.jpg", res=512):
     input_image = get_encoded_image(image_path)
     data = {
         "controlnet_module": preprocessor_name,

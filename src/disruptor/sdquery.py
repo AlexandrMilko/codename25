@@ -1,4 +1,3 @@
-from flask_login import current_user
 import os
 import requests
 
@@ -50,7 +49,7 @@ class GreenScreenImageQuery(Query):
 
     def run(self):
         # We run segmentation for our prerequisite image to see if segmentation was done correctly
-        run_preprocessor("seg_ofade20k", self.prerequisite_path, current_user.id, "seg_prerequisite.png")
+        run_preprocessor("seg_ofade20k", self.prerequisite_path, "seg_prerequisite.png")
 
         # if self.style in ("Modern", "Art Deco"):
         #     set_xsarchitectural()
@@ -323,15 +322,15 @@ def apply_style(empty_space, room_choice, style_budget_choice):
     if room_choice.lower() == "bedroom":
         from disruptor.stage.Bedroom import Bedroom
         room = Bedroom(es_path)
-        room.stage(current_user.id)
+        room.stage()
     elif room_choice.lower() == "kitchen":
         from disruptor.stage.Kitchen import Kitchen
         room = Kitchen(es_path)
-        room.stage(current_user.id)
+        room.stage()
     elif room_choice.lower() == "living room":
         from disruptor.stage.LivingRoom import LivingRoom
         room = LivingRoom(es_path)
-        room.stage(current_user.id)
+        room.stage()
     else:
         raise Exception(f"Wrong Room Type was specified: {room_choice.lower()}")
 
