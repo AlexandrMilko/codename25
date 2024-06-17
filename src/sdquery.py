@@ -49,6 +49,14 @@ class GreenScreenImageQuery(Query):
         self.inpainting_mask_image_b64 = get_encoded_image(inpainting_mask_path)
         self.windows_mask_image_b64 = get_encoded_image(windows_mask_path)
 
+        # We have to stretch the mask for upscaled image
+        stretched_windows_mask_path = f'images/preprocessed/windows_mask_inpainting.png'
+        tmp_image = Image.open(windows_mask_path)
+        tmp_image.resize(self.width*2, self.height*2)
+        tmp_image.save(stretched_windows_mask_path)
+        tmp_image.close()
+        self.stretched_windows_mask_image_b64 = get_encoded_image(stretched_windows_mask_path)
+
     def run(self):
         # We run segmentation for our prerequisite image to see if segmentation was done correctly
         run_preprocessor("seg_ofade20k", self.prerequisite_path, "seg_prerequisite.png")
@@ -199,7 +207,7 @@ class GreenScreenImageQuery(Query):
             "width": self.width * 2,
             "height": self.height * 2,
             # "seed": 123, # TODO add seed, before testing
-            "mask": self.windows_mask_image_b64,
+            "mask": self.stretched_windows_mask_image_b64,
             "inpainting_mask_invert": 1,
             "mask_blur": 1,
             "alwayson_scripts": {
