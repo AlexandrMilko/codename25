@@ -50,7 +50,7 @@ class GreenScreenImageQuery(Query):
         self.windows_mask_image_b64 = get_encoded_image(windows_mask_path)
 
         # We have to stretch the mask for upscaled image
-        stretched_windows_mask_path = f'images/preprocessed/windows_mask_inpainting.png'
+        stretched_windows_mask_path = f'images/preprocessed/stretched_windows_mask_inpainting.png'
         tmp_image = Image.open(windows_mask_path)
         tmp_image.resize((self.width*2, self.height*2), Image.Resampling.LANCZOS)
         tmp_image.save(stretched_windows_mask_path)
