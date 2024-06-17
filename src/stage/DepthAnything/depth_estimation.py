@@ -95,7 +95,7 @@ def image_pixels_to_depth(image_path, depth_npy_path=depth_npy_path):
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--model", type=str, default='zoedepth', help="Name of the model to test")
     parser.add_argument("-p", "--pretrained_resource", type=str,
-                        default='local::./stage/DepthAnything/zoedepth/checkpoints/depth_anything_metric_depth_indoor.pt',
+                        default='local::./stage/DepthAnything/zoedepth/checkpoints/depth_anything_v2_metric_vkitti_vitl.pth',
                         help="Pretrained resource to use for fetching weights.")
 
     args = parser.parse_args()
