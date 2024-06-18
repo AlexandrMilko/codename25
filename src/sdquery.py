@@ -225,20 +225,20 @@ class GreenScreenImageQuery(Query):
                             "control_mode": "Balanced",
                             "processor_res": 512 # WARNING: TODO change to image height
                         },
-                        # {
-                        #     "enabled": True,
-                        #     "image": self.prerequisite_image_b64,
-                        #     "module": "canny",
-                        #     "model": "control_v11p_sd15_canny [d14c016b]",
-                        #     "weight": 1,
-                        #     "guidance_start": 0,
-                        #     "guidance_end": 1,
-                        #     "control_mode": "Balanced",
-                        #     "effective_region_mask": self.inpainting_mask_image_b64,
-                        #     "threshold_a": 1,
-                        #     "threshold_b": 150,
-                        #     "processor_res": 1024  # WARNING: TODO change to image height
-                        # },
+                        {
+                            "enabled": True,
+                            "image": self.prerequisite_image_b64,
+                            "module": "canny",
+                            "model": "control_v11p_sd15_canny [d14c016b]",
+                            "weight": 1,
+                            "guidance_start": 0,
+                            "guidance_end": 1,
+                            "control_mode": "Balanced",
+                            "effective_region_mask": self.inpainting_mask_image_b64,
+                            "threshold_a": 1,
+                            "threshold_b": 150,
+                            "processor_res": 1024  # WARNING: TODO change to image height
+                        },
                         {
                             "enabled": True,
                             "image": self.designed_image_b64,
