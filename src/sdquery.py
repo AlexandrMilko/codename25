@@ -215,7 +215,7 @@ class GreenScreenImageQuery(Query):
                     "args": [
                         {
                             "enabled": True,
-                            "image": self.designed_image_b64,
+                            "image": self.prerequisite_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_v11p_sd15_seg [e1f51eb9]",
                             # "low_vram": True,
@@ -241,7 +241,7 @@ class GreenScreenImageQuery(Query):
                         },
                         {
                             "enabled": True,
-                            "image": self.designed_image_b64,
+                            "image": self.prerequisite_image_b64,
                             "module": "depth_anything",
                             "model": "control_v11f1p_sd15_depth [cfd03158]",
                             "weight": 1,
