@@ -24,7 +24,12 @@ class Room:
         move_file(f"images/preprocessed/users.png",
                   "UprightNet/imgs/normal_pair/users.png")
         from UprightNet.infer import get_roll_pitch
-        return get_roll_pitch()
+        try:
+            return get_roll_pitch()
+        except Exception as e:
+            print(f"EXCEPTION: {e}")
+            print("Returning default angles")
+            return 0, 0
 
     def get_walls(self):
         es_img = Image.open(self.original_image_path)
