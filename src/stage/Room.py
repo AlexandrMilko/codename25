@@ -27,6 +27,7 @@ class Room:
         try:
             return get_roll_pitch()
         except Exception as e:
+            os.chdir('..')
             print(f"EXCEPTION: {e}")
             print("Returning default angles")
             return 0, 0
