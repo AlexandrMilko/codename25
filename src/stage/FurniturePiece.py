@@ -50,9 +50,9 @@ class FurniturePiece:
 
 class Bed(FurniturePiece):
     # We use it to scale the model to metric units
-    scale = 0.01, 0.01, 0.01
+    scale = 1, 1, 1
     # We use it to compensate the angle if the model is originally rotated in a wrong way
-    default_angles = 0, 0, 90
+    default_angles = 0, 0, 0
 
     def __init__(self, model_path='3Ds/bedroom/bed.usdc'):
         super().__init__(model_path)
@@ -112,10 +112,10 @@ class Bed(FurniturePiece):
         return params
 
 class Curtain(FurniturePiece):
-    scale = 1, 0.3, 0.5
+    scale = 1, 1, 1
     # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 90
-    default_height = 2.85  # In meters
+    default_height = 2.2  # In meters
 
     def __init__(self, model_path='3Ds/other/curtain.usdc'):
         super().__init__(model_path)
