@@ -54,7 +54,7 @@ class Bed(FurniturePiece):
     # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 90
 
-    def __init__(self, model_path='3Ds/bedroom/bed.obj'):
+    def __init__(self, model_path='3Ds/bedroom/bed.usdc'):
         super().__init__(model_path)
 
     @staticmethod
@@ -117,7 +117,7 @@ class Curtain(FurniturePiece):
     default_angles = 0, 0, 90
     default_height = 2.85  # In meters
 
-    def __init__(self, model_path='3Ds/other/curtain.obj'):
+    def __init__(self, model_path='3Ds/other/curtain.usdc'):
         super().__init__(model_path)
 
     @staticmethod
@@ -215,7 +215,7 @@ class Plant(FurniturePiece):
     # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 0
 
-    def __init__(self, model_path='3Ds/other/plant.obj'):
+    def __init__(self, model_path='3Ds/other/plant.usdc'):
         super().__init__(model_path)
 
     @staticmethod
@@ -313,7 +313,7 @@ class KitchenTableWithChairs(FurniturePiece):
     # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 0
 
-    def __init__(self, model_path='3Ds/kitchen/kitchen_table_with_chairs.obj'):
+    def __init__(self, model_path='3Ds/kitchen/kitchen_table_with_chairs.usdc'):
         super().__init__(model_path)
 
     @staticmethod
@@ -443,7 +443,7 @@ class SofaWithTable(FurniturePiece):
     # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 0
 
-    def __init__(self, model_path='3Ds/living_room/sofa_with_table.obj'):
+    def __init__(self, model_path='3Ds/living_room/sofa_with_table.usdc'):
         super().__init__(model_path)
 
     @staticmethod
