@@ -5,6 +5,7 @@ from tools import move_file, run_preprocessor, copy_file, convert_to_mask, overl
 from stage.FurniturePiece import FurniturePiece
 from stage.Wall import Wall
 import numpy as np
+import open3d as o3d
 
 class Room:
     # BGR, used in segmented images
@@ -123,3 +124,41 @@ class Room:
 
         # Check if the mask contains white pixels
         cv2.imwrite(windows_mask_path, bw_mask)
+
+    @staticmethod
+    def save_floor_layout_image(ply_path: str, npy_path: str, output_path: str) -> None:
+        # Загрузка облака точек
+        pcd = o3d.io.read_point_cloud(ply_path)
+        points = np.asarray(pcd.points)
+
+        # Фильтрация точек пола
+        quantile = 60
+        floor_height = np.percentile(points[:, 1], quantile)
+        threshold = 0.05  # Допустимое отклонение от высоты пола
+        floor_points = points[np.abs(points[:, 1] - floor_height) < threshold]
+
+        # Загрузка карты глубины
+        depth_map = np.load(npy_path)
+        height, width = depth_map.shape
+        layout_image = np.zeros((height, width), dtype=np.uint8)
+
+        # Нахождение минимальных и максимальных значений координат пола
+        min_coords = floor_points.min(axis=0)
+        max_coords = floor_points.max(axis=0)
+
+        # Нормализация координат пола
+        norm_points = (floor_points - min_coords) / (max_coords - min_coords)
+        norm_points[:, 0] = norm_points[:, 0] * (width - 1)
+        norm_points[:, 2] = norm_points[:, 2] * (height - 1)
+
+        # Создание заполненного контура
+        hull = cv2.convexHull(norm_points[:, [0, 2]].astype(int))
+        cv2.fillPoly(layout_image, [hull], (255, 255, 255))
+
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        cv2.imwrite(output_path, layout_image)
+
+        # Визуализация результатов
+        # cv2.imshow('Layout Image', layout_image)
+        # cv2.waitKey(0)
+        cv2.destroyAllWindows()
