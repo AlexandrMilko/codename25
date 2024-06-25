@@ -21,14 +21,15 @@ class Bedroom(Room):
         # Add time for Garbage Collector
         time.sleep(5)
 
-        from stage.DepthAnything.depth_estimation import image_pixels_to_depth
-        image_pixels_to_depth(self.original_image_path)
+        from stage.DepthAnything.depth_estimation import image_pixels_to_point_cloud, depth_ply_path, depth_npy_path
+        image_pixels_to_point_cloud(self.original_image_path)
+        floor_layout_path = 'images/preprocessed/floor_layout.png'
+        self.save_floor_layout_image(depth_ply_path, depth_npy_path, floor_layout_path)
 
         # Add time for Garbage Collector
         time.sleep(5)
 
-        from stage.DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points, image_pixels_to_point_cloud
-        image_pixels_to_point_cloud(self.original_image_path)
+        # from stage.DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
         # image_pixels_to_3d(self.original_image_path, "my_3d_space.txt")
         # rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", -pitch_rad, -roll_rad)
 
