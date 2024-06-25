@@ -34,7 +34,7 @@ class Kitchen(Room):
         # rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", -pitch_rad, -roll_rad)
 
         # Segment our empty space room. It is used in Room.save_windows_mask
-        from src.tools import get_image_size, run_preprocessor
+        from tools import get_image_size, run_preprocessor
         width, height = get_image_size(self.original_image_path)
         run_preprocessor("seg_ofade20k", self.original_image_path, "segmented_es.png", height)
 
