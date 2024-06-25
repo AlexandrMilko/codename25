@@ -9,8 +9,10 @@ import torch
 import gc
 import numpy as np
 from tools import get_image_size
+import open3d as o3d
 
 depth_npy_path = 'stage/DepthAnything/zoedepth/depth.npy'
+depth_ply_path = 'stage/DepthAnything/zoedepth/depth.ply'
 
 def image_pixel_to_3d(x, y, image_path, depth_npy_path=depth_npy_path):
     w, h = get_image_size(image_path)
@@ -129,6 +131,70 @@ def image_pixels_to_depth(image_path, depth_npy_path=depth_npy_path):
     torch.cuda.empty_cache()
     # Add time for Garbage Collector
     time.sleep(5)
+
+def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth_ply_path=depth_ply_path):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-m", "--model", type=str, default='zoedepth', help="Name of the model to test")
+    parser.add_argument("-p", "--pretrained_resource", type=str,
+                        default='local::./stage/DepthAnything/zoedepth/checkpoints/depth_anything_metric_depth_indoor.pt',
+                        help="Pretrained resource to use for fetching weights.")
+
+    args = parser.parse_args()
+
+    config = get_config(args.model, "eval")
+    config.pretrained_resource = args.pretrained_resource
+    model = build_model(config).to('cuda' if torch.cuda.is_available() else 'cpu')
+    model.eval()
+
+    try:
+        color_image = Image.open(image_path).convert('RGB')
+        image_tensor = transforms.ToTensor()(color_image).unsqueeze(0).to(
+            'cuda' if torch.cuda.is_available() else 'cpu')
+
+        pred = model(image_tensor)
+        if isinstance(pred, dict):
+            pred = pred.get('metric_depth', pred.get('out'))
+        elif isinstance(pred, (list, tuple)):
+            pred = pred[-1]
+        pred = pred.squeeze().detach().cpu().numpy()
+        np.save(depth_npy_path, pred)
+
+        color_image = Image.open(image_path).convert('RGB')
+        original_width, original_height = color_image.size
+        FX = original_width * 0.6
+        FY = original_height * 0.9
+
+        # Resize color image and depth to final size
+        resized_color_image = color_image.resize((original_width, original_height), Image.LANCZOS)
+        resized_pred = Image.fromarray(pred).resize((original_width, original_height), Image.NEAREST)
+        focal_length_x, focal_length_y = (FX, FY)
+
+        x, y = np.meshgrid(np.arange(original_width), np.arange(original_height))
+        x = (x - original_width / 2) / focal_length_x
+        y = (y - original_height / 2) / focal_length_y
+        z = np.array(resized_pred)
+
+        points = np.stack((np.multiply(x, z), np.multiply(y, z), z), axis=-1).reshape(-1, 3)
+        colors = np.array(resized_color_image).reshape(-1, 3) / 255.0
+
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(points)
+        pcd.colors = o3d.utility.Vector3dVector(colors)
+        o3d.io.write_point_cloud(depth_ply_path, pcd)
+    except Exception as e:
+        print(f"Error processing {image_path}: {e}")
+
+    del model
+    del parser
+    del color_image
+    del image_tensor
+    del pred
+    gc.collect()
+    torch.cuda.empty_cache()
+    # Add time for Garbage Collector
+    time.sleep(5)
+
+
 
 
 def rotate_3d_points(input_fname, output_fname, pitch_rad, roll_rad): # We rotate them to restore the original global coordinates which were moved due to camera rotation

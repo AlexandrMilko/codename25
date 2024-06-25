@@ -27,7 +27,8 @@ class LivingRoom(Room):
         # Add time for Garbage Collector
         time.sleep(5)
 
-        # from stage.DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
+        from stage.DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points, image_pixels_to_point_cloud
+        image_pixels_to_point_cloud(self.original_image_path)
         # image_pixels_to_3d(self.original_image_path, "my_3d_space.txt")
         # rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", -pitch_rad, -roll_rad)
 
