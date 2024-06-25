@@ -161,4 +161,4 @@ class Room:
         # Визуализация результатов
         # cv2.imshow('Layout Image', layout_image)
         # cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.destroyAllWindows()
