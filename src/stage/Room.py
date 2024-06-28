@@ -1,9 +1,7 @@
 import cv2
 from PIL import Image
 import os
-from tools import move_file, run_preprocessor, copy_file, convert_to_mask, overlay_images, create_furniture_mask
-from stage.FurniturePiece import FurniturePiece
-from stage.Wall import Wall
+from tools import move_file, run_preprocessor, copy_file, convert_to_mask, overlay_images, create_furniture_mask, get_image_size
 import numpy as np
 import open3d as o3d
 
@@ -13,15 +11,13 @@ class Room:
     door_color = (51, 255, 8)
     floor_color = (50, 50, 80)
     blind_color = (255, 61, 0)  # blind that is set on windows, kinda curtains
-    def __init__(self, original_image_path): # Original image path is an empty space image
-        self.original_image_path = original_image_path
+    def __init__(self, empty_room_image_path): # Original image path is an empty space image
+        self.empty_room_image_path = empty_room_image_path
 
     def find_roll_pitch(self) -> tuple[float, float]:
-        es_img = Image.open(self.original_image_path)
-        width, height = es_img.size
-        es_img.close()
-        run_preprocessor("normal_dsine", self.original_image_path, "users.png", height)
-        copy_file(self.original_image_path, "UprightNet/imgs/rgb/users.png") # We copy it because we will use it later in get_wall method and we want to have access to the image
+        width, height = get_image_size(self.empty_room_image_path)
+        run_preprocessor("normal_dsine", self.empty_room_image_path, "users.png", height)
+        copy_file(self.empty_room_image_path, "UprightNet/imgs/rgb/users.png") # We copy it because we will use it later in get_wall method and we want to have access to the image
         move_file(f"images/preprocessed/users.png",
                   "UprightNet/imgs/normal_pair/users.png")
         from UprightNet.infer import get_roll_pitch
@@ -34,25 +30,21 @@ class Room:
             return 0, 0
 
     def get_walls(self):
-        es_img = Image.open(self.original_image_path)
-        width, height = es_img.size
-        es_img.close()
-        run_preprocessor("seg_ofade20k", self.original_image_path, "segmented_es.png", height)
+        width, height = get_image_size(self.empty_room_image_path)
+        run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
         from stage.Wall import Wall
         return Wall.find_walls(f'images/preprocessed/segmented_es.png')
 
     def get_biggest_wall(self):
-        es_img = Image.open(self.original_image_path)
-        width, height = es_img.size
-        es_img.close()
-        run_preprocessor("seg_ofade20k", self.original_image_path, "segmented_es.png", height)
+        width, height = get_image_size(self.empty_room_image_path)
+        run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
         from stage.Wall import Wall
         return Wall.find_biggest_wall(f'images/preprocessed/segmented_es.png')
 
     def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
         from stage.DepthAnything.depth_estimation import image_pixel_to_3d, rotate_3d_point
-        print(self.original_image_path, pixel, "IMAGE PATH and PIXEL")
-        target_point = image_pixel_to_3d(*pixel, self.original_image_path)
+        print(self.empty_room_image_path, pixel, "IMAGE PATH and PIXEL")
+        target_point = image_pixel_to_3d(*pixel, self.empty_room_image_path)
         # We rotate it back to compensate our camera rotation
         offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
         return offset_relative_to_camera
@@ -62,7 +54,7 @@ class Room:
         from stage.DepthAnything.depth_estimation import rotate_3d_point, image_pixel_to_3d
         from stage.Floor import Floor
         floor_pixel = Floor.find_centroid(f'images/preprocessed/segmented_es.png')
-        point_3d = image_pixel_to_3d(*floor_pixel, self.original_image_path)
+        point_3d = image_pixel_to_3d(*floor_pixel, self.empty_room_image_path)
         print(f"Floor Centroid: {floor_pixel} -> {point_3d}")
         rotated_point = rotate_3d_point(point_3d, -pitch, -roll)
         z_coordinate = rotated_point[2]
