@@ -64,7 +64,7 @@ class LivingRoom(Room):
         time.sleep(5)
 
         # Add SofaWithTable
-        self.add_sofa_with_table(camera_height, (pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
+        self.add_sofa_with_table((pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
 
         # Create windows mask for staged room
         run_preprocessor("seg_ofade20k", prerequisite_path, "seg_prerequisite.png", res=height)

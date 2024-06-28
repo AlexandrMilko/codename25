@@ -64,7 +64,7 @@ class Kitchen(Room):
         time.sleep(5)
 
         # Add kitchen_table_with_chairs
-        self.add_kitchen_table_with_chairs(camera_height, (pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
+        self.add_kitchen_table_with_chairs((pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
 
         run_preprocessor("seg_ofade20k", prerequisite_path, "seg_prerequisite.png", res=height)
         segmented_es_path = f'images/preprocessed/seg_prerequisite.png'
