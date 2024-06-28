@@ -1,6 +1,6 @@
 from stage.Room import Room
 from stage.Floor import Floor
-from stage.FurniturePiece import FurniturePiece, Bed, Curtain, Plant
+from stage.Furniture import Furniture, Bed, Curtain, Plant
 from tools import calculate_angle_from_top_view, get_image_size, create_mask_of_size, convert_png_to_mask, overlay_masks
 import numpy as np
 import os
@@ -94,9 +94,8 @@ class Bedroom(Room):
         print(f"PLANT placement pixels: {pixels_for_placing}")
         import random
         random_index = random.randint(0, len(pixels_for_placing) - 1)
-        render_parameters = (
-            plant.calculate_rendering_parameters(self, pixels_for_placing[random_index], (roll_rad, pitch_rad),
-                                               ))
+        plant_yaw_angle = 0  # We do not rotate plants
+        render_parameters = (plant.calculate_rendering_parameters(self, pixels_for_placing[random_index], plant_yaw_angle, (roll_rad, pitch_rad)))
         width, height = get_image_size(self.empty_room_image_path)
         render_parameters['resolution_x'] = width
         render_parameters['resolution_y'] = height
