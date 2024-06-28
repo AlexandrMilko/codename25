@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from stage.transform import four_point_transform
 from tools import calculate_angle_from_top_view
 
 class Wall:
@@ -9,10 +8,6 @@ class Wall:
         self.corners = corners
         self.image_path = image_path
         self.left_centroid, self.right_centroid = centroids
-
-    def find_angle_from_2d(self):
-        yaw = four_point_transform(np.array(self.corners), self.image_path)[1]
-        return yaw
 
     def find_angle_from_3d(self, room, pitch_rad, roll_rad):
         # # We consider only top corners. Taking bottom corners additionally doesnt give us any more useful info
@@ -25,7 +20,7 @@ class Wall:
         # there is a small wall next to our wall
         try:
             from stage.DepthAnything.depth_estimation import image_pixel_list_to_3d, rotate_3d_point
-            points_3d = image_pixel_list_to_3d(room.original_image_path, [self.left_centroid, self.right_centroid])
+            points_3d = image_pixel_list_to_3d(room.empty_room_image_path, [self.left_centroid, self.right_centroid])
             points_3d_before_camera_rotation = [rotate_3d_point(point, -pitch_rad, -roll_rad) for point in points_3d]
         except Exception as e:
             raise e
