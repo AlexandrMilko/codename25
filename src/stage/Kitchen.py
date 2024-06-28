@@ -58,7 +58,7 @@ class Kitchen(Room):
         time.sleep(5)
 
         # Add plant
-        self.add_plant(camera_height, (pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
+        self.add_plant((pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
 
         # Add time for Garbage Collector
         time.sleep(5)
