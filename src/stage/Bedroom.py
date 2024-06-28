@@ -62,7 +62,7 @@ class Bedroom(Room):
         time.sleep(5)
 
         # Add Bed
-        self.add_bed(camera_height, (pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
+        self.add_bed((pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
 
         # Create windows mask for staged room
         run_preprocessor("seg_ofade20k", prerequisite_path, "seg_prerequisite.png", height)
