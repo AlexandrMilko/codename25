@@ -22,7 +22,7 @@ class LivingRoom(Room):
         time.sleep(5)
 
         from stage.DepthAnything.depth_estimation import image_pixels_to_point_cloud, depth_ply_path, depth_npy_path
-        image_pixels_to_point_cloud(self.original_image_path)
+        image_pixels_to_point_cloud(self.empty_room_image_path)
         floor_layout_path = 'images/preprocessed/floor_layout.png'
         self.save_floor_layout_image(depth_ply_path, depth_npy_path, floor_layout_path)
 
@@ -30,20 +30,20 @@ class LivingRoom(Room):
         time.sleep(5)
 
         # from stage.DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
-        # image_pixels_to_3d(self.original_image_path, "my_3d_space.txt")
+        # image_pixels_to_3d(self.empty_room_image_path, "my_3d_space.txt")
         # rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", -pitch_rad, -roll_rad)
 
         # Segment our empty space room. It is used in Room.save_windows_mask
         from tools import get_image_size, run_preprocessor
-        width, height = get_image_size(self.original_image_path)
-        run_preprocessor("seg_ofade20k", self.original_image_path, "segmented_es.png", height)
+        width, height = get_image_size(self.empty_room_image_path)
+        run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
 
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 
         # Create an empty mask of same size as image
         mask_path = f'images/preprocessed/furniture_mask.png'
         tmp_mask_path = f'images/preprocessed/furniture_piece_mask.png'
-        width, height = get_image_size(self.original_image_path)
+        width, height = get_image_size(self.empty_room_image_path)
         empty_mask = create_mask_of_size(width, height)
         print("Saving empty mask to:", mask_path)
         empty_mask.save(mask_path)
@@ -57,7 +57,7 @@ class LivingRoom(Room):
         pixels_for_placing = curtain.find_placement_pixel(
             f'images/preprocessed/windows_mask.png')
         print(f"CURTAINS placement pixels: {pixels_for_placing}")
-        Image.open(self.original_image_path).save(prerequisite_path)
+        Image.open(self.empty_room_image_path).save(prerequisite_path)
         for window in pixels_for_placing:
             try:
                 left_top_point, right_top_point = window
@@ -66,7 +66,7 @@ class LivingRoom(Room):
                 for pixel in (left_top_point, right_top_point):
                     render_parameters = curtain.calculate_rendering_parameters(self, pixel, yaw_angle,
                                                                                (roll_rad, pitch_rad))
-                    width, height = get_image_size(self.original_image_path)
+                    width, height = get_image_size(self.empty_room_image_path)
                     render_parameters['resolution_x'] = width
                     render_parameters['resolution_y'] = height
                     curtains_height = camera_height + render_parameters['obj_offsets'][2]
@@ -88,7 +88,7 @@ class LivingRoom(Room):
         # Add plant
         plant = Plant()
         seg_image_path = f'images/preprocessed/segmented_es.png'
-        save_path = 'images/floor_mask.png'
+        save_path = 'images/preprocessed/floor_mask.png'
         Floor.save_mask(seg_image_path, save_path)
         pixels_for_placing = plant.find_placement_pixel(save_path)
         print(f"PLANT placement pixels: {pixels_for_placing}")
@@ -97,7 +97,7 @@ class LivingRoom(Room):
         render_parameters = (
             plant.calculate_rendering_parameters(self, pixels_for_placing[random_index], (roll_rad, pitch_rad),
                                                ))
-        width, height = get_image_size(self.original_image_path)
+        width, height = get_image_size(self.empty_room_image_path)
         render_parameters['resolution_x'] = width
         render_parameters['resolution_y'] = height
         plant_image = plant.request_blender_render(render_parameters)
@@ -120,7 +120,7 @@ class LivingRoom(Room):
         print(f"SofaWithTable placement pixel: {pixel_for_placing}")
         yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
         render_parameters = (sofa_with_table.calculate_rendering_parameters(self, pixel_for_placing, yaw_angle, (roll_rad, pitch_rad)))
-        width, height = get_image_size(self.original_image_path)
+        width, height = get_image_size(self.empty_room_image_path)
         render_parameters['resolution_x'] = width
         render_parameters['resolution_y'] = height
         sofa_image = sofa_with_table.request_blender_render(render_parameters)

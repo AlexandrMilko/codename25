@@ -25,7 +25,7 @@ class Wall:
         # there is a small wall next to our wall
         try:
             from stage.DepthAnything.depth_estimation import image_pixel_list_to_3d, rotate_3d_point
-            points_3d = image_pixel_list_to_3d(room.original_image_path, [self.left_centroid, self.right_centroid])
+            points_3d = image_pixel_list_to_3d(room.empty_room_image_path, [self.left_centroid, self.right_centroid])
             points_3d_before_camera_rotation = [rotate_3d_point(point, -pitch_rad, -roll_rad) for point in points_3d]
         except Exception as e:
             raise e

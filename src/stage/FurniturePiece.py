@@ -1,16 +1,11 @@
 import base64
 import math
-import os.path
 from io import BytesIO
 
 import cv2
 import numpy as np
 import requests
 from PIL import Image
-
-from stage import Room
-from sklearn.cluster import KMeans
-from tools import get_filename_without_extension, create_directory_if_not_exists
 
 
 class FurniturePiece:
