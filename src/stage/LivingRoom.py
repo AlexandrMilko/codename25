@@ -20,7 +20,7 @@ class LivingRoom(Room):
         # Add time for Garbage Collector
         time.sleep(5)
 
-        from src.DepthAnything.depth_estimation import image_pixels_to_point_cloud, depth_ply_path, depth_npy_path
+        from DepthAnything.depth_estimation import image_pixels_to_point_cloud, depth_ply_path, depth_npy_path
         image_pixels_to_point_cloud(self.empty_room_image_path)
         floor_layout_path = 'images/preprocessed/floor_layout.png'
         self.save_floor_layout_image(depth_ply_path, depth_npy_path, floor_layout_path)
