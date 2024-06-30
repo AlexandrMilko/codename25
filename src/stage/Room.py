@@ -42,7 +42,7 @@ class Room:
         return Wall.find_biggest_wall(f'images/preprocessed/segmented_es.png')
 
     def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
-        from src.DepthAnything.depth_estimation import image_pixel_to_3d, rotate_3d_point
+        from DepthAnything.depth_estimation import image_pixel_to_3d, rotate_3d_point
         print(self.empty_room_image_path, pixel, "IMAGE PATH and PIXEL")
         target_point = image_pixel_to_3d(*pixel, self.empty_room_image_path)
         # We rotate it back to compensate our camera rotation
@@ -51,7 +51,7 @@ class Room:
 
     def estimate_camera_height(self, camera_angles: tuple[float, float]):
         pitch, roll = camera_angles
-        from src.DepthAnything.depth_estimation import rotate_3d_point, image_pixel_to_3d
+        from DepthAnything.depth_estimation import rotate_3d_point, image_pixel_to_3d
         from stage.Floor import Floor
         floor_pixel = Floor.find_centroid(f'images/preprocessed/segmented_es.png')
         point_3d = image_pixel_to_3d(*floor_pixel, self.empty_room_image_path)
