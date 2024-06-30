@@ -1,4 +1,4 @@
 from stage.Room import Room
 from stage.Wall import Wall
-from stage.furniture import *
-from stage.room import *
+import stage.room
+import stage.furniture
