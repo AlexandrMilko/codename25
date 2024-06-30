@@ -32,14 +32,14 @@ class Room:
     def get_walls(self):
         width, height = get_image_size(self.empty_room_image_path)
         run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
-        from stage.Wall import Wall
-        return Wall.find_walls(f'images/preprocessed/segmented_es.png')
+        import stage
+        return stage.Wall.find_walls(f'images/preprocessed/segmented_es.png')
 
     def get_biggest_wall(self):
         width, height = get_image_size(self.empty_room_image_path)
         run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
-        from stage.Wall import Wall
-        return Wall.find_biggest_wall(f'images/preprocessed/segmented_es.png')
+        import stage
+        return stage.Wall.find_biggest_wall(f'images/preprocessed/segmented_es.png')
 
     def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
         from DepthAnything.depth_estimation import image_pixel_to_3d, rotate_3d_point
@@ -52,8 +52,8 @@ class Room:
     def estimate_camera_height(self, camera_angles: tuple[float, float]):
         pitch, roll = camera_angles
         from DepthAnything.depth_estimation import rotate_3d_point, image_pixel_to_3d
-        from stage.Floor import Floor
-        floor_pixel = Floor.find_centroid(f'images/preprocessed/segmented_es.png')
+        import stage
+        floor_pixel = stage.Floor.find_centroid(f'images/preprocessed/segmented_es.png')
         point_3d = image_pixel_to_3d(*floor_pixel, self.empty_room_image_path)
         print(f"Floor Centroid: {floor_pixel} -> {point_3d}")
         rotated_point = rotate_3d_point(point_3d, -pitch, -roll)
@@ -156,10 +156,10 @@ class Room:
         # cv2.destroyAllWindows()
 
     def add_curtains(self, camera_height, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        from stage.Furniture import Curtain
+        import stage
         from tools import calculate_angle_from_top_view, get_image_size, convert_png_to_mask, overlay_masks, image_overlay
         pitch_rad, roll_rad = camera_angles_rad
-        curtain = Curtain()
+        curtain = stage.Curtain()
         segmented_es_path = f'images/preprocessed/segmented_es.png'
         Room.save_windows_mask(segmented_es_path, f'images/preprocessed/windows_mask.png')
         pixels_for_placing = curtain.find_placement_pixel(
@@ -178,7 +178,7 @@ class Room:
                     render_parameters['resolution_x'] = width
                     render_parameters['resolution_y'] = height
                     curtains_height = camera_height + render_parameters['obj_offsets'][2]
-                    curtains_height_scale = curtains_height / Curtain.default_height
+                    curtains_height_scale = curtains_height / stage.Curtain.default_height
                     render_parameters['obj_scale'] = render_parameters['obj_scale'][0], render_parameters['obj_scale'][
                         1], curtains_height_scale
                     curtain_image = curtain.request_blender_render(render_parameters)
@@ -192,14 +192,13 @@ class Room:
                 print(f"{e}, we skip adding curtains for a window.")
 
     def add_plant(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        from stage.Furniture import Plant
-        from stage.Floor import Floor
+        import stage
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         pitch_rad, roll_rad = camera_angles_rad
-        plant = Plant()
+        plant = stage.Plant()
         seg_image_path = f'images/preprocessed/segmented_es.png'
         save_path = 'images/preprocessed/floor_mask.png'
-        Floor.save_mask(seg_image_path, save_path)
+        stage.Floor.save_mask(seg_image_path, save_path)
         pixels_for_placing = plant.find_placement_pixel(save_path)
         print(f"PLANT placement pixels: {pixels_for_placing}")
         import random
@@ -220,10 +219,10 @@ class Room:
         combined_image.save(prerequisite_path)
 
     def add_bed(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        from stage.Furniture import Bed
+        import stage
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         pitch_rad, roll_rad = camera_angles_rad
-        bed = Bed()
+        bed = stage.Bed()
         wall = self.get_biggest_wall()
         render_directory = f'images/preprocessed'
         wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
@@ -244,10 +243,10 @@ class Room:
         combined_image.save(prerequisite_path)
 
     def add_sofa_with_table(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        from stage.Furniture import SofaWithTable
+        import stage
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         pitch_rad, roll_rad = camera_angles_rad
-        sofa_with_table = SofaWithTable()
+        sofa_with_table = stage.SofaWithTable()
         wall = self.get_biggest_wall()
         render_directory = f'images/preprocessed/'
         wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
@@ -268,16 +267,15 @@ class Room:
         combined_image.save(prerequisite_path)
 
     def add_kitchen_table_with_chairs(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        from stage.Furniture import KitchenTableWithChairs
-        from stage.Floor import Floor
+        import stage
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         import random
         pitch_rad, roll_rad = camera_angles_rad
 
-        kitchen_table_with_chairs = KitchenTableWithChairs()
+        kitchen_table_with_chairs = stage.KitchenTableWithChairs()
         seg_image_path = f'images/preprocessed/segmented_es.png'
         save_path = 'images/preprocessed/floor_mask.png'
-        Floor.save_mask(seg_image_path, save_path)
+        stage.Floor.save_mask(seg_image_path, save_path)
 
         kitchen_table_with_chairs.find_placement_pixel_from_floor_layout('images/preprocessed/floor_layout.png')
 
