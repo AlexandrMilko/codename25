@@ -1,6 +1,5 @@
 from stage.Room import Room
 from stage.Floor import Floor
-from stage.Furniture import Furniture, Curtain, Plant, SofaWithTable
 from tools import calculate_angle_from_top_view, get_image_size, create_mask_of_size, convert_png_to_mask, overlay_masks
 import numpy as np
 import os
@@ -21,7 +20,7 @@ class LivingRoom(Room):
         # Add time for Garbage Collector
         time.sleep(5)
 
-        from stage.DepthAnything.depth_estimation import image_pixels_to_point_cloud, depth_ply_path, depth_npy_path
+        from src.DepthAnything.depth_estimation import image_pixels_to_point_cloud, depth_ply_path, depth_npy_path
         image_pixels_to_point_cloud(self.empty_room_image_path)
         floor_layout_path = 'images/preprocessed/floor_layout.png'
         self.save_floor_layout_image(depth_ply_path, depth_npy_path, floor_layout_path)
@@ -29,7 +28,7 @@ class LivingRoom(Room):
         # Add time for Garbage Collector
         time.sleep(5)
 
-        # from stage.DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
+        # from DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
         # image_pixels_to_3d(self.empty_room_image_path, "my_3d_space.txt")
         # rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", -pitch_rad, -roll_rad)
 

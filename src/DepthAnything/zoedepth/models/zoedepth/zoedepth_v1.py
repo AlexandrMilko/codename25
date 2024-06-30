@@ -26,14 +26,14 @@ import itertools
 
 import torch
 import torch.nn as nn
-from stage.DepthAnything.zoedepth.models.depth_model import DepthModel
-from stage.DepthAnything.zoedepth.models.base_models.midas import MidasCore
-from stage.DepthAnything.zoedepth.models.base_models.depth_anything import DepthAnythingCore
-from stage.DepthAnything.zoedepth.models.layers.attractor import AttractorLayer, AttractorLayerUnnormed
-from stage.DepthAnything.zoedepth.models.layers.dist_layers import ConditionalLogBinomial
-from stage.DepthAnything.zoedepth.models.layers.localbins_layers import (Projector, SeedBinRegressor,
+from DepthAnything.zoedepth.models.depth_model import DepthModel
+from DepthAnything.zoedepth.models.base_models.midas import MidasCore
+from DepthAnything.zoedepth.models.base_models.depth_anything import DepthAnythingCore
+from DepthAnything.zoedepth.models.layers.attractor import AttractorLayer, AttractorLayerUnnormed
+from DepthAnything.zoedepth.models.layers.dist_layers import ConditionalLogBinomial
+from DepthAnything.zoedepth.models.layers.localbins_layers import (Projector, SeedBinRegressor,
                                             SeedBinRegressorUnnormed)
-from stage.DepthAnything.zoedepth.models.model_io import load_state_from_resource
+from DepthAnything.zoedepth.models.model_io import load_state_from_resource
 
 
 class ZoeDepth(DepthModel):

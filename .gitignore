@@ -15,7 +15,7 @@ src/green_screen/preprocess/__pycache__/
 src/instance/site.db
 src/UprightNet/checkpoints
 src/UprightNet/.idea
-src/stage/DepthAnything/zoedepth/checkpoints
+src/DepthAnything/zoedepth/checkpoints
 src/UprightNet/imgs/normal_pair/users.png
 src/UprightNet/imgs/precomputed_crop_hw/users.txt
 src/UprightNet/imgs/rgb/users.png
