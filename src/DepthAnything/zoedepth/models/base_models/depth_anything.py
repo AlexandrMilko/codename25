@@ -26,7 +26,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from torchvision.transforms import Normalize
-from stage.DepthAnything.zoedepth.models.base_models.dpt_dinov2.dpt import DPT_DINOv2
+from DepthAnything.zoedepth.models.base_models.dpt_dinov2.dpt import DPT_DINOv2
 
 
 def denormalize(x):
@@ -341,7 +341,7 @@ class DepthAnythingCore(nn.Module):
         
         depth_anything = DPT_DINOv2(out_channels=[256, 512, 1024, 1024], use_clstoken=False)
 
-        state_dict = torch.load('stage/DepthAnything/zoedepth/checkpoints/depth_anything_metric_depth_indoor.pt', map_location='cpu')
+        state_dict = torch.load('DepthAnything/zoedepth/checkpoints/depth_anything_metric_depth_indoor.pt', map_location='cpu')
 
         corrected_state_dict = {key.replace('core.core.', ''): value for key, value in state_dict['model'].items()}
         keys_to_remove = [

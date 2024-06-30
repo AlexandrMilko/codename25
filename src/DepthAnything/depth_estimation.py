@@ -2,8 +2,8 @@ import argparse
 import time
 
 from PIL import Image
-from stage.DepthAnything.zoedepth.models.builder import build_model
-from stage.DepthAnything.zoedepth.utils.config import get_config
+from DepthAnything.zoedepth.models.builder import build_model
+from DepthAnything.zoedepth.utils.config import get_config
 import torchvision.transforms as transforms
 import torch
 import gc
@@ -11,8 +11,8 @@ import numpy as np
 from tools import get_image_size
 import open3d as o3d
 
-depth_npy_path = 'stage/DepthAnything/zoedepth/depth.npy'
-depth_ply_path = 'stage/DepthAnything/zoedepth/depth.ply'
+depth_npy_path = 'DepthAnything/zoedepth/depth.npy'
+depth_ply_path = 'DepthAnything/zoedepth/depth.ply'
 
 def image_pixel_to_3d(x, y, image_path, depth_npy_path=depth_npy_path):
     w, h = get_image_size(image_path)
@@ -97,7 +97,7 @@ def image_pixels_to_depth(image_path, depth_npy_path=depth_npy_path):
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--model", type=str, default='zoedepth', help="Name of the model to test")
     parser.add_argument("-p", "--pretrained_resource", type=str,
-                        default='local::./stage/DepthAnything/zoedepth/checkpoints/depth_anything_metric_depth_indoor.pt',
+                        default='local::./DepthAnything/zoedepth/checkpoints/depth_anything_metric_depth_indoor.pt',
                         help="Pretrained resource to use for fetching weights.")
 
     args = parser.parse_args()
@@ -136,7 +136,7 @@ def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--model", type=str, default='zoedepth', help="Name of the model to test")
     parser.add_argument("-p", "--pretrained_resource", type=str,
-                        default='local::./stage/DepthAnything/zoedepth/checkpoints/depth_anything_metric_depth_indoor.pt',
+                        default='local::./DepthAnything/zoedepth/checkpoints/depth_anything_metric_depth_indoor.pt',
                         help="Pretrained resource to use for fetching weights.")
 
     args = parser.parse_args()

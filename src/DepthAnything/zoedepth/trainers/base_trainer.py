@@ -37,8 +37,8 @@ import torch.optim as optim
 import wandb
 from tqdm import tqdm
 
-from stage.DepthAnything.zoedepth.utils.config import flatten
-from stage.DepthAnything.zoedepth.utils.misc import RunningAverageDict, colorize, colors
+from DepthAnything.zoedepth.utils.config import flatten
+from DepthAnything.zoedepth.utils.misc import RunningAverageDict, colorize, colors
 
 
 def is_rank_zero(args):
@@ -72,7 +72,7 @@ class BaseTrainer:
         import glob
         import os
 
-        from stage.DepthAnything.zoedepth.models.model_io import load_wts
+        from DepthAnything.zoedepth.models.model_io import load_wts
 
         if hasattr(self.config, "checkpoint"):
             checkpoint = self.config.checkpoint
