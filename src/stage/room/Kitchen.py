@@ -1,4 +1,4 @@
-import stage
+from stage import *
 from tools import calculate_angle_from_top_view, get_image_size, create_mask_of_size, convert_png_to_mask, overlay_masks
 import numpy as np
 import os

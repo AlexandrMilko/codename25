@@ -344,7 +344,7 @@ def get_max_possible_size(input_path, target_resolution=MAX_CONTROLNET_IMAGE_RES
     return width, height
 
 def apply_style(empty_space, room_choice, style_budget_choice):
-    import stage
+    from stage import *
     es_path = f"images/{empty_space}"
     if room_choice.lower() == "bedroom":
         room = stage.Bedroom(es_path)

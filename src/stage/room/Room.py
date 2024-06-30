@@ -32,13 +32,13 @@ class Room:
     def get_walls(self):
         width, height = get_image_size(self.empty_room_image_path)
         run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
-        import stage
+        from stage import *
         return stage.Wall.find_walls(f'images/preprocessed/segmented_es.png')
 
     def get_biggest_wall(self):
         width, height = get_image_size(self.empty_room_image_path)
         run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
-        import stage
+        from stage import *
         return stage.Wall.find_biggest_wall(f'images/preprocessed/segmented_es.png')
 
     def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
@@ -52,7 +52,7 @@ class Room:
     def estimate_camera_height(self, camera_angles: tuple[float, float]):
         pitch, roll = camera_angles
         from DepthAnything.depth_estimation import rotate_3d_point, image_pixel_to_3d
-        import stage
+        from stage import *
         floor_pixel = stage.Floor.find_centroid(f'images/preprocessed/segmented_es.png')
         point_3d = image_pixel_to_3d(*floor_pixel, self.empty_room_image_path)
         print(f"Floor Centroid: {floor_pixel} -> {point_3d}")
@@ -156,7 +156,7 @@ class Room:
         # cv2.destroyAllWindows()
 
     def add_curtains(self, camera_height, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        import stage
+        from stage import *
         from tools import calculate_angle_from_top_view, get_image_size, convert_png_to_mask, overlay_masks, image_overlay
         pitch_rad, roll_rad = camera_angles_rad
         curtain = stage.Curtain()
@@ -192,7 +192,7 @@ class Room:
                 print(f"{e}, we skip adding curtains for a window.")
 
     def add_plant(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        import stage
+        from stage import *
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         pitch_rad, roll_rad = camera_angles_rad
         plant = stage.Plant()
@@ -219,7 +219,7 @@ class Room:
         combined_image.save(prerequisite_path)
 
     def add_bed(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        import stage
+        from stage import *
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         pitch_rad, roll_rad = camera_angles_rad
         bed = stage.Bed()
@@ -243,7 +243,7 @@ class Room:
         combined_image.save(prerequisite_path)
 
     def add_sofa_with_table(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        import stage
+        from stage import *
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         pitch_rad, roll_rad = camera_angles_rad
         sofa_with_table = stage.SofaWithTable()
@@ -267,7 +267,7 @@ class Room:
         combined_image.save(prerequisite_path)
 
     def add_kitchen_table_with_chairs(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        import stage
+        from stage import *
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         import random
         pitch_rad, roll_rad = camera_angles_rad
