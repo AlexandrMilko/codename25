@@ -344,18 +344,16 @@ def get_max_possible_size(input_path, target_resolution=MAX_CONTROLNET_IMAGE_RES
     return width, height
 
 def apply_style(empty_space, room_choice, style_budget_choice):
+    import stage
     es_path = f"images/{empty_space}"
     if room_choice.lower() == "bedroom":
-        from stage.Bedroom import Bedroom
-        room = Bedroom(es_path)
+        room = stage.Bedroom(es_path)
         room.stage()
     elif room_choice.lower() == "kitchen":
-        from stage.Kitchen import Kitchen
-        room = Kitchen(es_path)
+        room = stage.Kitchen(es_path)
         room.stage()
     elif room_choice.lower() == "living room":
-        from stage.LivingRoom import LivingRoom
-        room = LivingRoom(es_path)
+        room = stage.LivingRoom(es_path)
         room.stage()
     else:
         raise Exception(f"Wrong Room Type was specified: {room_choice.lower()}")

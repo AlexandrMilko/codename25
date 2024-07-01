@@ -32,17 +32,17 @@ class Room:
     def get_walls(self):
         width, height = get_image_size(self.empty_room_image_path)
         run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
-        from stage.Wall import Wall
-        return Wall.find_walls(f'images/preprocessed/segmented_es.png')
+        import stage.Wall
+        return stage.Wall.find_walls(f'images/preprocessed/segmented_es.png')
 
     def get_biggest_wall(self):
         width, height = get_image_size(self.empty_room_image_path)
         run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
-        from stage.Wall import Wall
-        return Wall.find_biggest_wall(f'images/preprocessed/segmented_es.png')
+        import stage.Wall
+        return stage.Wall.find_biggest_wall(f'images/preprocessed/segmented_es.png')
 
     def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
-        from stage.DepthAnything.depth_estimation import image_pixel_to_3d, rotate_3d_point
+        from DepthAnything.depth_estimation import image_pixel_to_3d, rotate_3d_point
         print(self.empty_room_image_path, pixel, "IMAGE PATH and PIXEL")
         target_point = image_pixel_to_3d(*pixel, self.empty_room_image_path)
         # We rotate it back to compensate our camera rotation
@@ -51,9 +51,9 @@ class Room:
 
     def estimate_camera_height(self, camera_angles: tuple[float, float]):
         pitch, roll = camera_angles
-        from stage.DepthAnything.depth_estimation import rotate_3d_point, image_pixel_to_3d
-        from stage.Floor import Floor
-        floor_pixel = Floor.find_centroid(f'images/preprocessed/segmented_es.png')
+        from DepthAnything.depth_estimation import rotate_3d_point, image_pixel_to_3d
+        import stage.Floor
+        floor_pixel = stage.Floor.find_centroid(f'images/preprocessed/segmented_es.png')
         point_3d = image_pixel_to_3d(*floor_pixel, self.empty_room_image_path)
         print(f"Floor Centroid: {floor_pixel} -> {point_3d}")
         rotated_point = rotate_3d_point(point_3d, -pitch, -roll)
@@ -156,7 +156,7 @@ class Room:
         # cv2.destroyAllWindows()
 
     def add_curtains(self, camera_height, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        from stage.Furniture import Curtain
+        from stage.furniture.Curtain import Curtain
         from tools import calculate_angle_from_top_view, get_image_size, convert_png_to_mask, overlay_masks, image_overlay
         pitch_rad, roll_rad = camera_angles_rad
         curtain = Curtain()
@@ -192,7 +192,7 @@ class Room:
                 print(f"{e}, we skip adding curtains for a window.")
 
     def add_plant(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        from stage.Furniture import Plant
+        from stage.furniture.Plant import Plant
         from stage.Floor import Floor
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         pitch_rad, roll_rad = camera_angles_rad
@@ -220,7 +220,7 @@ class Room:
         combined_image.save(prerequisite_path)
 
     def add_bed(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        from stage.Furniture import Bed
+        from stage.furniture.Bed import Bed
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         pitch_rad, roll_rad = camera_angles_rad
         bed = Bed()
@@ -244,7 +244,7 @@ class Room:
         combined_image.save(prerequisite_path)
 
     def add_sofa_with_table(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        from stage.Furniture import SofaWithTable
+        from stage.furniture.SofaWithTable import SofaWithTable
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         pitch_rad, roll_rad = camera_angles_rad
         sofa_with_table = SofaWithTable()
@@ -268,7 +268,7 @@ class Room:
         combined_image.save(prerequisite_path)
 
     def add_kitchen_table_with_chairs(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        from stage.Furniture import KitchenTableWithChairs
+        from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
         from stage.Floor import Floor
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         import random

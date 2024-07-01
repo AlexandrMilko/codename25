@@ -25,9 +25,9 @@
 import json
 import os
 
-from stage.DepthAnything.zoedepth.utils.easydict import EasyDict as edict
+from DepthAnything.zoedepth.utils.easydict import EasyDict as edict
 
-from stage.DepthAnything.zoedepth.utils.arg_utils import infer_type
+from DepthAnything.zoedepth.utils.arg_utils import infer_type
 import pathlib
 import platform
 
