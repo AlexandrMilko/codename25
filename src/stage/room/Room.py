@@ -156,10 +156,10 @@ class Room:
         # cv2.destroyAllWindows()
 
     def add_curtains(self, camera_height, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        import stage.Curtain
+        from stage.furniture.Curtain import Curtain
         from tools import calculate_angle_from_top_view, get_image_size, convert_png_to_mask, overlay_masks, image_overlay
         pitch_rad, roll_rad = camera_angles_rad
-        curtain = stage.Curtain()
+        curtain = Curtain()
         segmented_es_path = f'images/preprocessed/segmented_es.png'
         Room.save_windows_mask(segmented_es_path, f'images/preprocessed/windows_mask.png')
         pixels_for_placing = curtain.find_placement_pixel(
@@ -178,7 +178,7 @@ class Room:
                     render_parameters['resolution_x'] = width
                     render_parameters['resolution_y'] = height
                     curtains_height = camera_height + render_parameters['obj_offsets'][2]
-                    curtains_height_scale = curtains_height / stage.Curtain.default_height
+                    curtains_height_scale = curtains_height / Curtain.default_height
                     render_parameters['obj_scale'] = render_parameters['obj_scale'][0], render_parameters['obj_scale'][
                         1], curtains_height_scale
                     curtain_image = curtain.request_blender_render(render_parameters)
@@ -192,14 +192,14 @@ class Room:
                 print(f"{e}, we skip adding curtains for a window.")
 
     def add_plant(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        import stage.Plant
-        import stage.Floor
+        from stage.furniture.Plant import Plant
+        from stage.Floor import Floor
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         pitch_rad, roll_rad = camera_angles_rad
-        plant = stage.Plant()
+        plant = Plant()
         seg_image_path = f'images/preprocessed/segmented_es.png'
         save_path = 'images/preprocessed/floor_mask.png'
-        stage.Floor.save_mask(seg_image_path, save_path)
+        Floor.save_mask(seg_image_path, save_path)
         pixels_for_placing = plant.find_placement_pixel(save_path)
         print(f"PLANT placement pixels: {pixels_for_placing}")
         import random
@@ -220,10 +220,10 @@ class Room:
         combined_image.save(prerequisite_path)
 
     def add_bed(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        import stage.Bed
+        from stage.furniture.Bed import Bed
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         pitch_rad, roll_rad = camera_angles_rad
-        bed = stage.Bed()
+        bed = Bed()
         wall = self.get_biggest_wall()
         render_directory = f'images/preprocessed'
         wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
@@ -244,10 +244,10 @@ class Room:
         combined_image.save(prerequisite_path)
 
     def add_sofa_with_table(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        import stage.SofaWithTable
+        from stage.furniture.SofaWithTable import SofaWithTable
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         pitch_rad, roll_rad = camera_angles_rad
-        sofa_with_table = stage.SofaWithTable()
+        sofa_with_table = SofaWithTable()
         wall = self.get_biggest_wall()
         render_directory = f'images/preprocessed/'
         wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
@@ -268,16 +268,16 @@ class Room:
         combined_image.save(prerequisite_path)
 
     def add_kitchen_table_with_chairs(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        import stage.KitchenTableWithChairs
-        import stage.Floor
+        from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
+        from stage.Floor import Floor
         from tools import convert_png_to_mask, image_overlay, overlay_masks
         import random
         pitch_rad, roll_rad = camera_angles_rad
 
-        kitchen_table_with_chairs = stage.KitchenTableWithChairs()
+        kitchen_table_with_chairs = KitchenTableWithChairs()
         seg_image_path = f'images/preprocessed/segmented_es.png'
         save_path = 'images/preprocessed/floor_mask.png'
-        stage.Floor.save_mask(seg_image_path, save_path)
+        Floor.save_mask(seg_image_path, save_path)
 
         kitchen_table_with_chairs.find_placement_pixel_from_floor_layout('images/preprocessed/floor_layout.png')
 
