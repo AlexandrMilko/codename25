@@ -1,6 +1,4 @@
-from stage.Room import Room
-from stage.Floor import Floor
-from stage.Furniture import Furniture, Bed, Curtain, Plant
+from stage.room.Room import Room
 from tools import calculate_angle_from_top_view, get_image_size, create_mask_of_size, convert_png_to_mask, overlay_masks
 import numpy as np
 import os
@@ -8,8 +6,10 @@ from math import radians
 import time
 
 from PIL import Image
+from tools import image_overlay
 
-class Bedroom(Room):
+
+class Kitchen(Room):
 
     def stage(self):
         roll, pitch = np.negative(np.degrees(self.find_roll_pitch()))
@@ -19,7 +19,7 @@ class Bedroom(Room):
         # Add time for Garbage Collector
         time.sleep(5)
 
-        from stage.DepthAnything.depth_estimation import image_pixels_to_point_cloud, depth_ply_path, depth_npy_path
+        from DepthAnything.depth_estimation import image_pixels_to_point_cloud, depth_ply_path, depth_npy_path
         image_pixels_to_point_cloud(self.empty_room_image_path)
         floor_layout_path = 'images/preprocessed/floor_layout.png'
         self.save_floor_layout_image(depth_ply_path, depth_npy_path, floor_layout_path)
@@ -27,7 +27,7 @@ class Bedroom(Room):
         # Add time for Garbage Collector
         time.sleep(5)
 
-        # from stage.DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
+        # from DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
         # image_pixels_to_3d(self.empty_room_image_path, "my_3d_space.txt")
         # rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", -pitch_rad, -roll_rad)
 
@@ -61,11 +61,10 @@ class Bedroom(Room):
         # Add time for Garbage Collector
         time.sleep(5)
 
-        # Add Bed
-        self.add_bed((pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
+        # Add kitchen_table_with_chairs
+        self.add_kitchen_table_with_chairs((pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
 
-        # Create windows mask for staged room
-        run_preprocessor("seg_ofade20k", prerequisite_path, "seg_prerequisite.png", height)
+        run_preprocessor("seg_ofade20k", prerequisite_path, "seg_prerequisite.png", res=height)
         segmented_es_path = f'images/preprocessed/seg_prerequisite.png'
         Room.save_windows_mask(segmented_es_path,
                                f'images/preprocessed/windows_mask_inpainting.png')

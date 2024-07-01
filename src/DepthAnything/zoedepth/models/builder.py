@@ -23,7 +23,7 @@
 # File author: Shariq Farooq Bhat
 
 from importlib import import_module
-from stage.DepthAnything.zoedepth.models.depth_model import DepthModel
+from DepthAnything.zoedepth.models.depth_model import DepthModel
 
 def build_model(config) -> DepthModel:
     """Builds a model from a config. The model is specified by the model name and version in the config. The model is then constructed using the build_from_config function of the model interface.
@@ -35,7 +35,7 @@ def build_model(config) -> DepthModel:
     Returns:
         torch.nn.Module: Model corresponding to name and version as specified in config
     """
-    module_name = f"stage.DepthAnything.zoedepth.models.{config.model}"
+    module_name = f"DepthAnything.zoedepth.models.{config.model}"
     try:
         module = import_module(module_name)
     except ModuleNotFoundError as e:

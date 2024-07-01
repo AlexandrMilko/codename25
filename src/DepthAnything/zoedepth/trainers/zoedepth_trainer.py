@@ -26,10 +26,10 @@ import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
 
-from stage.DepthAnything.zoedepth.trainers.loss import GradL1Loss, SILogLoss
-from stage.DepthAnything.zoedepth.utils.config import DATASETS_CONFIG
-from stage.DepthAnything.zoedepth.utils.misc import compute_metrics
-from stage.DepthAnything.zoedepth.data.preprocess import get_black_border
+from DepthAnything.zoedepth.trainers.loss import GradL1Loss, SILogLoss
+from DepthAnything.zoedepth.utils.config import DATASETS_CONFIG
+from DepthAnything.zoedepth.utils.misc import compute_metrics
+from DepthAnything.zoedepth.data.preprocess import get_black_border
 
 from .base_trainer import BaseTrainer
 from torchvision import transforms
