@@ -75,6 +75,23 @@ def submit_post(url: str, data: dict):
     """
     return requests.post(url, data=json.dumps(data))
 
+def resize_image(image, resolution):
+    width, height = image.size
+    new_height = resolution
+    new_width = int((new_height / height) * width)
+    return image.resize((new_width, new_height), Image.LANCZOS)
+
+def decode_image(encoded_image):
+    import io
+    image_data = base64.b64decode(encoded_image)
+    image = Image.open(io.BytesIO(image_data))
+    return image
+
+def encode_image(image):
+    import io
+    buffered = io.BytesIO()
+    image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
 
 def save_encoded_image(b64_image: str, output_path: str):
     """
@@ -82,9 +99,13 @@ def save_encoded_image(b64_image: str, output_path: str):
     """
     with open(output_path, "wb") as image_file:
         image_file.write(base64.b64decode(b64_image))
+def resize_and_save_image(encoded_image, filepath, resolution):
+    image = decode_image(encoded_image)
+    resized_image = resize_image(image, resolution)
+    encoded_resized_image = encode_image(resized_image)
+    save_encoded_image(encoded_resized_image, filepath)
 
-
-def get_encoded_image(image_path):
+def get_encoded_image_from_path(image_path):
     img = cv2.imread(image_path)
     # Encode into PNG and send to ControlNet
     try:
@@ -93,9 +114,8 @@ def get_encoded_image(image_path):
         retval, bytes = cv2.imencode('.jpg', img)
     return base64.b64encode(bytes).decode('utf-8')
 
-
 def run_preprocessor(preprocessor_name, image_path, filename, resolution):
-    input_image = get_encoded_image(image_path)
+    input_image = get_encoded_image_from_path(image_path)
     data = {
         "controlnet_module": preprocessor_name,
         "controlnet_input_images": [input_image],
@@ -109,11 +129,16 @@ def run_preprocessor(preprocessor_name, image_path, filename, resolution):
     output_filepath = os.path.join(output_dir, filename)
 
     # If there was no such dir, we create it and try again
+    encoded_image = response.json()['images'][0]
     try:
-        save_encoded_image(response.json()['images'][0], output_filepath)
+        # IMPORTANT: We resize image everytime,
+        # so if Stable Diffusion sets default resolution of 512, 
+        # when we exceed the limit,
+        # the result would still have same resolution(although, the quality is worse)
+        resize_and_save_image(encoded_image, output_filepath, resolution)
     except FileNotFoundError as e:
         create_directory_if_not_exists(output_dir)
-        save_encoded_image(response.json()['images'][0], output_filepath)
+        resize_and_save_image(encoded_image, output_filepath, resolution)
 
 
 def convert_to_mask(image_path, output_path=None):

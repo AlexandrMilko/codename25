@@ -10,11 +10,11 @@ def get_insane_image_1337():
 
     filename = 'user_image.png'
     directory = f"images/"
-    from tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image
+    from tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image_from_path
     create_directory_if_not_exists(directory)
     file_path = directory + filename
     save_encoded_image(input_image, file_path)
 
     apply_style(filename, room_choice, style_budget_choice)
 
-    return jsonify({'output_image': get_encoded_image('images/applied.jpg')})
+    return jsonify({'output_image': get_encoded_image_from_path('images/applied.jpg')})
