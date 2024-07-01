@@ -103,7 +103,7 @@ class Room:
         combined_mask = cv2.bitwise_or(window_color_mask, blind_color_mask)
 
         _, thresh = cv2.threshold(combined_mask, 127, 255, cv2.THRESH_BINARY)
-        kernel = np.ones((29, 29), np.uint8)
+        kernel = np.ones((151, 151), np.uint8)
         erosion = cv2.erode(thresh, kernel, iterations=1)
         color_mask = cv2.dilate(erosion, kernel, iterations=1)
         # cv2.imshow('gray', img)

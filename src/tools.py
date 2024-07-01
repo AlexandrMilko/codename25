@@ -132,7 +132,7 @@ def run_preprocessor(preprocessor_name, image_path, filename, resolution):
     encoded_image = response.json()['images'][0]
     try:
         # IMPORTANT: We resize image everytime,
-        # so if Stable Diffusion sets default resolution of 512, 
+        # so if Stable Diffusion sets default resolution of 512,
         # when we exceed the limit,
         # the result would still have same resolution(although, the quality is worse)
         resize_and_save_image(encoded_image, output_filepath, resolution)
