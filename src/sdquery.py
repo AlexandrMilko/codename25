@@ -58,9 +58,6 @@ class GreenScreenImageQuery(Query):
         self.stretched_windows_mask_image_b64 = get_encoded_image(stretched_windows_mask_path)
 
     def run(self):
-        # We run segmentation for our prerequisite image to see if segmentation was done correctly
-        run_preprocessor("seg_ofade20k", self.prerequisite_path, "seg_prerequisite.png")
-
         # if self.style in ("Modern", "Art Deco"):
         #     set_xsarchitectural()
         # else:
