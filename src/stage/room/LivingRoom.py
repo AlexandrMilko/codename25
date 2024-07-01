@@ -1,4 +1,4 @@
-import stage.Room
+from stage.room.Room import Room
 from tools import calculate_angle_from_top_view, get_image_size, create_mask_of_size, convert_png_to_mask, overlay_masks
 import numpy as np
 import os
@@ -9,7 +9,7 @@ from PIL import Image
 from tools import image_overlay
 
 
-class LivingRoom(stage.Room):
+class LivingRoom(Room):
 
     def stage(self):
         roll, pitch = np.negative(np.degrees(self.find_roll_pitch()))
@@ -67,5 +67,5 @@ class LivingRoom(stage.Room):
         # Create windows mask for staged room
         run_preprocessor("seg_ofade20k", prerequisite_path, "seg_prerequisite.png", res=height)
         segmented_es_path = f'images/preprocessed/seg_prerequisite.png'
-        stage.Room.save_windows_mask(segmented_es_path,
+        Room.save_windows_mask(segmented_es_path,
                                f'images/preprocessed/windows_mask_inpainting.png')
