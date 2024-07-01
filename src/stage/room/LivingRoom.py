@@ -65,7 +65,7 @@ class LivingRoom(Room):
         self.add_sofa_with_table((pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
 
         # Create windows mask for staged room
-        run_preprocessor("seg_ofade20k", prerequisite_path, "seg_prerequisite.png", res=height)
+        run_preprocessor("seg_ofade20k", prerequisite_path, "seg_prerequisite.png", height)
         segmented_es_path = f'images/preprocessed/seg_prerequisite.png'
         Room.save_windows_mask(segmented_es_path,
                                f'images/preprocessed/windows_mask_inpainting.png')
