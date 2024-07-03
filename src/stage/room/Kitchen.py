@@ -82,17 +82,6 @@ class Kitchen(Room):
         Floor.save_mask(seg_image_path, save_path)
 
         pixels_for_placing = kitchen_table_with_chairs.find_pixel_placement('images/preprocessed/floor_layout.png')
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print(pixels_for_placing)
-
-        # pixels_for_placing = kitchen_table_with_chairs.find_placement_pixel(save_path)
         print(f"KitchenTableWithChairs placement pixel: {pixels_for_placing}")
         wall = self.get_biggest_wall()
         render_directory = f'images/preprocessed/'
