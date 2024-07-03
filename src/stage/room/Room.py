@@ -1,23 +1,30 @@
 import cv2
 from PIL import Image
 import os
-from tools import move_file, run_preprocessor, copy_file, convert_to_mask, overlay_images, create_furniture_mask, get_image_size
+from tools import move_file, run_preprocessor, copy_file, convert_to_mask, overlay_images, create_furniture_mask, \
+    get_image_size
 import numpy as np
 import open3d as o3d
 
+
 class Room:
+    floor_layout_path = 'images/preprocessed/floor_layout.png'
+    depth_image_path = 'DepthAnything/zoedepth/depth.npy'
+
     # BGR, used in segmented images
     window_color = (230, 230, 230)
     door_color = (51, 255, 8)
     floor_color = (50, 50, 80)
     blind_color = (255, 61, 0)  # blind that is set on windows, kinda curtains
-    def __init__(self, empty_room_image_path): # Original image path is an empty space image
+
+    def __init__(self, empty_room_image_path):  # Original image path is an empty space image
         self.empty_room_image_path = empty_room_image_path
 
     def find_roll_pitch(self) -> tuple[float, float]:
         width, height = get_image_size(self.empty_room_image_path)
         run_preprocessor("normal_dsine", self.empty_room_image_path, "users.png", height)
-        copy_file(self.empty_room_image_path, "UprightNet/imgs/rgb/users.png") # We copy it because we will use it later in get_wall method and we want to have access to the image
+        copy_file(self.empty_room_image_path,
+                  "UprightNet/imgs/rgb/users.png")  # We copy it because we will use it later in get_wall method and we want to have access to the image
         move_file(f"images/preprocessed/users.png",
                   "UprightNet/imgs/normal_pair/users.png")
         from UprightNet.infer import get_roll_pitch
@@ -48,6 +55,36 @@ class Room:
         # We rotate it back to compensate our camera rotation
         offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
         return offset_relative_to_camera
+
+    def pixel_to_3d(self, x, y):
+        """
+        Args:
+            x: x coordinate of the pixel
+            y: y coordinate of the pixel
+            # filename: name of file
+
+        Returns:
+            X_3D, Y_3D: coordinates of pixel
+        """
+        # Load the layout image to get dimensions
+        layout_image = Image.open(self.floor_layout_path).convert('RGB')
+        original_width, original_height = layout_image.size
+
+        # Load the depth map
+        depth_image = np.load(self.depth_image_path)
+
+        # Ensure we are getting the correct depth value
+        resized_depth = Image.fromarray(depth_image).resize((original_width, original_height), Image.NEAREST)
+        Z_depth = np.array(resized_depth)[y, x]
+
+        # Compute focal lengths based on original image dimensions
+        FX = original_width * 0.6
+
+        # Compute 3D coordinates
+        X_3D = (x - original_width / 2.1) * Z_depth / FX
+        Z_3D = Z_depth / 1.3
+
+        return X_3D, Z_3D, 0
 
     def estimate_camera_height(self, camera_angles: tuple[float, float]):
         pitch, roll = camera_angles
@@ -157,7 +194,8 @@ class Room:
 
     def add_curtains(self, camera_height, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
         from stage.furniture.Curtain import Curtain
-        from tools import calculate_angle_from_top_view, get_image_size, convert_png_to_mask, overlay_masks, image_overlay
+        from tools import calculate_angle_from_top_view, get_image_size, convert_png_to_mask, overlay_masks, \
+            image_overlay
         pitch_rad, roll_rad = camera_angles_rad
         curtain = Curtain()
         segmented_es_path = f'images/preprocessed/segmented_es.png'
@@ -218,92 +256,3 @@ class Room:
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(plant_image, background_image)
         combined_image.save(prerequisite_path)
-
-    def add_bed(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        from stage.furniture.Bed import Bed
-        from tools import convert_png_to_mask, image_overlay, overlay_masks
-        pitch_rad, roll_rad = camera_angles_rad
-        bed = Bed()
-        wall = self.get_biggest_wall()
-        render_directory = f'images/preprocessed'
-        wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
-        pixel_for_placing = bed.find_placement_pixel(os.path.join(render_directory, 'wall_mask.png'))
-        print(f"BED placement pixel: {pixel_for_placing}")
-        yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
-        render_parameters = (
-            bed.calculate_rendering_parameters(self, pixel_for_placing, yaw_angle, (roll_rad, pitch_rad)))
-        width, height = get_image_size(self.empty_room_image_path)
-        render_parameters['resolution_x'] = width
-        render_parameters['resolution_y'] = height
-        bed_image = bed.request_blender_render(render_parameters)
-        bed_image.save(tmp_mask_path)
-        convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
-        background_image = Image.open(prerequisite_path)
-        combined_image = image_overlay(bed_image, background_image)
-        combined_image.save(prerequisite_path)
-
-    def add_sofa_with_table(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        from stage.furniture.SofaWithTable import SofaWithTable
-        from tools import convert_png_to_mask, image_overlay, overlay_masks
-        pitch_rad, roll_rad = camera_angles_rad
-        sofa_with_table = SofaWithTable()
-        wall = self.get_biggest_wall()
-        render_directory = f'images/preprocessed/'
-        wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
-        pixel_for_placing = sofa_with_table.find_placement_pixel(os.path.join(render_directory, 'wall_mask.png'))
-        print(f"SofaWithTable placement pixel: {pixel_for_placing}")
-        yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
-        render_parameters = (
-            sofa_with_table.calculate_rendering_parameters(self, pixel_for_placing, yaw_angle, (roll_rad, pitch_rad)))
-        width, height = get_image_size(self.empty_room_image_path)
-        render_parameters['resolution_x'] = width
-        render_parameters['resolution_y'] = height
-        sofa_image = sofa_with_table.request_blender_render(render_parameters)
-        sofa_image.save(tmp_mask_path)
-        convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
-        background_image = Image.open(prerequisite_path)
-        combined_image = image_overlay(sofa_image, background_image)
-        combined_image.save(prerequisite_path)
-
-    def add_kitchen_table_with_chairs(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
-        from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
-        from stage.Floor import Floor
-        from tools import convert_png_to_mask, image_overlay, overlay_masks
-        import random
-        pitch_rad, roll_rad = camera_angles_rad
-
-        kitchen_table_with_chairs = KitchenTableWithChairs()
-        seg_image_path = f'images/preprocessed/segmented_es.png'
-        save_path = 'images/preprocessed/floor_mask.png'
-        Floor.save_mask(seg_image_path, save_path)
-
-        kitchen_table_with_chairs.find_placement_pixel_from_floor_layout('images/preprocessed/floor_layout.png')
-
-        pixels_for_placing = kitchen_table_with_chairs.find_placement_pixel(save_path)
-        print(f"KitchenTableWithChairs placement pixel: {pixels_for_placing}")
-        wall = self.get_biggest_wall()
-        render_directory = f'images/preprocessed/'
-        wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
-        yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
-        random_index = random.randint(0, len(pixels_for_placing) - 1)
-        render_parameters = (
-            kitchen_table_with_chairs.calculate_rendering_parameters(self, pixels_for_placing[random_index], yaw_angle,
-                                                                     (roll_rad, pitch_rad)))
-        width, height = get_image_size(self.empty_room_image_path)
-        render_parameters['resolution_x'] = width
-        render_parameters['resolution_y'] = height
-        table_image = kitchen_table_with_chairs.request_blender_render(render_parameters)
-        table_image.save(tmp_mask_path)
-        convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
-        background_image = Image.open(prerequisite_path)
-        combined_image = image_overlay(table_image, background_image)
-        combined_image.save(prerequisite_path)
-
-        # Create windows mask for staged room
-        run_preprocessor("seg_ofade20k", prerequisite_path, "seg_prerequisite.png", height)
-        segmented_es_path = f'images/preprocessed/seg_prerequisite.png'
-        Room.save_windows_mask(segmented_es_path,
-                               f'images/preprocessed/windows_mask_inpainting.png')
