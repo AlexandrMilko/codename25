@@ -44,14 +44,7 @@ class Room:
     def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
         from DepthAnything.depth_estimation import image_pixel_to_3d, rotate_3d_point
         print(self.empty_room_image_path, pixel, "IMAGE PATH and PIXEL")
-
-        import time
-        start_time = time.time()
         target_point = image_pixel_to_3d(*pixel, self.empty_room_image_path)
-        end_time = time.time()
-        execution_time = end_time - start_time
-        print(f"infer_3d Execution time: {execution_time} seconds")
-
         # We rotate it back to compensate our camera rotation
         offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
         return offset_relative_to_camera
@@ -182,6 +175,8 @@ class Room:
                 yaw_angle = calculate_angle_from_top_view(*[self.infer_3d(pixel, pitch_rad, roll_rad) for
                                                             pixel in (left_top_point, right_top_point)])
                 for pixel in (left_top_point, right_top_point):
+                    import time
+                    start_time = time.time()
                     render_parameters = curtain.calculate_rendering_parameters(self, pixel, yaw_angle,
                                                                                (roll_rad, pitch_rad))
                     width, height = get_image_size(self.empty_room_image_path)
@@ -198,6 +193,11 @@ class Room:
                     background_image = Image.open(prerequisite_path)
                     combined_image = image_overlay(curtain_image, background_image)
                     combined_image.save(prerequisite_path)
+
+                    end_time = time.time()
+                    execution_time = end_time - start_time
+                    print(f"One curtain pair Execution time: {execution_time} seconds")
+
             except IndexError as e:
                 print(f"{e}, we skip adding curtains for a window.")
 
