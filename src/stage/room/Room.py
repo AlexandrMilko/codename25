@@ -84,7 +84,7 @@ class Room:
         return number_of_windows
 
     @staticmethod
-    def save_windows_mask(segmented_image_path: str, windows_mask_path: str):
+    def save_windows_mask(segmented_image_path: str, output_windows_mask_path: str):
         image = cv2.imread(segmented_image_path)
         window_rgb_values = Room.window_color
         blind_rgb_values = Room.blind_color
@@ -103,7 +103,7 @@ class Room:
         combined_mask = cv2.bitwise_or(window_color_mask, blind_color_mask)
 
         _, thresh = cv2.threshold(combined_mask, 127, 255, cv2.THRESH_BINARY)
-        width, height = get_image_size(windows_mask_path)
+        width, height = get_image_size(segmented_image_path)
         kernel = np.ones((height // 25, height // 25), np.uint8) # We adjust kernel based on img size
         print(width, height, "WINDOWS IMG WIDTH, HEIGHT")
         print(height // 25, "KERNEL SIZE for window mask denoising")
@@ -118,7 +118,7 @@ class Room:
         bw_mask[color_mask != 0] = 255
 
         # Check if the mask contains white pixels
-        cv2.imwrite(windows_mask_path, bw_mask)
+        cv2.imwrite(output_windows_mask_path, bw_mask)
 
     @staticmethod
     def save_floor_layout_image(ply_path: str, npy_path: str, output_path: str) -> None:
