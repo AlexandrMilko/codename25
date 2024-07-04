@@ -288,7 +288,7 @@ def apply_style(empty_space, room_choice, style_budget_choice):
 
     # Add time for Garbage Collector
     import time
-    time.sleep(5)
+    time.sleep(1)
 
     style, budget = style_budget_choice.split(", ")
     text = f"Residential, {room_choice}, {budget}, {style}"
