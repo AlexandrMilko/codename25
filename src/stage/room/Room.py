@@ -103,8 +103,9 @@ class Room:
         combined_mask = cv2.bitwise_or(window_color_mask, blind_color_mask)
 
         _, thresh = cv2.threshold(combined_mask, 127, 255, cv2.THRESH_BINARY)
-        _, height = get_image_size(windows_mask_path)
+        width, height = get_image_size(windows_mask_path)
         kernel = np.ones((height // 25, height // 25), np.uint8) # We adjust kernel based on img size
+        print(width, height, "WINDOWS IMG WIDTH, HEIGHT")
         print(height // 25, "KERNEL SIZE for window mask denoising")
         erosion = cv2.erode(thresh, kernel, iterations=1)
         color_mask = cv2.dilate(erosion, kernel, iterations=1)
