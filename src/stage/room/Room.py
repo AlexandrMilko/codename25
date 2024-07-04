@@ -179,6 +179,10 @@ class Room:
                     start_time = time.time()
                     render_parameters = curtain.calculate_rendering_parameters(self, pixel, yaw_angle,
                                                                                (roll_rad, pitch_rad))
+                    end_time = time.time()
+                    execution_time = end_time - start_time
+                    print(f"Calculating rendering params Execution time: {execution_time} seconds")
+                    
                     width, height = get_image_size(self.empty_room_image_path)
                     render_parameters['resolution_x'] = width
                     render_parameters['resolution_y'] = height
@@ -193,10 +197,6 @@ class Room:
                     background_image = Image.open(prerequisite_path)
                     combined_image = image_overlay(curtain_image, background_image)
                     combined_image.save(prerequisite_path)
-
-                    end_time = time.time()
-                    execution_time = end_time - start_time
-                    print(f"One curtain pair Execution time: {execution_time} seconds")
 
             except IndexError as e:
                 print(f"{e}, we skip adding curtains for a window.")
