@@ -89,7 +89,7 @@ class LivingRoom(Room):
         sofa_image = sofa_with_table.request_blender_render(render_parameters)
         sofa_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
+        overlay_masks(tmp_mask_path, mask_path, mask_path)
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(sofa_image, background_image)
         combined_image.save(prerequisite_path)
