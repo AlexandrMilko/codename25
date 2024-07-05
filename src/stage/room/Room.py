@@ -1,23 +1,30 @@
 import cv2
 from PIL import Image
 import os
-from tools import move_file, run_preprocessor, copy_file, convert_to_mask, overlay_images, create_furniture_mask, get_image_size
+from tools import move_file, run_preprocessor, copy_file, convert_to_mask, overlay_images, create_furniture_mask, \
+    get_image_size
 import numpy as np
 import open3d as o3d
 
+
 class Room:
+    floor_layout_path = 'images/preprocessed/floor_layout.png'
+    depth_image_path = 'DepthAnything/zoedepth/depth.npy'
+
     # BGR, used in segmented images
     window_color = (230, 230, 230)
     door_color = (51, 255, 8)
     floor_color = (50, 50, 80)
     blind_color = (255, 61, 0)  # blind that is set on windows, kinda curtains
-    def __init__(self, empty_room_image_path): # Original image path is an empty space image
+
+    def __init__(self, empty_room_image_path):  # Original image path is an empty space image
         self.empty_room_image_path = empty_room_image_path
 
     def find_roll_pitch(self) -> tuple[float, float]:
         width, height = get_image_size(self.empty_room_image_path)
         run_preprocessor("normal_dsine", self.empty_room_image_path, "users.png", height)
-        copy_file(self.empty_room_image_path, "UprightNet/imgs/rgb/users.png") # We copy it because we will use it later in get_wall method and we want to have access to the image
+        copy_file(self.empty_room_image_path,
+                  "UprightNet/imgs/rgb/users.png")  # We copy it because we will use it later in get_wall method and we want to have access to the image
         move_file(f"images/preprocessed/users.png",
                   "UprightNet/imgs/normal_pair/users.png")
         from UprightNet.infer import get_roll_pitch
@@ -48,6 +55,36 @@ class Room:
         # We rotate it back to compensate our camera rotation
         offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
         return offset_relative_to_camera
+
+    def pixel_to_3d(self, x, y):
+        """
+        Args:
+            x: x coordinate of the pixel
+            y: y coordinate of the pixel
+            # filename: name of file
+
+        Returns:
+            X_3D, Y_3D: coordinates of pixel
+        """
+        # Load the layout image to get dimensions
+        layout_image = Image.open(self.floor_layout_path).convert('RGB')
+        original_width, original_height = layout_image.size
+
+        # Load the depth map
+        depth_image = np.load(self.depth_image_path)
+
+        # Ensure we are getting the correct depth value
+        resized_depth = Image.fromarray(depth_image).resize((original_width, original_height), Image.NEAREST)
+        Z_depth = np.array(resized_depth)[y, x]
+
+        # Compute focal lengths based on original image dimensions
+        FX = original_width * 0.6
+
+        # Compute 3D coordinates
+        X_3D = (x - original_width / 2.1) * Z_depth / FX
+        Z_3D = Z_depth / 1.3
+
+        return X_3D, Z_3D, 0
 
     def estimate_camera_height(self, camera_angles: tuple[float, float]):
         pitch, roll = camera_angles
@@ -160,7 +197,8 @@ class Room:
 
     def add_curtains(self, camera_height, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
         from stage.furniture.Curtain import Curtain
-        from tools import calculate_angle_from_top_view, get_image_size, convert_png_to_mask, overlay_masks, image_overlay
+        from tools import calculate_angle_from_top_view, get_image_size, convert_png_to_mask, overlay_masks, \
+            image_overlay
         pitch_rad, roll_rad = camera_angles_rad
         curtain = Curtain()
         segmented_es_path = f'images/preprocessed/segmented_es.png'

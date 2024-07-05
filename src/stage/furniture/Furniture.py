@@ -4,6 +4,7 @@ from io import BytesIO
 import requests
 from PIL import Image
 
+
 class Furniture:
     scale = 1, 1, 1
     default_angles = 0, 0, 0
@@ -38,31 +39,30 @@ class Furniture:
         else:
             print("Error:", response.status_code, response.text)
 
+
 class FloorFurniture(Furniture):
-    def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
+    def calculate_rendering_parameters(self, room,
+                                       placement_pixel: tuple[int, int],
                                        yaw_angle: float,
                                        camera_angles_rad: tuple[float, float]):
-        from math import radians
         roll, pitch = camera_angles_rad
         default_angles = self.get_default_angles()
 
-        obj_offsets = room.infer_3d(placement_pixel, pitch,
-                                    roll)  # We set negative rotation to compensate
-        obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(
-            default_angles[2] + yaw_angle)  # In blender, yaw angle is around z axis. z axis is to the top
+        from math import radians
+        # We set negative rotation to compensate
+        obj_offsets = room.pixel_to_3d(*placement_pixel)
+        # In blender, yaw angle is around z axis. z axis is to the top
+        obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(default_angles[2] + yaw_angle)
         obj_scale = self.get_scale()
         # We set opposite
-        camera_angles = radians(
-            90) - pitch, +roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+        # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+        camera_angles = radians(90) - pitch, +roll, 0
         print("Started estimating camera height")
         camera_height = room.estimate_camera_height((pitch, roll))
         print(f"Camera height: {camera_height}")
         camera_location = 0, 0, camera_height
-        obj_offsets_floor = obj_offsets.copy()
-        obj_offsets_floor[2] = 0
 
         print(obj_offsets, "obj_offsets")
-        print(obj_offsets_floor, "obj_offsets for blender with floor z axis")
         print(obj_angles, "obj_angles")
         print(yaw_angle, "yaw_angle")
         print(obj_scale, "obj_scale")
@@ -71,7 +71,8 @@ class FloorFurniture(Furniture):
         print(self.model_path, "model_path")
 
         params = {
-            'obj_offsets': tuple(obj_offsets_floor), # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
+            'obj_offsets': tuple(obj_offsets),
+            # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
             'obj_angles': tuple(obj_angles),
             'obj_scale': tuple(obj_scale),
             'camera_angles': tuple(camera_angles),
@@ -80,6 +81,8 @@ class FloorFurniture(Furniture):
         }
 
         return params
+
+
 class HangingFurniture(Furniture):
     def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
                                        yaw_angle: float,
@@ -108,7 +111,8 @@ class HangingFurniture(Furniture):
         print(self.model_path, "model_path")
 
         params = {
-            'obj_offsets': tuple(obj_offsets), # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
+            'obj_offsets': tuple(obj_offsets),
+            # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
             'obj_angles': tuple(obj_angles),
             'obj_scale': tuple(obj_scale),
             'camera_angles': tuple(camera_angles),
