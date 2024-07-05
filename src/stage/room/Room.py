@@ -186,16 +186,29 @@ class Room:
                         1], curtains_height_scale
                     curtain_image = curtain.request_blender_render(render_parameters)
                     curtain_image.save(tmp_mask_path)
-                    convert_png_to_mask(tmp_mask_path)
+
                     import time
                     start_time = time.time()
-                    overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
-                    background_image = Image.open(prerequisite_path)
-                    combined_image = image_overlay(curtain_image, background_image)
-                    combined_image.save(prerequisite_path)
+                    convert_png_to_mask(tmp_mask_path)
                     end_time = time.time()
                     execution_time = end_time - start_time
-                    print(f"process image Execution time: {execution_time} seconds")
+                    print(f"convert_png_to_mask Execution time: {execution_time} seconds")
+
+                    start_time = time.time()
+                    overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
+                    end_time = time.time()
+                    execution_time = end_time - start_time
+                    print(f"overlay_masks Execution time: {execution_time} seconds")
+                    
+                    background_image = Image.open(prerequisite_path)
+
+                    start_time = time.time()
+                    combined_image = image_overlay(curtain_image, background_image)
+                    end_time = time.time()
+                    execution_time = end_time - start_time
+                    print(f"image_overlay Execution time: {execution_time} seconds")
+
+                    combined_image.save(prerequisite_path)
 
             except IndexError as e:
                 print(f"{e}, we skip adding curtains for a window.")
