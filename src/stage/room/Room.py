@@ -195,11 +195,11 @@ class Room:
                     print(f"convert_png_to_mask Execution time: {execution_time} seconds")
 
                     start_time = time.time()
-                    overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
+                    overlay_masks(tmp_mask_path, mask_path, mask_path)
                     end_time = time.time()
                     execution_time = end_time - start_time
                     print(f"overlay_masks Execution time: {execution_time} seconds")
-                    
+
                     background_image = Image.open(prerequisite_path)
 
                     start_time = time.time()
@@ -236,7 +236,7 @@ class Room:
         plant_image = plant.request_blender_render(render_parameters)
         plant_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
+        overlay_masks(tmp_mask_path, mask_path, mask_path)
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(plant_image, background_image)
         combined_image.save(prerequisite_path)
@@ -260,7 +260,7 @@ class Room:
         bed_image = bed.request_blender_render(render_parameters)
         bed_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
+        overlay_masks(tmp_mask_path, mask_path, mask_path)
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(bed_image, background_image)
         combined_image.save(prerequisite_path)
@@ -284,7 +284,7 @@ class Room:
         sofa_image = sofa_with_table.request_blender_render(render_parameters)
         sofa_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
+        overlay_masks(tmp_mask_path, mask_path, mask_path)
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(sofa_image, background_image)
         combined_image.save(prerequisite_path)
@@ -319,7 +319,7 @@ class Room:
         table_image = kitchen_table_with_chairs.request_blender_render(render_parameters)
         table_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
+        overlay_masks(tmp_mask_path, mask_path, mask_path)
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(table_image, background_image)
         combined_image.save(prerequisite_path)

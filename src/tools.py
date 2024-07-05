@@ -162,16 +162,17 @@ def convert_png_to_mask(image_path, output_path=None):
     # Open the image
     image = Image.open(image_path).convert("RGBA")
 
-    # Create a new image for the mask
-    mask = Image.new("L", image.size, 0)
+    # Convert the image to a numpy array
+    image_array = np.array(image)
 
-    # Get the alpha channel
-    alpha = image.split()[-1]
+    # Extract the alpha channel
+    alpha_channel = image_array[:, :, 3]
 
-    # Set the mask pixels based on alpha channel
-    for y in range(image.height):
-        for x in range(image.width):
-            mask.putpixel((x, y), 255 if alpha.getpixel((x, y)) > 0 else 0)
+    # Create a mask based on the alpha channel
+    mask_array = np.where(alpha_channel > 0, 255, 0).astype(np.uint8)
+
+    # Convert the mask array back to an image
+    mask = Image.fromarray(mask_array, mode='L')
 
     # Save the mask to the specified path or overwrite the original image
     if output_path is None:
@@ -383,30 +384,41 @@ def create_furniture_mask(es_path, furniture_renders_paths: list, furniture_rend
     perform_dilation(save_path, save_path, 32)
 
 
-def overlay_masks(fg_mask_path, bg_mask_path, output_path, coordinates):
+def overlay_masks(fg_mask_path, bg_mask_path, output_path):
     # Open both images
-    img1 = Image.open(fg_mask_path)
-    img2 = Image.open(bg_mask_path)
+    fg_img = Image.open(fg_mask_path).convert("RGBA")
+    bg_img = Image.open(bg_mask_path).convert("RGBA")
 
-    # Remove white background from the first image
-    img1 = img1.convert("RGBA")
-    datas = img1.getdata()
-    newData = []
-    for item in datas:
-        # Change all white (also shades of whites)
-        # pixels to transparent
-        if item[0] == 0 and item[1] == 0 and item[2] == 0:
-            newData.append((255, 255, 255, 0))
-        else:
-            newData.append(item)
-    img1.putdata(newData)
+    # Convert images to numpy arrays
+    fg_img_array = np.array(fg_img)
+    bg_img_array = np.array(bg_img)
 
-    # Paste img1 onto img2 at the specified coordinates
-    img2.paste(img1, coordinates, mask=img1)
+    # Create a mask for black pixels in the foreground image
+    black_mask = (fg_img_array[:, :, :3] == 0).all(axis=2)
 
-    # Save or display the resulting image
-    # img2.show()  # Display the resulting image
-    img2.save(output_path)  # Save the resulting image
+    # Set black pixels to transparent
+    fg_img_array[black_mask] = [255, 255, 255, 0]
+
+    # Determine the dimensions of the overlay area
+    fg_h, fg_w = fg_img_array.shape[:2]
+    bg_h, bg_w = bg_img_array.shape[:2]
+
+    # Ensure the overlay does not exceed background dimensions
+    overlay_h = min(fg_h, bg_h)
+    overlay_w = min(fg_w, bg_w)
+
+    # Overlay the images
+    bg_img_array[:overlay_h, :overlay_w] = np.where(
+        fg_img_array[:overlay_h, :overlay_w, 3:] > 0,
+        fg_img_array[:overlay_h, :overlay_w],
+        bg_img_array[:overlay_h, :overlay_w]
+    )
+
+    # Convert the result back to an image
+    result_img = Image.fromarray(bg_img_array, 'RGBA')
+
+    # Save the resulting image
+    result_img.save(output_path)
 
 
 def overlay_images(fg_image_path, bg_image_path, output_path, coordinates):
