@@ -13,7 +13,7 @@ class KitchenTableWithChairs(FloorFurniture):
         super().__init__(model_path)
 
     @staticmethod
-    def find_pixel_placement(floor_layout_path: str) -> list[tuple[int, int]]:
+    def find_placement_pixel(floor_layout_path: str) -> list[tuple[int, int]]:
         image = cv2.imread(floor_layout_path, cv2.IMREAD_GRAYSCALE)
 
         origin = (image.shape[1] // 2, image.shape[0] // 2)
