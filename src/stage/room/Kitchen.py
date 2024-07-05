@@ -81,7 +81,9 @@ class Kitchen(Room):
         save_path = 'images/preprocessed/floor_mask.png'
         Floor.save_mask(seg_image_path, save_path)
 
-        pixels_for_placing = kitchen_table_with_chairs.find_pixel_placement('images/preprocessed/floor_layout.png')
+        kitchen_table_with_chairs.find_placement_pixel_from_floor_layout('images/preprocessed/floor_layout.png')
+
+        pixels_for_placing = kitchen_table_with_chairs.find_placement_pixel(save_path)
         print(f"KitchenTableWithChairs placement pixel: {pixels_for_placing}")
         wall = self.get_biggest_wall()
         render_directory = f'images/preprocessed/'
@@ -89,7 +91,7 @@ class Kitchen(Room):
         yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
         random_index = random.randint(0, len(pixels_for_placing) - 1)
         render_parameters = (
-            kitchen_table_with_chairs.calculate_rendering_parameters(self, pixels_for_placing[0], yaw_angle,
+            kitchen_table_with_chairs.calculate_rendering_parameters(self, pixels_for_placing[random_index], yaw_angle,
                                                                      (roll_rad, pitch_rad)))
         width, height = get_image_size(self.empty_room_image_path)
         render_parameters['resolution_x'] = width
@@ -97,7 +99,7 @@ class Kitchen(Room):
         table_image = kitchen_table_with_chairs.request_blender_render(render_parameters)
         table_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
+        overlay_masks(tmp_mask_path, mask_path, mask_path)
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(table_image, background_image)
         combined_image.save(prerequisite_path)
