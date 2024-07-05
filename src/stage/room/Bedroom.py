@@ -15,7 +15,7 @@ class Bedroom(Room):
         pitch_rad, roll_rad = radians(pitch), radians(roll)
 
         # Add time for Garbage Collector
-        time.sleep(5)
+        time.sleep(1)
 
         from DepthAnything.depth_estimation import image_pixels_to_point_cloud, depth_ply_path, depth_npy_path
         image_pixels_to_point_cloud(self.empty_room_image_path)
@@ -23,7 +23,7 @@ class Bedroom(Room):
         self.save_floor_layout_image(depth_ply_path, depth_npy_path, floor_layout_path)
 
         # Add time for Garbage Collector
-        time.sleep(5)
+        time.sleep(1)
 
         # from DepthAnything.depth_estimation import image_pixels_to_3d, rotate_3d_points
         # image_pixels_to_3d(self.empty_room_image_path, "my_3d_space.txt")
@@ -51,13 +51,13 @@ class Bedroom(Room):
         self.add_curtains(camera_height, (pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
 
         # Add time for Garbage Collector
-        time.sleep(5)
+        time.sleep(1)
 
         # Add plant
         self.add_plant((pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
 
         # Add time for Garbage Collector
-        time.sleep(5)
+        time.sleep(1)
 
         # Add Bed
         self.add_bed((pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
