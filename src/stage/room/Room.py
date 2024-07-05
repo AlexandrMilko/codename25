@@ -84,7 +84,7 @@ class Room:
         return number_of_windows
 
     @staticmethod
-    def save_windows_mask(segmented_image_path: str, windows_mask_path: str):
+    def save_windows_mask(segmented_image_path: str, output_windows_mask_path: str):
         image = cv2.imread(segmented_image_path)
         window_rgb_values = Room.window_color
         blind_rgb_values = Room.blind_color
@@ -103,7 +103,10 @@ class Room:
         combined_mask = cv2.bitwise_or(window_color_mask, blind_color_mask)
 
         _, thresh = cv2.threshold(combined_mask, 127, 255, cv2.THRESH_BINARY)
-        kernel = np.ones((151, 151), np.uint8)
+        width, height = get_image_size(segmented_image_path)
+        kernel = np.ones((height // 25, height // 25), np.uint8) # We adjust kernel based on img size
+        print(width, height, "WINDOWS IMG WIDTH, HEIGHT")
+        print(height // 25, "KERNEL SIZE for window mask denoising")
         erosion = cv2.erode(thresh, kernel, iterations=1)
         color_mask = cv2.dilate(erosion, kernel, iterations=1)
         # cv2.imshow('gray', img)
@@ -115,7 +118,7 @@ class Room:
         bw_mask[color_mask != 0] = 255
 
         # Check if the mask contains white pixels
-        cv2.imwrite(windows_mask_path, bw_mask)
+        cv2.imwrite(output_windows_mask_path, bw_mask)
 
     @staticmethod
     def save_floor_layout_image(ply_path: str, npy_path: str, output_path: str) -> None:
@@ -184,10 +187,12 @@ class Room:
                     curtain_image = curtain.request_blender_render(render_parameters)
                     curtain_image.save(tmp_mask_path)
                     convert_png_to_mask(tmp_mask_path)
-                    overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
+                    overlay_masks(tmp_mask_path, mask_path, mask_path)
                     background_image = Image.open(prerequisite_path)
                     combined_image = image_overlay(curtain_image, background_image)
+
                     combined_image.save(prerequisite_path)
+
             except IndexError as e:
                 print(f"{e}, we skip adding curtains for a window.")
 
@@ -214,7 +219,7 @@ class Room:
         plant_image = plant.request_blender_render(render_parameters)
         plant_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
+        overlay_masks(tmp_mask_path, mask_path, mask_path)
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(plant_image, background_image)
         combined_image.save(prerequisite_path)
@@ -238,7 +243,7 @@ class Room:
         bed_image = bed.request_blender_render(render_parameters)
         bed_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
+        overlay_masks(tmp_mask_path, mask_path, mask_path)
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(bed_image, background_image)
         combined_image.save(prerequisite_path)
@@ -262,7 +267,7 @@ class Room:
         sofa_image = sofa_with_table.request_blender_render(render_parameters)
         sofa_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
+        overlay_masks(tmp_mask_path, mask_path, mask_path)
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(sofa_image, background_image)
         combined_image.save(prerequisite_path)
@@ -297,7 +302,7 @@ class Room:
         table_image = kitchen_table_with_chairs.request_blender_render(render_parameters)
         table_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path, [0, 0])
+        overlay_masks(tmp_mask_path, mask_path, mask_path)
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(table_image, background_image)
         combined_image.save(prerequisite_path)

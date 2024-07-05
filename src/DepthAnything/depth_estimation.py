@@ -130,7 +130,7 @@ def image_pixels_to_depth(image_path, depth_npy_path=depth_npy_path):
     gc.collect()
     torch.cuda.empty_cache()
     # Add time for Garbage Collector
-    time.sleep(5)
+    time.sleep(1)
 
 def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth_ply_path=depth_ply_path):
     parser = argparse.ArgumentParser()
@@ -192,7 +192,7 @@ def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth
     gc.collect()
     torch.cuda.empty_cache()
     # Add time for Garbage Collector
-    time.sleep(5)
+    time.sleep(1)
 
 
 

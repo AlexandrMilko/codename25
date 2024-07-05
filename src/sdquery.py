@@ -8,11 +8,11 @@ import math
 from tools import create_directory_if_not_exists, min_max_scale, move_file, submit_post, save_encoded_image, get_encoded_image_from_path, run_preprocessor, restart_stable_diffusion, overlay_masks, get_image_size
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
-MAX_CONTROLNET_IMAGE_RESOLUTION = 600
+MAX_CONTROLNET_IMAGE_RESOLUTION = 800
 
 
 class Query:
-    negative_prompt = "(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime), text, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
+    negative_prompt = "ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish, text"
     sampler_name = "DPM2"
 
 class GreenScreenImageQuery(Query):
@@ -33,19 +33,20 @@ class GreenScreenImageQuery(Query):
         self.furniture_mask_path = f'images/preprocessed/{furniture_mask}'
         self.prerequisite_image_b64 = get_encoded_image_from_path(self.prerequisite_path)
         self.furniture_mask_image_b64 = get_encoded_image_from_path(self.furniture_mask_path)
-        # self.width, self.height = get_max_possible_size(self.prerequisite_path)
-        self.width, self.height = get_image_size(self.prerequisite_path)
+        self.width, self.height = get_max_possible_size(self.prerequisite_path)
+        # self.width, self.height = get_image_size(self.prerequisite_path)
 
         space, room, budget, self.style = text.split(", ")
         # self.prompt = f'interior design, {room.lower()}, {self.style.lower()} style, ultra-realistic, global illumination, unreal engine 5, octane render, highly detailed, two tone lighting, <lora:epi_noiseoffset2:1>'
         # self.prompt = f'{self.style.lower()} style, RAW photo, subject, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3, <lora:epi_noiseoffset2:1>'
-        self.prompt = f'{self.style.lower()} {room}'
+        self.prompt = f'{self.style.lower()} style, high-end budget, RAW photo, subject, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3, <lora:epi_noiseoffset2:1>'
+        # self.prompt = f'{self.style.lower()} {room}'
         self.output_filename = output_filename
 
         # Prepare mask for SD
         windows_mask_path = f'images/preprocessed/windows_mask_inpainting.png'
         inpainting_mask_path = f'images/preprocessed/inpainting_mask.png'
-        overlay_masks(windows_mask_path, self.furniture_mask_path, inpainting_mask_path, [0, 0])
+        overlay_masks(windows_mask_path, self.furniture_mask_path, inpainting_mask_path)
         self.inpainting_mask_image_b64 = get_encoded_image_from_path(inpainting_mask_path)
         self.windows_mask_image_b64 = get_encoded_image_from_path(windows_mask_path)
 
@@ -85,7 +86,7 @@ class GreenScreenImageQuery(Query):
             "denoising_strength": self.denoising_strength,
             "width": self.width,
             "height": self.height,
-            # "seed": 123, # TODO add seed, before testing
+            "seed": -1,
             "mask": self.windows_mask_image_b64,
             "inpainting_mask_invert": 1,
             "mask_blur": 1,
@@ -97,82 +98,29 @@ class GreenScreenImageQuery(Query):
                             "image": self.prerequisite_image_b64,
                             "module": "seg_ofade20k",
                             "model": "control_v11p_sd15_seg [e1f51eb9]",
-                            "weight": 1,
-                            "guidance_start": 0,
-                            "guidance_end": 1,
-                            "control_mode": "Balanced",
-                            "processor_res": 512,  # WARNING: TODO change to image height
                             # "low_vram": True,
-                        },
-                        {
-                            "enabled": True,
-                            "image": self.prerequisite_image_b64,
-                            "module": "canny",
-                            "model": "control_v11p_sd15_canny [d14c016b]",
-                            "weight": 1,
+                            "weight": 1.0,
                             "guidance_start": 0,
                             "guidance_end": 1,
-                            "control_mode": "Balanced",
-                            "effective_region_mask": self.inpainting_mask_image_b64,
-                            "threshold_a": 1,
-                            "threshold_b": 150,
-                            "processor_res": 1024  # WARNING: TODO change to image height
+                            "control_mode": "ControlNet is more important",
+                            "processor_res": 512  # WARNING: TODO change to image height
                         },
-                        {
-                            "enabled": True,
-                            "image": self.prerequisite_image_b64,
-                            "module": "depth_anything",
-                            "model": "control_v11f1p_sd15_depth [cfd03158]",
-                            "weight": 1,
-                            "guidance_start": 0,
-                            "guidance_end": 1,
-                            "control_mode": "Balanced",
-                            "processor_res": 512,  # WARNING: TODO change to image height
-                            # "low_vram": True,
-                        }
+                        # {
+                        #     "enabled": True,
+                        #     "image": self.prerequisite_image_b64,
+                        #     "module": "depth_midas",
+                        #     "model": "control_v11f1p_sd15_depth [cfd03158]",
+                        #     "weight": 0.4,
+                        #     "guidance_start": 0.1,
+                        #     "guidance_end": 0.5,
+                        #     "control_mode": "Balanced",
+                        #     "processor_res": 512,  # WARNING: TODO change to image height
+                        #     # "low_vram": True,
+                        # }
                     ]
                 }
             }
         }
-        # data = {
-        #     "prompt": self.prompt,
-        #     "sampler_name": self.sampler_name,
-        #     # "negative_prompt": self.negative_prompt,
-        #     "init_images": [self.prerequisite_image_b64],
-        #     "batch_size": 1,
-        #     "steps": self.steps,
-        #     "cfg_scale": self.cfg_scale,
-        #     "denoising_strength": self.denoising_strength,
-        #     "width": self.width,
-        #     "height": self.height,
-        #     # "seed": 123, # TODO add seed, before testing
-        #     "alwayson_scripts": {
-        #         "controlnet": {
-        #             "args": [
-        #                 {
-        #                     "image": self.prerequisite_image_b64,
-        #                     "module": "seg_ofade20k",
-        #                     "model": "control_v11p_sd15_seg [e1f51eb9]",
-        #                     "weight": 1,
-        #                     "guidance_start": 0,
-        #                     "guidance_end": 1,
-        #                     "control_mode": 0,
-        #                     "processor_res": 512
-        #                 },
-        #                 {
-        #                     "image": self.prerequisite_image_b64,
-        #                     "module": "depth_midas",
-        #                     "model": "control_v11f1p_sd15_depth [cfd03158]",
-        #                     "weight": 1,
-        #                     "guidance_start": 0,
-        #                     "guidance_end": 1,
-        #                     "control_mode": 0,
-        #                     "processor_res": 512
-        #                 }
-        #             ]
-        #         }
-        #     }
-        # }
 
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
@@ -203,10 +151,7 @@ class GreenScreenImageQuery(Query):
             "denoising_strength": self.denoising_strength,
             "width": self.width * 2,
             "height": self.height * 2,
-            # "seed": 123, # TODO add seed, before testing
-            # "mask": self.stretched_windows_mask_image_b64,
-            # "inpainting_mask_invert": 1,
-            # "mask_blur": 1,
+            "seed": -1,
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
@@ -216,35 +161,21 @@ class GreenScreenImageQuery(Query):
                             "module": "seg_ofade20k",
                             "model": "control_v11p_sd15_seg [e1f51eb9]",
                             # "low_vram": True,
-                            "weight": 1, # TODO try setting default settings
-                            "guidance_start": 0,
-                            "guidance_end": 0.8,
-                            "control_mode": "Balanced",
-                            "processor_res": 512 # WARNING: TODO change to image height
-                        },
-                        {
-                            "enabled": True,
-                            "image": self.prerequisite_image_b64,
-                            "module": "canny",
-                            "model": "control_v11p_sd15_canny [d14c016b]",
-                            "weight": 1,
-                            "guidance_start": 0,
-                            "guidance_end": 0.8,
-                            "control_mode": "Balanced",
-                            "effective_region_mask": self.inpainting_mask_image_b64,
-                            "threshold_a": 1,
-                            "threshold_b": 150,
-                            "processor_res": 1024  # WARNING: TODO change to image height
+                            "weight": 0.9,
+                            "guidance_start": 0.1,
+                            "guidance_end": 0.5,
+                            "control_mode": "ControlNet is more important",
+                            "processor_res": 512  # WARNING: TODO change to image height
                         },
                         {
                             "enabled": True,
                             "image": self.prerequisite_image_b64,
                             "module": "depth_anything",
                             "model": "control_v11f1p_sd15_depth [cfd03158]",
-                            "weight": 1,
-                            "guidance_start": 0,
-                            "guidance_end": 0.8,
-                            "control_mode": "Balanced",
+                            "weight": 0.4,
+                            "guidance_start": 0.1,
+                            "guidance_end": 0.5,
+                            "control_mode": "My prompt is more important",
                             "processor_res": 512,  # WARNING: TODO change to image height
                             # "low_vram": True,
                         }
@@ -357,7 +288,7 @@ def apply_style(empty_space, room_choice, style_budget_choice):
 
     # Add time for Garbage Collector
     import time
-    time.sleep(5)
+    time.sleep(1)
 
     style, budget = style_budget_choice.split(", ")
     text = f"Residential, {room_choice}, {budget}, {style}"
