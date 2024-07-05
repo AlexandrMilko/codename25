@@ -351,10 +351,12 @@ def find_lowest_point(points):
 #
 #     return int(pixel_x), int(pixel_y)
 
-
-def create_mask_of_size(width, height):
+def save_mask_of_size(width, height, output_path):
     # Create a new black image with the same size
     black_mask = Image.new("RGB", (width, height), color=(0, 0, 0))
+    print("Saving empty mask to:", output_path)
+    black_mask.save(output_path)
+    print("Empty mask saved successfully!")
     return black_mask
 
 def perform_dilation(input_image_path, output_image_path, kernel_size):
@@ -374,11 +376,7 @@ def create_furniture_mask(es_path, furniture_renders_paths: list, furniture_rend
     try:
         image = Image.open(es_path)
         width, height = image.size
-        empty_mask = create_mask_of_size(width, height)
-        print("Saving empty mask to:", save_path)
-        os.remove(save_path)
-        empty_mask.save(save_path)
-        print("Empty mask saved successfully!")
+        save_mask_of_size(width, height)
     except Exception as e:
         print("An error occurred while saving the mask:", e)
     for i in range(len(furniture_renders_paths)):

@@ -2,7 +2,7 @@ import cv2
 from PIL import Image
 import os
 from tools import move_file, run_preprocessor, copy_file, convert_to_mask, overlay_images, create_furniture_mask, \
-    get_image_size
+    get_image_size, save_mask_of_size
 import numpy as np
 import open3d as o3d
 
@@ -158,7 +158,7 @@ class Room:
         cv2.imwrite(output_windows_mask_path, bw_mask)
 
     @staticmethod
-    def save_floor_layout_image(ply_path: str, npy_path: str, output_path: str) -> None:
+    def save_floor_layout_image(ply_path: str, npy_path: str, output_path="images/preprocessed/floor_layout.png") -> None:
         # Загрузка облака точек
         pcd = o3d.io.read_point_cloud(ply_path)
         points = np.asarray(pcd.points)
@@ -261,3 +261,26 @@ class Room:
         background_image = Image.open(prerequisite_path)
         combined_image = image_overlay(plant_image, background_image)
         combined_image.save(prerequisite_path)
+
+    def prepare_empty_room_data(self):
+        from DepthAnything.depth_estimation import image_pixels_to_point_cloud, depth_ply_path, depth_npy_path, \
+            image_pixels_to_3d, rotate_3d_points
+        roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
+
+        image_pixels_to_point_cloud(self.empty_room_image_path)
+        self.save_floor_layout_image(depth_ply_path, depth_npy_path)
+        # image_pixels_to_3d(self.empty_room_image_path, "my_3d_space.txt")
+        # rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", -pitch_rad, -roll_rad)
+
+        # Segment our empty space room. It is used in Room.save_windows_mask
+        width, height = get_image_size(self.empty_room_image_path)
+        run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
+
+        camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
+
+        # Create an empty mask of same size as image
+        mask_path = f'images/preprocessed/furniture_mask.png'
+        width, height = get_image_size(self.empty_room_image_path)
+        save_mask_of_size(width, height, mask_path)
+
+        return camera_height, pitch_rad, roll_rad, height
