@@ -81,7 +81,7 @@ class Kitchen(Room):
         save_path = 'images/preprocessed/floor_mask.png'
         Floor.save_mask(seg_image_path, save_path)
 
-        kitchen_table_with_chairs.find_placement_pixel_from_floor_layout('images/preprocessed/floor_layout.png')
+        kitchen_table_with_chairs.find_pixel_placement('images/preprocessed/floor_layout.png')
 
         pixels_for_placing = kitchen_table_with_chairs.find_placement_pixel(save_path)
         print(f"KitchenTableWithChairs placement pixel: {pixels_for_placing}")
