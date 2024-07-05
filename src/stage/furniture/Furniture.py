@@ -4,6 +4,8 @@ from io import BytesIO
 import requests
 from PIL import Image
 
+from math import radians
+
 
 class Furniture:
     scale = 1, 1, 1
@@ -48,7 +50,6 @@ class FloorFurniture(Furniture):
         roll, pitch = camera_angles_rad
         default_angles = self.get_default_angles()
 
-        from math import radians
         # We set negative rotation to compensate
         obj_offsets = room.pixel_to_3d(*placement_pixel)
         # In blender, yaw angle is around z axis. z axis is to the top
@@ -61,14 +62,6 @@ class FloorFurniture(Furniture):
         camera_height = room.estimate_camera_height((pitch, roll))
         print(f"Camera height: {camera_height}")
         camera_location = 0, 0, camera_height
-
-        print(obj_offsets, "obj_offsets")
-        print(obj_angles, "obj_angles")
-        print(yaw_angle, "yaw_angle")
-        print(obj_scale, "obj_scale")
-        print(camera_angles, "camera_angles")
-        print(camera_location, "camera_location")
-        print(self.model_path, "model_path")
 
         params = {
             'obj_offsets': tuple(obj_offsets),
@@ -87,7 +80,6 @@ class HangingFurniture(Furniture):
     def calculate_rendering_parameters(self, room, placement_pixel: tuple[int, int],
                                        yaw_angle: float,
                                        camera_angles_rad: tuple[float, float]):
-        from math import radians
         roll, pitch = camera_angles_rad
         default_angles = self.get_default_angles()
 
@@ -101,14 +93,6 @@ class HangingFurniture(Furniture):
             90) - pitch, +roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
         # TODO Perform camera height estimation not here, but in stage() function to save computing power
         camera_location = 0, 0, 0
-
-        print(obj_offsets, "obj_offsets")
-        print(obj_angles, "obj_angles")
-        print(yaw_angle, "yaw_angle")
-        print(obj_scale, "obj_scale")
-        print(camera_angles, "camera_angles")
-        print(camera_location, "camera_location")
-        print(self.model_path, "model_path")
 
         params = {
             'obj_offsets': tuple(obj_offsets),
