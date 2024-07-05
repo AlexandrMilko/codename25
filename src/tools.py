@@ -115,6 +115,7 @@ def get_encoded_image_from_path(image_path):
     return base64.b64encode(bytes).decode('utf-8')
 
 def run_preprocessor(preprocessor_name, image_path, filename, resolution):
+    PREPROCESSOR_RESOLUTION_LIMIT = 1024 # We set this limit to avoid GPU OOM errors
     input_image = get_encoded_image_from_path(image_path)
     data = {
         "controlnet_module": preprocessor_name,
@@ -123,6 +124,9 @@ def run_preprocessor(preprocessor_name, image_path, filename, resolution):
         "controlnet_threshold_a": 64,
         "controlnet_threshold_b": 64
     }
+
+    if resolution > PREPROCESSOR_RESOLUTION_LIMIT: data['controlnet_processor_res'] = PREPROCESSOR_RESOLUTION_LIMIT
+
     preprocessor_url = 'http://127.0.0.1:7861/controlnet/detect'
     response = submit_post(preprocessor_url, data)
     output_dir = f"images/preprocessed"
