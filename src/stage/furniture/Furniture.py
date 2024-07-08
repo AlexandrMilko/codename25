@@ -41,6 +41,28 @@ class Furniture:
         else:
             print("Error:", response.status_code, response.text)
 
+    def calculate_rendering_parameters_without_offsets(self,
+                                       yaw_angle: float,
+                                       camera_angles_rad: tuple[float, float]):
+        roll, pitch = camera_angles_rad
+        default_angles = self.get_default_angles()
+
+        obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(default_angles[2] + yaw_angle)
+        obj_scale = self.get_scale()
+        # We set opposite
+        # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+        camera_angles = radians(90) - pitch, +roll, 0
+
+        params = {
+            # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
+            'obj_angles': tuple(obj_angles),
+            'obj_scale': tuple(obj_scale),
+            'camera_angles': tuple(camera_angles),
+            'model_path': self.model_path
+        }
+
+        return params
+
 
 class FloorFurniture(Furniture):
     def calculate_rendering_parameters(self, room,
@@ -48,30 +70,17 @@ class FloorFurniture(Furniture):
                                        yaw_angle: float,
                                        camera_angles_rad: tuple[float, float]):
         roll, pitch = camera_angles_rad
-        default_angles = self.get_default_angles()
-
         # We set negative rotation to compensate
         obj_offsets = room.pixel_to_3d(*placement_pixel)
-        # In blender, yaw angle is around z axis. z axis is to the top
-        obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(default_angles[2] + yaw_angle)
-        obj_scale = self.get_scale()
-        # We set opposite
-        # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
-        camera_angles = radians(90) - pitch, +roll, 0
+        # TODO Perform camera height estimation not here, but in stage() function to save computing power
         print("Started estimating camera height")
         camera_height = room.estimate_camera_height((pitch, roll))
         print(f"Camera height: {camera_height}")
         camera_location = 0, 0, camera_height
 
-        params = {
-            'obj_offsets': tuple(obj_offsets),
-            # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
-            'obj_angles': tuple(obj_angles),
-            'obj_scale': tuple(obj_scale),
-            'camera_angles': tuple(camera_angles),
-            'camera_location': tuple(camera_location),
-            'model_path': self.model_path
-        }
+        params = self.calculate_rendering_parameters_without_offsets(yaw_angle, camera_angles_rad)
+        params['obj_offsets'] = tuple(obj_offsets)
+        params['camera_location'] = tuple(camera_location)
 
         return params
 
@@ -81,27 +90,12 @@ class HangingFurniture(Furniture):
                                        yaw_angle: float,
                                        camera_angles_rad: tuple[float, float]):
         roll, pitch = camera_angles_rad
-        default_angles = self.get_default_angles()
-
         obj_offsets = room.infer_3d(placement_pixel, pitch,
                                     roll)  # We set negative rotation to compensate
-        obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(
-            default_angles[2] + yaw_angle)  # In blender, yaw angle is around z axis. z axis is to the top
-        obj_scale = self.get_scale()
-        # We set opposite
-        camera_angles = radians(
-            90) - pitch, +roll, 0  # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
-        # TODO Perform camera height estimation not here, but in stage() function to save computing power
         camera_location = 0, 0, 0
 
-        params = {
-            'obj_offsets': tuple(obj_offsets),
-            # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
-            'obj_angles': tuple(obj_angles),
-            'obj_scale': tuple(obj_scale),
-            'camera_angles': tuple(camera_angles),
-            'camera_location': tuple(camera_location),
-            'model_path': self.model_path
-        }
+        params = self.calculate_rendering_parameters_without_offsets(yaw_angle, camera_angles_rad)
+        params['obj_offsets'] = tuple(obj_offsets)
+        params['camera_location'] = tuple(camera_location)
 
         return params
