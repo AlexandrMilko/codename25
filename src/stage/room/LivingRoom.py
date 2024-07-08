@@ -1,5 +1,5 @@
 from stage.room.Room import Room
-from tools import (calculate_angle_from_top_view, get_image_size, create_mask_of_size,
+from tools import (calculate_angle_from_top_view, get_image_size,
                    convert_png_to_mask, overlay_masks, run_preprocessor, save_mask_of_size)
 import numpy as np
 import os
