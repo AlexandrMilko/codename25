@@ -1,11 +1,10 @@
-from tools import (calculate_angle_from_top_view, get_image_size,
-                   convert_png_to_mask, overlay_masks, run_preprocessor, save_mask_of_size)
+from tools import get_image_size, convert_png_to_mask, overlay_masks, run_preprocessor
 from stage.room.Room import Room
 from PIL import Image
 import os
 
-class Kitchen(Room):
 
+class Kitchen(Room):
     def stage(self):
         camera_height, pitch_rad, roll_rad, height = self.prepare_empty_room_data()
 

@@ -5,8 +5,6 @@ import cv2
 
 
 class Curtain(HangingFurniture):
-    scale = 1, 1, 1
-    # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 90
 
     def __init__(self, default_height, model_path):

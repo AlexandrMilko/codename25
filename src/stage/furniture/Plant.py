@@ -1,12 +1,9 @@
 from stage.furniture.Furniture import FloorFurniture
 import cv2
 import numpy as np
-class Plant(FloorFurniture):
-    # We use it to scale the model to metric units
-    scale = 1, 1, 1
-    # We use it to compensate the angle if the model is originally rotated in a wrong way
-    default_angles = 0, 0, 0
 
+
+class Plant(FloorFurniture):
     def __init__(self, model_path='3Ds/other/plant.usdc'):
         super().__init__(model_path)
 

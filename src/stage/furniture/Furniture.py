@@ -1,10 +1,8 @@
-import base64
-from io import BytesIO
-
-import requests
-from PIL import Image
-
 from math import radians
+from io import BytesIO
+from PIL import Image
+import requests
+import base64
 
 
 class Furniture:
