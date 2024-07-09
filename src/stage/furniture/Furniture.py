@@ -51,7 +51,7 @@ class Furniture:
         obj_scale = self.get_scale()
         # We set opposite
         # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
-        camera_angles = radians(90) - pitch, +roll, 0
+        camera_angles = float(radians(90) - pitch), float(+roll), 0 # We convert to float to avoid JSON conversion errors from numpy
 
         params = {
             # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
