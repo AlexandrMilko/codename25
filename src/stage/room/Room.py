@@ -200,7 +200,7 @@ class Room:
         from tools import calculate_angle_from_top_view, get_image_size, convert_png_to_mask, overlay_masks, \
             image_overlay
         pitch_rad, roll_rad = camera_angles_rad
-        curtain = Curtain()
+        curtain = Curtain(2.2, '3Ds/other/curtain.usdc')
         segmented_es_path = f'images/preprocessed/segmented_es.png'
         Room.save_windows_mask(segmented_es_path, f'images/preprocessed/windows_mask.png')
         pixels_for_placing = curtain.find_placement_pixel(
@@ -219,9 +219,10 @@ class Room:
                     render_parameters['resolution_x'] = width
                     render_parameters['resolution_y'] = height
                     curtains_height = camera_height + render_parameters['obj_offsets'][2]
-                    curtains_height_scale = curtains_height / Curtain.default_height
-                    render_parameters['obj_scale'] = render_parameters['obj_scale'][0], render_parameters['obj_scale'][
-                        1], curtains_height_scale
+                    height_scale = curtain.calculate_height_scale(curtains_height)
+                    render_parameters['obj_scale'] = (render_parameters['obj_scale'][0],
+                                                      render_parameters['obj_scale'][1],
+                                                      height_scale)
                     curtain_image = curtain.request_blender_render(render_parameters)
                     curtain_image.save(tmp_mask_path)
                     convert_png_to_mask(tmp_mask_path)

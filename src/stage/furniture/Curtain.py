@@ -1,16 +1,20 @@
 from stage.furniture.Furniture import HangingFurniture
-import cv2
 import numpy as np
 import math
+import cv2
+
 
 class Curtain(HangingFurniture):
     scale = 1, 1, 1
     # We use it to compensate the angle if the model is originally rotated in a wrong way
     default_angles = 0, 0, 90
-    default_height = 2.2  # In meters
 
-    def __init__(self, model_path='3Ds/other/curtain.usdc'):
+    def __init__(self, default_height, model_path):
         super().__init__(model_path)
+        self.default_height = default_height
+
+    def calculate_height_scale(self, curtains_height):
+        return curtains_height / self.default_height
 
     @staticmethod
     def find_perspective_angle(x1, y1, x2, y2):
@@ -45,7 +49,8 @@ class Curtain(HangingFurniture):
             print("Верхняя левая:", top_left)
             print("Верхняя правая:", top_right)
 
-            angle_radians = math.radians(Curtain.find_perspective_angle(top_left[0], top_left[1], top_right[0], top_right[1]))
+            angle_radians = math.radians(
+                Curtain.find_perspective_angle(top_left[0], top_left[1], top_right[0], top_right[1]))
 
             # Вычисление координат точек слева и справа от верхних углов
             right_top_point = (
