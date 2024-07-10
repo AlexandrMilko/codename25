@@ -1,5 +1,5 @@
-# from stage.furniture.Bed import Bed
-# from stage.furniture.Curtain import Curtain
-# from stage.furniture.Plant import Plant
-# from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
-# from stage.furniture.SofaWithTable import SofaWithTable
+from .Bed import Bed
+from .Curtain import Curtain
+from .Plant import Plant
+from .KitchenTableWithChairs import KitchenTableWithChairs
+from .SofaWithTable import SofaWithTable
