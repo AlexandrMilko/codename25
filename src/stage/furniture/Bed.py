@@ -1,10 +1,11 @@
 from stage.furniture.Furniture import FloorFurniture
-import cv2
+from constants import Path
 import numpy as np
+import cv2
 
 
 class Bed(FloorFurniture):
-    def __init__(self, model_path='3Ds/bedroom/bed.usdc'):
+    def __init__(self, model_path=Path.BED_MODEL.value):
         super().__init__(model_path)
 
     @staticmethod

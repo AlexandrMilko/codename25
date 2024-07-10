@@ -1,10 +1,11 @@
 from stage.furniture.Furniture import FloorFurniture
+from constants import Path
 import numpy as np
 import cv2
 
 
 class KitchenTableWithChairs(FloorFurniture):
-    def __init__(self, model_path='3Ds/kitchen/kitchen_table_with_chairs.usdc'):
+    def __init__(self, model_path=Path.KITCHEN_TABLE_WITH_CHAIRS_MODEL.value):
         super().__init__(model_path)
 
     @staticmethod

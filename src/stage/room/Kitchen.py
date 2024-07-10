@@ -1,49 +1,47 @@
-from tools import get_image_size, convert_png_to_mask, overlay_masks, run_preprocessor
+from tools import get_image_size, convert_png_to_mask, overlay_masks, run_preprocessor, image_overlay
 from stage.room.Room import Room
+from constants import Path
 from PIL import Image
-import os
 
 
 class Kitchen(Room):
     def stage(self):
         camera_height, pitch_rad, roll_rad, height = self.prepare_empty_room_data()
 
-        prerequisite_path = f'images/preprocessed/prerequisite.png'
-        tmp_mask_path = f'images/preprocessed/furniture_piece_mask.png'
-        segmented_es_path = f'images/preprocessed/seg_prerequisite.png'
-        mask_path = f'images/preprocessed/furniture_mask.png'
-
         # Add curtains
-        self.add_curtains(camera_height, (pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
+        self.add_curtains(camera_height, (pitch_rad, roll_rad),
+                          Path.FURNITURE_MASK_IMAGE.value,
+                          Path.FURNITURE_PIECE_MASK_IMAGE.value,
+                          Path.PREREQUISITE_IMAGE.value)
 
         # Add plant
         # TODO change algo for plant with new Kyrylo algorithm
         # self.add_plant((pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
 
         # Add kitchen_table_with_chairs
-        self.add_kitchen_table_with_chairs((pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
+        self.add_kitchen_table_with_chairs((pitch_rad, roll_rad),
+                                           Path.FURNITURE_MASK_IMAGE.value,
+                                           Path.FURNITURE_PIECE_MASK_IMAGE.value,
+                                           Path.PREREQUISITE_IMAGE.value)
 
-        run_preprocessor("seg_ofade20k", prerequisite_path, "seg_prerequisite.png", height)
-        Room.save_windows_mask(segmented_es_path,
-                               f'images/preprocessed/windows_mask_inpainting.png')
+        run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, "seg_prerequisite.png", height)
+        Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
     def add_kitchen_table_with_chairs(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
         from stage.Floor import Floor
-        from tools import convert_png_to_mask, image_overlay, overlay_masks
         import random
         pitch_rad, roll_rad = camera_angles_rad
 
         kitchen_table_with_chairs = KitchenTableWithChairs()
-        seg_image_path = f'images/preprocessed/segmented_es.png'
-        save_path = 'images/preprocessed/floor_mask.png'
+        seg_image_path = Path.SEGMENTED_ES_IMAGE.value
+        save_path = Path.FLOOR_MASK_IMAGE.value
         Floor.save_mask(seg_image_path, save_path)
 
-        pixels_for_placing = kitchen_table_with_chairs.find_placement_pixel('images/preprocessed/floor_layout.png')
+        pixels_for_placing = kitchen_table_with_chairs.find_placement_pixel(Path.FLOOR_LAYOUT_IMAGE.value)
         print(f"KitchenTableWithChairs placement pixel: {pixels_for_placing}")
         wall = self.get_biggest_wall()
-        render_directory = f'images/preprocessed/'
-        wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
+        wall.save_mask(Path.WALL_MASK_IMAGE.value)
         yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
         random_index = random.randint(0, len(pixels_for_placing) - 1)
         render_parameters = (
@@ -62,6 +60,4 @@ class Kitchen(Room):
 
         # Create windows mask for staged room
         run_preprocessor("seg_ofade20k", prerequisite_path, "seg_prerequisite.png", height)
-        segmented_es_path = f'images/preprocessed/seg_prerequisite.png'
-        Room.save_windows_mask(segmented_es_path,
-                               f'images/preprocessed/windows_mask_inpainting.png')
+        Room.save_windows_mask(Path.SEGMENTED_ES_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)

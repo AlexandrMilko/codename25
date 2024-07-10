@@ -1,10 +1,11 @@
 from stage.furniture.Furniture import FloorFurniture
-import cv2
+from constants import Path
 import numpy as np
+import cv2
 
 
 class SofaWithTable(FloorFurniture):
-    def __init__(self, model_path='3Ds/living_room/sofa_with_table.usdc'):
+    def __init__(self, model_path=Path.SOFA_WITH_TABLE_MODEL.value):
         super().__init__(model_path)
 
     @staticmethod

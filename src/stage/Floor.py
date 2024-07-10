@@ -1,5 +1,7 @@
+from constants import Path
 import cv2
 import numpy as np
+
 
 
 class Floor:
@@ -30,7 +32,7 @@ class Floor:
 
     @staticmethod
     def find_centroid(seg_image_path):
-        save_path = 'images/preprocessed/floor_mask.png'
+        save_path = Path.FLOOR_MASK_IMAGE.value
         Floor.save_mask(seg_image_path, save_path)
         image = cv2.imread(save_path, cv2.IMREAD_GRAYSCALE)
         contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
