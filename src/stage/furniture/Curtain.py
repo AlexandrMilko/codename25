@@ -1,4 +1,4 @@
-from stage.furniture.Furniture import HangingFurniture
+from .Furniture import HangingFurniture
 import numpy as np
 import math
 import cv2

@@ -1,4 +1,4 @@
-from stage.furniture.Furniture import FloorFurniture
+from .Furniture import FloorFurniture
 from constants import Path
 import numpy as np
 import cv2
