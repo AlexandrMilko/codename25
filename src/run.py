@@ -33,5 +33,7 @@ def is_port_in_use(port: int) -> bool:
 
 
 if __name__ == "__main__":
-    available_port = 5001 if is_port_in_use(port=5000) else 5000
-    app.run(host="0.0.0.0", port=available_port, debug=False)
+    if is_port_in_use(port=5000):
+        app.run(host="0.0.0.0", port=5001, debug=False)
+    else:
+        app.run(host="0.0.0.0", debug=False)
