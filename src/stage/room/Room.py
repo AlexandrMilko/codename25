@@ -1,4 +1,6 @@
-from tools import move_file, run_preprocessor, copy_file, get_image_size, save_mask_of_size
+from tools import (move_file, run_preprocessor, copy_file, get_image_size, save_mask_of_size,
+                   convert_png_to_mask, overlay_masks, image_overlay, calculate_angle_from_top_view)
+from constants import Path
 from PIL import Image
 import open3d as o3d
 import numpy as np
@@ -7,9 +9,6 @@ import os
 
 
 class Room:
-    floor_layout_path = 'images/preprocessed/floor_layout.png'
-    depth_image_path = 'DepthAnything/zoedepth/depth.npy'
-
     # BGR, used in segmented images
     window_color = (230, 230, 230)
     door_color = (51, 255, 8)
@@ -39,13 +38,13 @@ class Room:
         width, height = get_image_size(self.empty_room_image_path)
         run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
         import stage.Wall
-        return stage.Wall.find_walls(f'images/preprocessed/segmented_es.png')
+        return stage.Wall.find_walls(Path.SEGMENTED_ES_IMAGE.value)
 
     def get_biggest_wall(self):
         width, height = get_image_size(self.empty_room_image_path)
         run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
         import stage.Wall
-        return stage.Wall.find_biggest_wall(f'images/preprocessed/segmented_es.png')
+        return stage.Wall.find_biggest_wall(Path.SEGMENTED_ES_IMAGE.value)
 
     def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
         from DepthAnything.depth_estimation import image_pixel_to_3d, rotate_3d_point
@@ -66,11 +65,11 @@ class Room:
             X_3D, Y_3D: coordinates of pixel
         """
         # Load the layout image to get dimensions
-        layout_image = Image.open(self.floor_layout_path).convert('RGB')
+        layout_image = Image.open(Path.FLOOR_LAYOUT_IMAGE.value).convert('RGB')
         original_width, original_height = layout_image.size
 
         # Load the depth map
-        depth_image = np.load(self.depth_image_path)
+        depth_image = np.load(Path.DEPTH_IMAGE.value)
 
         # Ensure we are getting the correct depth value
         resized_depth = Image.fromarray(depth_image).resize((original_width, original_height), Image.NEAREST)
@@ -89,7 +88,7 @@ class Room:
         pitch, roll = camera_angles
         from DepthAnything.depth_estimation import rotate_3d_point, image_pixel_to_3d
         import stage.Floor
-        floor_pixel = stage.Floor.find_centroid(f'images/preprocessed/segmented_es.png')
+        floor_pixel = stage.Floor.find_centroid(Path.SEGMENTED_ES_IMAGE.value)
         point_3d = image_pixel_to_3d(*floor_pixel, self.empty_room_image_path)
         print(f"Floor Centroid: {floor_pixel} -> {point_3d}")
         rotated_point = rotate_3d_point(point_3d, -pitch, -roll)
@@ -157,7 +156,7 @@ class Room:
         cv2.imwrite(output_windows_mask_path, bw_mask)
 
     @staticmethod
-    def save_floor_layout_image(ply_path: str, npy_path: str, output_path="images/preprocessed/floor_layout.png") -> None:
+    def save_floor_layout_image(ply_path: str, npy_path: str, output_path=Path.FLOOR_LAYOUT_IMAGE.value) -> None:
         # Загрузка облака точек
         pcd = o3d.io.read_point_cloud(ply_path)
         points = np.asarray(pcd.points)
@@ -196,14 +195,10 @@ class Room:
 
     def add_curtains(self, camera_height, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
         from stage.furniture.Curtain import Curtain
-        from tools import calculate_angle_from_top_view, get_image_size, convert_png_to_mask, overlay_masks, \
-            image_overlay
         pitch_rad, roll_rad = camera_angles_rad
-        curtain = Curtain(2.2, '3Ds/other/curtain.usdc')
-        segmented_es_path = f'images/preprocessed/segmented_es.png'
-        Room.save_windows_mask(segmented_es_path, f'images/preprocessed/windows_mask.png')
-        pixels_for_placing = curtain.find_placement_pixel(
-            f'images/preprocessed/windows_mask.png')
+        curtain = Curtain(2.2, Path.CURTAIN_MODEL.value)
+        Room.save_windows_mask(Path.SEGMENTED_ES_IMAGE.value, Path.WINDOWS_MASK_IMAGE.value)
+        pixels_for_placing = curtain.find_placement_pixel(Path.WINDOWS_MASK_IMAGE.value)
         print(f"CURTAINS placement pixels: {pixels_for_placing}")
         Image.open(self.empty_room_image_path).save(prerequisite_path)
         for window in pixels_for_placing:
@@ -237,11 +232,10 @@ class Room:
     def add_plant(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
         from stage.furniture.Plant import Plant
         from stage.Floor import Floor
-        from tools import convert_png_to_mask, image_overlay, overlay_masks
         pitch_rad, roll_rad = camera_angles_rad
         plant = Plant()
-        seg_image_path = f'images/preprocessed/segmented_es.png'
-        save_path = 'images/preprocessed/floor_mask.png'
+        seg_image_path = Path.SEGMENTED_ES_IMAGE.value
+        save_path = Path.FLOOR_MASK_IMAGE
         Floor.save_mask(seg_image_path, save_path)
         pixels_for_placing = plant.find_placement_pixel(save_path)
         print(f"PLANT placement pixels: {pixels_for_placing}")
@@ -263,8 +257,8 @@ class Room:
         combined_image.save(prerequisite_path)
 
     def prepare_empty_room_data(self):
-        from DepthAnything.depth_estimation import image_pixels_to_point_cloud, depth_ply_path, depth_npy_path, \
-            image_pixels_to_3d, rotate_3d_points
+        from DepthAnything.depth_estimation import (image_pixels_to_point_cloud, depth_ply_path, depth_npy_path,
+                                                    image_pixels_to_3d, rotate_3d_points)
         roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
 
         image_pixels_to_point_cloud(self.empty_room_image_path)
@@ -279,7 +273,7 @@ class Room:
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 
         # Create an empty mask of same size as image
-        mask_path = f'images/preprocessed/furniture_mask.png'
+        mask_path = Path.FURNITURE_MASK_IMAGE.value
         width, height = get_image_size(self.empty_room_image_path)
         save_mask_of_size(width, height, mask_path)
 

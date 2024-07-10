@@ -1,18 +1,14 @@
-import os
+from tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image_from_path
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from sdquery import apply_style
-from tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image_from_path
+from constants import Path
+import os
+
 
 app = Flask(__name__)
 CORS(app)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", None)
-
-IMAGE_DIRECTORY = 'images'
-INPUT_IMAGE_NAME = 'user_image.png'
-INPUT_IMAGE_PATH = os.path.join(IMAGE_DIRECTORY, INPUT_IMAGE_NAME)
-OUTPUT_IMAGE_NAME ='applied.jpg'
-OUTPUT_IMAGE_PATH = os.path.join(IMAGE_DIRECTORY, OUTPUT_IMAGE_NAME)
 
 
 @app.route("/ai/get_insane_image_1337", methods=['POST'])
@@ -22,11 +18,11 @@ def get_insane_image_1337():
     style_budget_choice = data.get('style_budget_choice')
     input_image = data.get('input_image')
 
-    create_directory_if_not_exists(IMAGE_DIRECTORY)
-    save_encoded_image(input_image, INPUT_IMAGE_PATH)
-    apply_style(INPUT_IMAGE_NAME, room_choice, style_budget_choice)
+    create_directory_if_not_exists(Path.IMAGES_DIR.value)
+    save_encoded_image(input_image, Path.INPUT_IMAGE.value)
+    apply_style(Path.INPUT_IMAGE.value, room_choice, style_budget_choice)
 
-    output_image = get_encoded_image_from_path(OUTPUT_IMAGE_PATH)
+    output_image = get_encoded_image_from_path(Path.OUTPUT_IMAGE.value)
     return jsonify({'output_image': output_image})
 
 
