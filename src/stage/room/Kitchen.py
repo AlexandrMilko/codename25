@@ -1,6 +1,6 @@
 from tools import get_image_size, convert_png_to_mask, overlay_masks, run_preprocessor, image_overlay
-from stage.room.Room import Room
 from constants import Path
+from .Room import Room
 from PIL import Image
 
 
