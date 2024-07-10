@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 
 
-
 class Floor:
     def __init__(self, centroid: list[int], seg_image_path: str):
         self.centroid = centroid

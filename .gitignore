@@ -1,9 +1,9 @@
 .idea/
 src/__pycache__
-src/images/
-src/UprightNet/checkpoints
-src/UprightNet/.idea
-src/DepthAnything/zoedepth/checkpoints
-src/UprightNet/imgs/normal_pair/users.png
-src/UprightNet/imgs/precomputed_crop_hw/users.txt
-src/UprightNet/imgs/rgb/users.png
+images/
+UprightNet/checkpoints
+UprightNet/.idea
+DepthAnything/zoedepth/checkpoints
+UprightNet/imgs/normal_pair/users.png
+UprightNet/imgs/precomputed_crop_hw/users.txt
+UprightNet/imgs/rgb/users.png
