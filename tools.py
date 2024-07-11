@@ -1,11 +1,12 @@
-import os
-import cv2
-import base64
-import requests
-import json
-import shutil
+from constants import Path
 from PIL import Image
 import numpy as np
+import requests
+import base64
+import shutil
+import json
+import cv2
+import os
 
 
 def order_points(pts):
@@ -75,11 +76,13 @@ def submit_post(url: str, data: dict):
     """
     return requests.post(url, data=json.dumps(data))
 
+
 def resize_image(image, resolution):
     width, height = image.size
     new_height = resolution
     new_width = int((new_height / height) * width)
     return image.resize((new_width, new_height), Image.LANCZOS)
+
 
 def decode_image(encoded_image):
     import io
@@ -87,11 +90,13 @@ def decode_image(encoded_image):
     image = Image.open(io.BytesIO(image_data))
     return image
 
+
 def encode_image(image):
     import io
     buffered = io.BytesIO()
     image.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode()
+
 
 def save_encoded_image(b64_image: str, output_path: str):
     """
@@ -99,11 +104,14 @@ def save_encoded_image(b64_image: str, output_path: str):
     """
     with open(output_path, "wb") as image_file:
         image_file.write(base64.b64decode(b64_image))
+
+
 def resize_and_save_image(encoded_image, filepath, resolution):
     image = decode_image(encoded_image)
     resized_image = resize_image(image, resolution)
     encoded_resized_image = encode_image(resized_image)
     save_encoded_image(encoded_resized_image, filepath)
+
 
 def get_encoded_image_from_path(image_path):
     img = cv2.imread(image_path)
@@ -114,8 +122,9 @@ def get_encoded_image_from_path(image_path):
         retval, bytes = cv2.imencode('.jpg', img)
     return base64.b64encode(bytes).decode('utf-8')
 
+
 def run_preprocessor(preprocessor_name, image_path, filename, resolution):
-    PREPROCESSOR_RESOLUTION_LIMIT = 1024 # We set this limit to avoid GPU OOM errors
+    PREPROCESSOR_RESOLUTION_LIMIT = 1024  # We set this limit to avoid GPU OOM errors
     input_image = get_encoded_image_from_path(image_path)
     data = {
         "controlnet_module": preprocessor_name,
@@ -129,7 +138,7 @@ def run_preprocessor(preprocessor_name, image_path, filename, resolution):
 
     preprocessor_url = 'http://127.0.0.1:7861/controlnet/detect'
     response = submit_post(preprocessor_url, data)
-    output_dir = f"images/preprocessed"
+    output_dir = Path.PREPROCESSED_IMAGES_DIR.value
     output_filepath = os.path.join(output_dir, filename)
 
     # If there was no such dir, we create it and try again
@@ -161,6 +170,7 @@ def convert_to_mask(image_path, output_path=None):
         mask.save(image_path)
     else:
         mask.save(output_path)
+
 
 def convert_png_to_mask(image_path, output_path=None):
     # Open the image
@@ -351,11 +361,14 @@ def find_lowest_point(points):
 #
 #     return int(pixel_x), int(pixel_y)
 
-
-def create_mask_of_size(width, height):
+def save_mask_of_size(width, height, output_path):
     # Create a new black image with the same size
     black_mask = Image.new("RGB", (width, height), color=(0, 0, 0))
+    print("Saving empty mask to:", output_path)
+    black_mask.save(output_path)
+    print("Empty mask saved successfully!")
     return black_mask
+
 
 def perform_dilation(input_image_path, output_image_path, kernel_size):
     # Read the input image
@@ -370,15 +383,12 @@ def perform_dilation(input_image_path, output_image_path, kernel_size):
     # Save the result
     cv2.imwrite(output_image_path, dilated_image)
 
+
 def create_furniture_mask(es_path, furniture_renders_paths: list, furniture_renders_offsets: list, save_path):
     try:
         image = Image.open(es_path)
         width, height = image.size
-        empty_mask = create_mask_of_size(width, height)
-        print("Saving empty mask to:", save_path)
-        os.remove(save_path)
-        empty_mask.save(save_path)
-        print("Empty mask saved successfully!")
+        save_mask_of_size(width, height)
     except Exception as e:
         print("An error occurred while saving the mask:", e)
     for i in range(len(furniture_renders_paths)):
@@ -457,10 +467,12 @@ def get_image_size(image_path):
     image.close()
     return width, height
 
+
 def find_abs_min_z(points):
     # Find the minimum z-coordinate among the points
     min_z = np.min(points[:, 2])
     return abs(min_z)
+
 
 def calculate_angle_from_top_view(point1, point2):
     points3d = np.array([point1, point2])
@@ -499,6 +511,7 @@ def image_overlay(furniture_image, background_image):
     combined_image = Image.alpha_composite(background_image.convert('RGBA'), furniture_image.convert('RGBA'))
 
     return combined_image
+
 
 def restart_stable_diffusion(api_url: str):
     import time

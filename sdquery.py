@@ -1,11 +1,10 @@
-import os
-import requests
-
-import cv2
+from tools import (create_directory_if_not_exists, submit_post, save_encoded_image,
+                   get_encoded_image_from_path, overlay_masks)
+from constants import Path
 from PIL import Image
 import math
-
-from tools import create_directory_if_not_exists, min_max_scale, move_file, submit_post, save_encoded_image, get_encoded_image_from_path, run_preprocessor, restart_stable_diffusion, overlay_masks, get_image_size
+import cv2
+import os
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 MAX_CONTROLNET_IMAGE_RESOLUTION = 800
@@ -14,6 +13,7 @@ MAX_CONTROLNET_IMAGE_RESOLUTION = 800
 class Query:
     negative_prompt = "ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish, text"
     sampler_name = "DPM2"
+
 
 class GreenScreenImageQuery(Query):
     """
@@ -26,11 +26,10 @@ class GreenScreenImageQuery(Query):
     cfg_scale = 7
     steps = 20
 
-    def __init__(self, text, output_filename="applied.jpg", prerequisite="prerequisite.png",
-                 furniture_mask="furniture_mask.png"):
+    def __init__(self, text):
         # We will use result image to transform it into new space of user image
-        self.prerequisite_path = f'images/preprocessed/{prerequisite}'
-        self.furniture_mask_path = f'images/preprocessed/{furniture_mask}'
+        self.prerequisite_path = Path.PREREQUISITE_IMAGE.value
+        self.furniture_mask_path = Path.FURNITURE_MASK_IMAGE.value
         self.prerequisite_image_b64 = get_encoded_image_from_path(self.prerequisite_path)
         self.furniture_mask_image_b64 = get_encoded_image_from_path(self.furniture_mask_path)
         self.width, self.height = get_max_possible_size(self.prerequisite_path)
@@ -41,19 +40,19 @@ class GreenScreenImageQuery(Query):
         # self.prompt = f'{self.style.lower()} style, RAW photo, subject, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3, <lora:epi_noiseoffset2:1>'
         self.prompt = f'{self.style.lower()} style, high-end budget, RAW photo, subject, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3, <lora:epi_noiseoffset2:1>'
         # self.prompt = f'{self.style.lower()} {room}'
-        self.output_filename = output_filename
+        self.output_filepath = Path.OUTPUT_IMAGE.value
 
         # Prepare mask for SD
-        windows_mask_path = f'images/preprocessed/windows_mask_inpainting.png'
-        inpainting_mask_path = f'images/preprocessed/inpainting_mask.png'
+        windows_mask_path = Path.WINDOWS_MASK_IMAGE.value
+        inpainting_mask_path = Path.INPAINTING_MASK_IMAGE.value
         overlay_masks(windows_mask_path, self.furniture_mask_path, inpainting_mask_path)
         self.inpainting_mask_image_b64 = get_encoded_image_from_path(inpainting_mask_path)
         self.windows_mask_image_b64 = get_encoded_image_from_path(windows_mask_path)
 
         # We have to stretch the mask for upscaled image
-        stretched_windows_mask_path = f'images/preprocessed/stretched_windows_mask_inpainting.png'
+        stretched_windows_mask_path = Path.STRETCHED_WINDOWS_MASK_INPAINTING.value
         tmp_image = Image.open(windows_mask_path)
-        tmp_image = tmp_image.resize((self.width*2, self.height*2), Image.Resampling.LANCZOS)
+        tmp_image = tmp_image.resize((self.width * 2, self.height * 2), Image.Resampling.LANCZOS)
         tmp_image.save(stretched_windows_mask_path)
         tmp_image.close()
         self.stretched_windows_mask_image_b64 = get_encoded_image_from_path(stretched_windows_mask_path)
@@ -124,8 +123,8 @@ class GreenScreenImageQuery(Query):
 
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
-        output_dir = f"images/preprocessed"
-        output_filepath = os.path.join(output_dir, 'designed.png')
+        output_dir = Path.PREPROCESSED_IMAGES_DIR.value
+        output_filepath = Path.DESIGNED_IMAGE.value
 
         # If there was no such dir, we create it and try again
         try:
@@ -186,21 +185,21 @@ class GreenScreenImageQuery(Query):
 
         img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
-        output_dir = f"images"
-        output_filepath = os.path.join(output_dir, self.output_filename)
+        output_dir = Path.IMAGES_DIR.value
 
         # If there was no such dir, we create it and try again
         try:
-            save_encoded_image(response.json()['images'][0], output_filepath)
+            save_encoded_image(response.json()['images'][0], self.output_filepath)
         except FileNotFoundError as e:
             create_directory_if_not_exists(output_dir)
-            save_encoded_image(response.json()['images'][0], output_filepath)
+            save_encoded_image(response.json()['images'][0], self.output_filepath)
 
     def set_image_size_from_user_image(self, image_path):
         image = cv2.imread(image_path)
         height, width, channels = image.shape
         self.height = height
         self.width = width
+
 
 def set_deliberate():
     print("SET DELIBERATE")
@@ -221,6 +220,7 @@ def set_xsarchitectural():
     data = {"sd_model_checkpoint": "xsarchitectural_v11.ckpt"}
     options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
+
 
 def change_image_size(input_path, output_path, target_size_kb=20):
     # Load the image using Pillow
@@ -271,9 +271,10 @@ def get_max_possible_size(input_path, target_resolution=MAX_CONTROLNET_IMAGE_RES
     # If no resizing was done, return the original dimensions
     return width, height
 
-def apply_style(empty_space, room_choice, style_budget_choice):
+
+def apply_style(es_path, room_choice, style_budget_choice):
     import stage
-    es_path = f"images/{empty_space}"
+
     if room_choice.lower() == "bedroom":
         room = stage.Bedroom(es_path)
         room.stage()
@@ -287,17 +288,17 @@ def apply_style(empty_space, room_choice, style_budget_choice):
         raise Exception(f"Wrong Room Type was specified: {room_choice.lower()}")
 
     # Add time for Garbage Collector
-    import time
-    time.sleep(1)
-
-    style, budget = style_budget_choice.split(", ")
-    text = f"Residential, {room_choice}, {budget}, {style}"
-    query = GreenScreenImageQuery(text)
-    query.run()
-
-    # We restart it to deallocate memory. TODO fix it.
-    try:
-        time.sleep(3)
-        restart_stable_diffusion('http://127.0.0.1:7861')
-    except requests.exceptions.ConnectionError:
-        print("Stable Diffusion restarting")
+    # import time
+    # time.sleep(1)
+    #
+    # style, budget = style_budget_choice.split(", ")
+    # text = f"Residential, {room_choice}, {budget}, {style}"
+    # query = GreenScreenImageQuery(text)
+    # query.run()
+    #
+    # # We restart it to deallocate memory. TODO fix it.
+    # try:
+    #     time.sleep(3)
+    #     restart_stable_diffusion('http://127.0.0.1:7861')
+    # except requests.exceptions.ConnectionError:
+    #     print("Stable Diffusion restarting")

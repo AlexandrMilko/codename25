@@ -1,7 +1,7 @@
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
 from tools import calculate_angle_from_top_view
+import numpy as np
+import cv2
+
 
 class Wall:
     def __init__(self, corners: list[list[int]], image_path: str, centroids: list[list[int]]):
@@ -206,12 +206,13 @@ class Wall:
             for cluster_number in clustered_points.keys():
                 cluster = np.array(clustered_points[cluster_number])
                 center = np.mean(cluster, axis=0, dtype=np.int32)
-                cluster_centers[cluster_number] = np.flip(center) # To make it x,y and not y,x
+                cluster_centers[cluster_number] = np.flip(center)  # To make it x,y and not y,x
 
             walls_corners[label] = [x_y for x_y in cluster_centers.values()]
             walls_centroids[label] = centroids
 
         return walls_corners, walls_centroids
+
     @staticmethod
     def find_left_right_centroids(wall_contour):
         M = cv2.moments(wall_contour)
@@ -231,6 +232,7 @@ class Wall:
             int(moments_right["m10"] / moments_right["m00"]), int(moments_right["m01"] / moments_right["m00"]))
 
         return centroid_left, centroid_right
+
 
 if __name__ == "__main__":
     walls = Wall.find_walls('../test_imgs/39Before.jpg')
