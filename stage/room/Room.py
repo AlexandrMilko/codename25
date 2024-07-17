@@ -193,14 +193,13 @@ class Room:
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
 
-    def add_curtains(self, camera_height, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
+    def calculate_curtains_parameters(self, camera_height, camera_angles_rad: tuple):
         from stage.furniture.Curtain import Curtain
         pitch_rad, roll_rad = camera_angles_rad
         curtain = Curtain(2.2, Path.CURTAIN_MODEL.value)
         Room.save_windows_mask(Path.SEGMENTED_ES_IMAGE.value, Path.WINDOWS_MASK_IMAGE.value)
         pixels_for_placing = curtain.find_placement_pixel(Path.WINDOWS_MASK_IMAGE.value)
         print(f"CURTAINS placement pixels: {pixels_for_placing}")
-        Image.open(self.empty_room_image_path).save(prerequisite_path)
         curtains_parameters = []
         for window in pixels_for_placing:
             try:
@@ -210,35 +209,24 @@ class Room:
                 for pixel in (left_top_point, right_top_point):
                     render_parameters = curtain.calculate_rendering_parameters(self, pixel, yaw_angle,
                                                                                (roll_rad, pitch_rad))
-                    # width, height = get_image_size(self.empty_room_image_path)
-                    # render_parameters['resolution_x'] = width
-                    # render_parameters['resolution_y'] = height
                     curtains_height = camera_height + render_parameters['obj_offsets'][2]
                     height_scale = curtain.calculate_height_scale(curtains_height)
                     render_parameters['obj_scale'] = (render_parameters['obj_scale'][0],
                                                       render_parameters['obj_scale'][1],
                                                       height_scale)
                     curtains_parameters.append(render_parameters)
-                    # curtain_image = curtain.request_blender_render(render_parameters)
-                    # curtain_image.save(tmp_mask_path)
-                    # convert_png_to_mask(tmp_mask_path)
-                    # overlay_masks(tmp_mask_path, mask_path, mask_path)
-                    # background_image = Image.open(prerequisite_path)
-                    # combined_image = image_overlay(curtain_image, background_image)
-                    #
-                    # combined_image.save(prerequisite_path)
 
             except IndexError as e:
                 print(f"{e}, we skip adding curtains for a window.")
         return curtains_parameters
 
-    def add_plant(self, camera_angles_rad: tuple, mask_path, tmp_mask_path, prerequisite_path):
+    def calculate_plant_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.Plant import Plant
         from stage.Floor import Floor
         pitch_rad, roll_rad = camera_angles_rad
         plant = Plant()
         seg_image_path = Path.SEGMENTED_ES_IMAGE.value
-        save_path = Path.FLOOR_MASK_IMAGE
+        save_path = Path.FLOOR_MASK_IMAGE.value
         Floor.save_mask(seg_image_path, save_path)
         pixels_for_placing = plant.find_placement_pixel(save_path)
         print(f"PLANT placement pixels: {pixels_for_placing}")
@@ -248,17 +236,7 @@ class Room:
         render_parameters = (
             plant.calculate_rendering_parameters(self, pixels_for_placing[random_index], plant_yaw_angle,
                                                  (roll_rad, pitch_rad)))
-        # width, height = get_image_size(self.empty_room_image_path)
-        # render_parameters['resolution_x'] = width
-        # render_parameters['resolution_y'] = height
         return render_parameters
-        plant_image = plant.request_blender_render(render_parameters)
-        plant_image.save(tmp_mask_path)
-        convert_png_to_mask(tmp_mask_path)
-        overlay_masks(tmp_mask_path, mask_path, mask_path)
-        background_image = Image.open(prerequisite_path)
-        combined_image = image_overlay(plant_image, background_image)
-        combined_image.save(prerequisite_path)
 
     def prepare_empty_room_data(self):
         from DepthAnything.depth_estimation import (image_pixels_to_point_cloud, depth_ply_path, depth_npy_path,
@@ -292,3 +270,13 @@ class Room:
         scene_render_parameters['objects'] = dict()
 
         return camera_height, pitch_rad, roll_rad, height, scene_render_parameters
+
+    @staticmethod
+    def process_rendered_image(furniture_image):
+        furniture_image.save(Path.FURNITURE_PIECE_MASK_IMAGE.value)
+        convert_png_to_mask(Path.FURNITURE_PIECE_MASK_IMAGE.value)
+        overlay_masks(Path.FURNITURE_PIECE_MASK_IMAGE.value, Path.FURNITURE_MASK_IMAGE.value,
+                      Path.FURNITURE_MASK_IMAGE.value)
+        background_image = Image.open(Path.PREREQUISITE_IMAGE.value)
+        combined_image = image_overlay(furniture_image, background_image)
+        combined_image.save(Path.PREREQUISITE_IMAGE.value)
