@@ -2,14 +2,14 @@ from tools import get_image_size, convert_png_to_mask, overlay_masks, run_prepro
 from constants import Path
 from .Room import Room
 from PIL import Image
-
+from ..furniture.Furniture import Furniture
 
 class LivingRoom(Room):
     def stage(self):
-        camera_height, pitch_rad, roll_rad, height = self.prepare_empty_room_data()
+        camera_height, pitch_rad, roll_rad, height, scene_render_parameters = self.prepare_empty_room_data()
 
         # Add curtains
-        self.add_curtains(camera_height, (pitch_rad, roll_rad),
+        curtains_parameters = self.add_curtains(camera_height, (pitch_rad, roll_rad),
                           Path.FURNITURE_MASK_IMAGE.value,
                           Path.FURNITURE_PIECE_MASK_IMAGE.value,
                           Path.PREREQUISITE_IMAGE.value)
@@ -18,10 +18,24 @@ class LivingRoom(Room):
         # self.add_plant((pitch_rad, roll_rad), Path.FURNITURE_MASK_IMAGE.value, Path.FURNITURE_PIECE_MASK_IMAGE.value, Path.PREREQUISITE_IMAGE.value)
 
         # Add kitchen_table_with_chairs
-        self.add_sofa_with_table((pitch_rad, roll_rad),
+        sofa_parameters = self.add_sofa_with_table((pitch_rad, roll_rad),
                                  Path.FURNITURE_MASK_IMAGE.value,
                                  Path.FURNITURE_PIECE_MASK_IMAGE.value,
                                  Path.PREREQUISITE_IMAGE.value)
+
+        scene_render_parameters['objects'] = [*curtains_parameters, sofa_parameters]
+
+        import json
+        print(json.dumps(scene_render_parameters, indent=4))
+
+        furniture_image = Furniture.request_blender_render(scene_render_parameters)
+        furniture_image.save(Path.FURNITURE_PIECE_MASK_IMAGE.value)
+        convert_png_to_mask(Path.FURNITURE_PIECE_MASK_IMAGE.value)
+        overlay_masks(Path.FURNITURE_PIECE_MASK_IMAGE.value, Path.FURNITURE_MASK_IMAGE.value,
+                      Path.FURNITURE_MASK_IMAGE.value)
+        background_image = Image.open(Path.PREREQUISITE_IMAGE.value)
+        combined_image = image_overlay(furniture_image, background_image)
+        combined_image.save(Path.PREREQUISITE_IMAGE.value)
 
         # Create windows mask for staged room
         run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, "seg_prerequisite.png", height)
@@ -38,9 +52,10 @@ class LivingRoom(Room):
         yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
         render_parameters = (
             sofa_with_table.calculate_rendering_parameters(self, pixel_for_placing, yaw_angle, (roll_rad, pitch_rad)))
-        width, height = get_image_size(self.empty_room_image_path)
-        render_parameters['resolution_x'] = width
-        render_parameters['resolution_y'] = height
+        # width, height = get_image_size(self.empty_room_image_path)
+        # render_parameters['resolution_x'] = width
+        # render_parameters['resolution_y'] = height
+        return render_parameters
         sofa_image = sofa_with_table.request_blender_render(render_parameters)
         sofa_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)
