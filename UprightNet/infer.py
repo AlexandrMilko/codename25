@@ -70,7 +70,7 @@ def get_roll_pitch():
             pred_cam_geo_unit, pred_up_geo_unit, pred_weights = model.infer_model(stacked_img)
             from UprightNet.models.networks import JointLoss
             pred_roll, pred_pitch = JointLoss.compute_angle_from_pred(pred_cam_geo_unit, pred_up_geo_unit, pred_weights)
-            os.chdir('../src')
+            os.chdir('..')
 
             del model
             del dataset
