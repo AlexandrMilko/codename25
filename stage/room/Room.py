@@ -239,6 +239,7 @@ class Room:
         return render_parameters
 
     def prepare_empty_room_data(self):
+        Image.open(self.empty_room_image_path).save(Path.PREREQUISITE_IMAGE.value)
         from DepthAnything.depth_estimation import (image_pixels_to_point_cloud, depth_ply_path, depth_npy_path,
                                                     image_pixels_to_3d, rotate_3d_points)
         roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
