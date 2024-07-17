@@ -7,10 +7,10 @@ import os
 
 class Bedroom(Room):
     def stage(self):
-        camera_height, pitch_rad, roll_rad, height = self.prepare_empty_room_data()
+        camera_height, pitch_rad, roll_rad, height, scene_render_parameters = self.prepare_empty_room_data()
 
         # Add curtains
-        self.add_curtains(camera_height, (pitch_rad, roll_rad),
+        curtains_parameters = self.add_curtains(camera_height, (pitch_rad, roll_rad),
                           Path.FURNITURE_MASK_IMAGE.value,
                           Path.FURNITURE_PIECE_MASK_IMAGE.value,
                           Path.PREREQUISITE_IMAGE.value)
@@ -20,11 +20,15 @@ class Bedroom(Room):
         # self.add_plant((pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
 
         # Add kitchen_table_with_chairs
-        self.add_bed((pitch_rad, roll_rad),
+        bed_parameters = self.add_bed((pitch_rad, roll_rad),
                      Path.FURNITURE_MASK_IMAGE.value,
                      Path.FURNITURE_PIECE_MASK_IMAGE.value,
                      Path.PREREQUISITE_IMAGE.value)
 
+        scene_render_parameters['objects'] = [*curtains_parameters, bed_parameters]
+
+        import json
+        print(json.dumps(scene_render_parameters, indent = 4))
         # Create windows mask for staged room
         run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, "seg_prerequisite.png", height)
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
@@ -41,9 +45,7 @@ class Bedroom(Room):
         yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
         render_parameters = (
             bed.calculate_rendering_parameters(self, pixel_for_placing, yaw_angle, (roll_rad, pitch_rad)))
-        width, height = get_image_size(self.empty_room_image_path)
-        render_parameters['resolution_x'] = width
-        render_parameters['resolution_y'] = height
+        return render_parameters
         bed_image = bed.request_blender_render(render_parameters)
         bed_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)
