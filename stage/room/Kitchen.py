@@ -2,6 +2,7 @@ from tools import get_image_size, convert_png_to_mask, overlay_masks, run_prepro
 from constants import Path
 from .Room import Room
 from PIL import Image
+from ..furniture.Furniture import Furniture
 
 
 class Kitchen(Room):
@@ -28,6 +29,15 @@ class Kitchen(Room):
 
         import json
         print(json.dumps(scene_render_parameters, indent=4))
+
+        furniture_image = Furniture.request_blender_render(scene_render_parameters)
+        furniture_image.save(Path.FURNITURE_PIECE_MASK_IMAGE.value)
+        convert_png_to_mask(Path.FURNITURE_PIECE_MASK_IMAGE.value)
+        overlay_masks(Path.FURNITURE_PIECE_MASK_IMAGE.value, Path.FURNITURE_MASK_IMAGE.value, Path.FURNITURE_MASK_IMAGE.value)
+        background_image = Image.open(Path.PREREQUISITE_IMAGE.value)
+        combined_image = image_overlay(furniture_image, background_image)
+        combined_image.save(Path.PREREQUISITE_IMAGE.value)
+
         run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, "seg_prerequisite.png", height)
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
