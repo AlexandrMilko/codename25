@@ -82,7 +82,7 @@ class Room:
         X_3D = (x - original_width / 2.1) * Z_depth / FX
         Z_3D = Z_depth / 1.3
 
-        return X_3D, Z_3D, 0
+        return [X_3D, Z_3D, 0]
 
     def estimate_camera_height(self, camera_angles: tuple[float, float]):
         pitch, roll = camera_angles
