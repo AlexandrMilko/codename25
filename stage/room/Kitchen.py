@@ -6,10 +6,10 @@ from PIL import Image
 
 class Kitchen(Room):
     def stage(self):
-        camera_height, pitch_rad, roll_rad, height = self.prepare_empty_room_data()
+        camera_height, pitch_rad, roll_rad, height, scene_render_parameters = self.prepare_empty_room_data()
 
         # Add curtains
-        self.add_curtains(camera_height, (pitch_rad, roll_rad),
+        curtains_parameters = self.add_curtains(camera_height, (pitch_rad, roll_rad),
                           Path.FURNITURE_MASK_IMAGE.value,
                           Path.FURNITURE_PIECE_MASK_IMAGE.value,
                           Path.PREREQUISITE_IMAGE.value)
@@ -19,11 +19,15 @@ class Kitchen(Room):
         # self.add_plant((pitch_rad, roll_rad), mask_path, tmp_mask_path, prerequisite_path)
 
         # Add kitchen_table_with_chairs
-        self.add_kitchen_table_with_chairs((pitch_rad, roll_rad),
+        table_with_chairs_parameters = self.add_kitchen_table_with_chairs((pitch_rad, roll_rad),
                                            Path.FURNITURE_MASK_IMAGE.value,
                                            Path.FURNITURE_PIECE_MASK_IMAGE.value,
                                            Path.PREREQUISITE_IMAGE.value)
 
+        scene_render_parameters['objects'] = [*curtains_parameters, table_with_chairs_parameters]
+
+        import json
+        print(json.dumps(scene_render_parameters, indent=4))
         run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, "seg_prerequisite.png", height)
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
@@ -47,9 +51,10 @@ class Kitchen(Room):
         render_parameters = (
             kitchen_table_with_chairs.calculate_rendering_parameters(self, pixels_for_placing[random_index], yaw_angle,
                                                                      (roll_rad, pitch_rad)))
-        width, height = get_image_size(self.empty_room_image_path)
-        render_parameters['resolution_x'] = width
-        render_parameters['resolution_y'] = height
+        # width, height = get_image_size(self.empty_room_image_path)
+        # render_parameters['resolution_x'] = width
+        # render_parameters['resolution_y'] = height
+        return render_parameters
         table_image = kitchen_table_with_chairs.request_blender_render(render_parameters)
         table_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)

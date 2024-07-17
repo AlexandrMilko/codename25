@@ -248,9 +248,10 @@ class Room:
         render_parameters = (
             plant.calculate_rendering_parameters(self, pixels_for_placing[random_index], plant_yaw_angle,
                                                  (roll_rad, pitch_rad)))
-        width, height = get_image_size(self.empty_room_image_path)
-        render_parameters['resolution_x'] = width
-        render_parameters['resolution_y'] = height
+        # width, height = get_image_size(self.empty_room_image_path)
+        # render_parameters['resolution_x'] = width
+        # render_parameters['resolution_y'] = height
+        return render_parameters
         plant_image = plant.request_blender_render(render_parameters)
         plant_image.save(tmp_mask_path)
         convert_png_to_mask(tmp_mask_path)
