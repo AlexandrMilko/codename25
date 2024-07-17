@@ -1,6 +1,6 @@
 from tools import (create_directory_if_not_exists, submit_post, save_encoded_image,
                    get_encoded_image_from_path, overlay_masks, restart_stable_diffusion)
-import requests.exceptions.ConnectionError
+import requests
 from constants import Path
 from PIL import Image
 import math
