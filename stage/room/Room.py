@@ -284,7 +284,9 @@ class Room:
         scene_render_parameters = dict()
         from math import radians
         scene_render_parameters["camera_location"] = [0, 0, 0]
-        scene_render_parameters["camera_angles"] = float(radians(90) - pitch_rad), float(+roll_rad), 0
+        # We set opposite
+        # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+        scene_render_parameters["camera_angles"] = float(radians(90) - pitch_rad), float(+roll_rad), 0 # We convert to float to avoid JSON conversion errors from numpy
         scene_render_parameters['resolution_x'] = width
         scene_render_parameters['resolution_y'] = height
         scene_render_parameters['objects'] = dict()
