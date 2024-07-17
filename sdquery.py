@@ -1,5 +1,6 @@
 from tools import (create_directory_if_not_exists, submit_post, save_encoded_image,
-                   get_encoded_image_from_path, overlay_masks)
+                   get_encoded_image_from_path, overlay_masks, restart_stable_diffusion)
+import requests.exceptions.ConnectionError
 from constants import Path
 from PIL import Image
 import math
@@ -288,17 +289,17 @@ def apply_style(es_path, room_choice, style_budget_choice):
         raise Exception(f"Wrong Room Type was specified: {room_choice.lower()}")
 
     # Add time for Garbage Collector
-    # import time
-    # time.sleep(1)
-    #
-    # style, budget = style_budget_choice.split(", ")
-    # text = f"Residential, {room_choice}, {budget}, {style}"
-    # query = GreenScreenImageQuery(text)
-    # query.run()
-    #
-    # # We restart it to deallocate memory. TODO fix it.
-    # try:
-    #     time.sleep(3)
-    #     restart_stable_diffusion('http://127.0.0.1:7861')
-    # except requests.exceptions.ConnectionError:
-    #     print("Stable Diffusion restarting")
+    import time
+    time.sleep(1)
+
+    style, budget = style_budget_choice.split(", ")
+    text = f"Residential, {room_choice}, {budget}, {style}"
+    query = GreenScreenImageQuery(text)
+    query.run()
+
+    # We restart it to deallocate memory. TODO fix it.
+    try:
+        time.sleep(3)
+        restart_stable_diffusion('http://127.0.0.1:7861')
+    except requests.exceptions.ConnectionError:
+        print("Stable Diffusion restarting")
