@@ -282,7 +282,9 @@ class Room:
         save_mask_of_size(width, height, mask_path)
 
         scene_render_parameters = dict()
+        from math import radians
         scene_render_parameters["camera_location"] = [0, 0, 0]
+        scene_render_parameters["camera_angles"] = float(radians(90) - pitch_rad), float(+roll_rad), 0
         scene_render_parameters['resolution_x'] = width
         scene_render_parameters['resolution_y'] = height
         scene_render_parameters['objects'] = dict()
