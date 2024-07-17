@@ -40,22 +40,16 @@ class Furniture:
             print("Error:", response.status_code, response.text)
 
     def calculate_rendering_parameters_without_offsets(self,
-                                       yaw_angle: float,
-                                       camera_angles_rad: tuple[float, float]):
-        roll, pitch = camera_angles_rad
+                                       yaw_angle: float):
         default_angles = self.get_default_angles()
 
         obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(default_angles[2] + yaw_angle)
         obj_scale = self.get_scale()
-        # We set opposite
-        # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
-        camera_angles = float(radians(90) - pitch), float(+roll), 0 # We convert to float to avoid JSON conversion errors from numpy
 
         params = {
             # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
             'obj_angles': tuple(obj_angles),
             'obj_scale': tuple(obj_scale),
-            'camera_angles': tuple(camera_angles),
             'model_path': self.model_path
         }
 
@@ -74,11 +68,10 @@ class FloorFurniture(Furniture):
         print("Started estimating camera height")
         camera_height = room.estimate_camera_height((pitch, roll))
         print(f"Camera height: {camera_height}")
-        camera_location = 0, 0, camera_height
+        obj_offsets[2] -= camera_height
 
-        params = self.calculate_rendering_parameters_without_offsets(yaw_angle, camera_angles_rad)
+        params = self.calculate_rendering_parameters_without_offsets(yaw_angle)
         params['obj_offsets'] = tuple(obj_offsets)
-        params['camera_location'] = tuple(camera_location)
 
         return params
 
@@ -90,10 +83,8 @@ class HangingFurniture(Furniture):
         roll, pitch = camera_angles_rad
         obj_offsets = room.infer_3d(placement_pixel, pitch,
                                     roll)  # We set negative rotation to compensate
-        camera_location = 0, 0, 0
 
-        params = self.calculate_rendering_parameters_without_offsets(yaw_angle, camera_angles_rad)
+        params = self.calculate_rendering_parameters_without_offsets(yaw_angle)
         params['obj_offsets'] = tuple(obj_offsets)
-        params['camera_location'] = tuple(camera_location)
 
         return params
