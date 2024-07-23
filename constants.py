@@ -49,6 +49,8 @@ class Path(Enum):
     BED_MODEL = join(BEDROOM_MODELS_DIR, 'bed.usdc')
 
     # DepthAnything
-    DEPTH_IMAGE = 'DepthAnything/zoedepth/depth.npy'
+    DEPTH_IMAGE = 'DepthAnythingV2/output/depth.npy'
+    PLY_SPACE = 'DepthAnythingV2/output/depth.ply'
+    DEPTH_CHECKPOINT = 'DepthAnythingV2/metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth'
 
     # UprightNet
