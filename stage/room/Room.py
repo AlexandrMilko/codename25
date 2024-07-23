@@ -47,7 +47,7 @@ class Room:
         return stage.Wall.find_biggest_wall(Path.SEGMENTED_ES_IMAGE.value)
 
     def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
-        from DepthAnything.depth_estimation import image_pixel_to_3d, rotate_3d_point
+        from DepthAnythingV2.depth_estimation import image_pixel_to_3d, rotate_3d_point
         print(self.empty_room_image_path, pixel, "IMAGE PATH and PIXEL")
         target_point = image_pixel_to_3d(*pixel, self.empty_room_image_path)
         # We rotate it back to compensate our camera rotation
@@ -86,7 +86,7 @@ class Room:
 
     def estimate_camera_height(self, camera_angles: tuple[float, float]):
         pitch, roll = camera_angles
-        from DepthAnything.depth_estimation import rotate_3d_point, image_pixel_to_3d
+        from DepthAnythingV2.depth_estimation import rotate_3d_point, image_pixel_to_3d
         import stage.Floor
         floor_pixel = stage.Floor.find_centroid(Path.SEGMENTED_ES_IMAGE.value)
         point_3d = image_pixel_to_3d(*floor_pixel, self.empty_room_image_path)
@@ -240,7 +240,7 @@ class Room:
 
     def prepare_empty_room_data(self):
         Image.open(self.empty_room_image_path).save(Path.PREREQUISITE_IMAGE.value)
-        from DepthAnything.depth_estimation import (image_pixels_to_point_cloud, depth_ply_path, depth_npy_path,
+        from DepthAnythingV2.depth_estimation import (image_pixels_to_point_cloud, depth_ply_path, depth_npy_path,
                                                     image_pixels_to_3d, rotate_3d_points)
         roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
 
