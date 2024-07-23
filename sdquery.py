@@ -288,18 +288,18 @@ def apply_style(es_path, room_choice, style_budget_choice):
     else:
         raise Exception(f"Wrong Room Type was specified: {room_choice.lower()}")
 
-    # Add time for Garbage Collector
-    import time
-    time.sleep(1)
+    # # Add time for Garbage Collector
+    # import time
+    # time.sleep(1)
+    #
+    # style, budget = style_budget_choice.split(", ")
+    # text = f"Residential, {room_choice}, {budget}, {style}"
+    # query = GreenScreenImageQuery(text)
+    # query.run()
 
-    style, budget = style_budget_choice.split(", ")
-    text = f"Residential, {room_choice}, {budget}, {style}"
-    query = GreenScreenImageQuery(text)
-    query.run()
-
-    # We restart it to deallocate memory. TODO fix it.
-    try:
-        time.sleep(3)
-        restart_stable_diffusion('http://127.0.0.1:7861')
-    except requests.exceptions.ConnectionError:
-        print("Stable Diffusion restarting")
+    # # We restart it to deallocate memory. TODO fix it.
+    # try:
+    #     time.sleep(3)
+    #     restart_stable_diffusion('http://127.0.0.1:7861')
+    # except requests.exceptions.ConnectionError:
+    #     print("Stable Diffusion restarting")

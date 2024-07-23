@@ -1,3 +1,4 @@
+from postProcessing import ImageProcessor
 from tools import run_preprocessor
 from constants import Path
 from .Room import Room
@@ -25,6 +26,9 @@ class Kitchen(Room):
 
         furniture_image = Furniture.request_blender_render(scene_render_parameters)
         Room.process_rendered_image(furniture_image)
+
+        processor = ImageProcessor()
+        processor.execute()
 
         run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, "seg_prerequisite.png", height)
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
