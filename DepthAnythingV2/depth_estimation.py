@@ -93,7 +93,7 @@ def pixel_to_3d(x, y, w, h, depth_npy_path):
     return X_3D, Y_3D, Z_3D
 
 def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth_ply_path=depth_ply_path):
-    from depth_anything_v2.dpt import DepthAnythingV2
+    from DepthAnythingV2.metric_depth.depth_anything_v2.dpt import DepthAnythingV2
     # Determine the device to use (CUDA, MPS, or CPU)
     DEVICE = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
 
