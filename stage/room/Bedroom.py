@@ -1,3 +1,4 @@
+from postProcessing import ImageProcessor
 from tools import run_preprocessor
 from constants import Path
 from .Room import Room
@@ -26,6 +27,9 @@ class Bedroom(Room):
 
         furniture_image = Furniture.request_blender_render(scene_render_parameters)
         Room.process_rendered_image(furniture_image)
+
+        processor = ImageProcessor()
+        processor.execute()
 
         # Create windows mask for staged room
         run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, "seg_prerequisite.png", height)
