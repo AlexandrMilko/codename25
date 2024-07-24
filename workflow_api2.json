@@ -120,7 +120,7 @@
   },
   "37": {
     "inputs": {
-      "model_path": "iclight_sd15_fc.safetensors",
+      "model_path": "IC-Light/iclight_sd15_fc.safetensors",
       "model": [
         "2",
         0
@@ -188,15 +188,6 @@
     "class_type": "VAEEncode",
     "_meta": {
       "title": "VAE Encode"
-    }
-  },
-  "52": {
-    "inputs": {
-      "filename_prefix": "ComfyUI"
-    },
-    "class_type": "SaveImage",
-    "_meta": {
-      "title": "Save Image"
     }
   },
   "56": {
@@ -274,7 +265,7 @@
   },
   "63": {
     "inputs": {
-      "path": "C:/Desktop/Codename25/SavedImg/image1.png",
+      "path": "/home/app/codename25/images/applied.jpg",
       "overwrite": "true",
       "image": [
         "7",
