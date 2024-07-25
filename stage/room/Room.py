@@ -193,6 +193,116 @@ class Room:
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
 
+    @staticmethod
+    def offsets_to_floor_pixels(ply_path, npy_path, points_dict: dict, output_path=None) -> dict:
+
+        """
+        :param ply_path: path to the .ply file that represents 3d space
+        :param npy_path: path to the .npy file that is the result of depth estimation
+        :param output_path: path to save the debug layout image
+        :param points_dict: 3d points to be converted into 2d layout pixel coords in the following format
+        (the dictionary with same keys will be returned along with converted values)
+        Example:
+        note: 3d point passed has to be in such: format y coordinate is height
+        {"camera": [x, y, z]} -> {"camera": [x, y]} (x - horizontal margin, y - vertical margin from top left corner)
+        :return:
+        {"camera": [228, 0]}
+        """
+
+        # Загрузка облака точек
+        pcd = o3d.io.read_point_cloud(ply_path)
+        points = np.asarray(pcd.points)
+
+        # Фильтрация точек пола
+        quantile = 60
+        floor_height = np.percentile(points[:, 1], quantile)
+        threshold = 0.05  # Допустимое отклонение от высоты пола
+        floor_points = points[np.abs(points[:, 1] - floor_height) < threshold]
+
+        # Загрузка карты глубины
+        depth_map = np.load(npy_path)
+        height, width = depth_map.shape
+        layout_image = np.zeros((height, width, 3), dtype=np.uint8)  # Изменение на цветное изображение
+
+        # We add the user's specified points to floor points before normalization, so it does not neglect them
+        for point_name in points_dict.keys():
+            # We reverse x axis because in pixel coordinate system it is opposite to blender
+            points_dict[point_name][0] = -points_dict[point_name][0]
+            floor_points = np.vstack([floor_points, np.array(points_dict[point_name])])
+
+        # Нахождение минимальных и максимальных значений координат пола
+        min_coords = floor_points.min(axis=0)
+        max_coords = floor_points.max(axis=0)
+
+        # Нормализация координат пола
+        norm_points = (floor_points - min_coords) / (max_coords - min_coords)
+        norm_points[:, 0] = norm_points[:, 0] * (width - 1)
+        norm_points[:, 2] = norm_points[:, 2] * (height - 1)
+
+        # Создание заполненного контура
+        hull = cv2.convexHull(norm_points[:, [0, 2]].astype(int))
+        cv2.fillPoly(layout_image, [hull], (255, 255, 255))
+
+        # Converting 3d points to 2d floor pixels
+        result = dict()
+        for point_name in points_dict.keys():
+            x_3d, _, y_3d = points_dict[point_name]
+            pixel_x = int((x_3d - min_coords[0]) / (max_coords[0] - min_coords[0]) * (width - 1))
+            pixel_y = int((y_3d - min_coords[2]) / (max_coords[2] - min_coords[2]) * (height - 1))
+
+            pixel_x = np.clip(pixel_x, 0, width - 1) # May not be needed
+            pixel_y = np.clip(pixel_y, 0, height - 1) # May not be needed
+            print(f"Points coords: x={pixel_x}, y={pixel_y}")  # Отладочное сообщение
+            result[point_name] = [pixel_x, pixel_y]
+            cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Красный цвет
+
+        if output_path is not None:
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            cv2.imwrite(output_path, layout_image)
+
+        # Визуализация результатов
+        # cv2.imshow('Layout Image', layout_image)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
+        return result
+
+    @staticmethod
+    def calculate_pixels_per_meter_ratio(ply_path, npy_path, render_offsets):
+        """
+        ply_path - .ply space of room
+        npy_path - .npy image from depth estimation
+        # WARNING, when you use new offsets, you should recalculate floor layout and its pixels_per_meter_ratio.
+        Because if some of the offsets get out of boundaries, it will affect normalization
+        """
+        offsets = {
+            'camera': [0, 0, 0],
+            'point_for_calculating_ratio': [0.2, 0, 0.2] # We can use any offsets to calculate ratio. But they should be small enough,
+            # so they do not get out of floor layout boundaries and do not affect points normalization
+        }
+        pixels = Room.offsets_to_floor_pixels(ply_path, npy_path, offsets | render_offsets)
+        pixels_x_diff = pixels['camera'][0] - pixels['point_for_calculating_ratio'][0]
+        pixels_y_diff = pixels['camera'][1] - pixels['point_for_calculating_ratio'][1]
+        offsets_x_diff = offsets['camera'][0] - offsets['point_for_calculating_ratio'][0]
+        offsets_z_diff = offsets['camera'][2] - offsets['point_for_calculating_ratio'][2]
+        ratio_x = pixels_x_diff / offsets_x_diff
+        ratio_y = pixels_y_diff / offsets_z_diff
+        return ratio_x, ratio_y
+
+    @staticmethod
+    def calculate_offset_from_pixel_diff(pixels_diff, ratio):
+        """
+        pixels_diff: has the following format [pixels_x_diff, pixels_y_diff].
+        Represents difference in pixel coordinates between 2 points
+
+        ratio: has the following format [ratio_x, ratio_y]
+        Represents pixels_per_meter_ratio for a floor layout. For both axes.
+        """
+        pixel_x_diff, pixel_y_diff = pixels_diff
+        ratio_x, ratio_y = ratio
+        offset_x, offset_z = pixel_x_diff / ratio_x, pixel_y_diff / ratio_y
+        return offset_x, offset_z
+
     def calculate_curtains_parameters(self, camera_height, camera_angles_rad: tuple):
         from stage.furniture.Curtain import Curtain
         pitch_rad, roll_rad = camera_angles_rad
