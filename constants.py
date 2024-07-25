@@ -52,5 +52,6 @@ class Path(Enum):
     DEPTH_IMAGE = 'DepthAnythingV2/output/depth.npy'
     PLY_SPACE = 'DepthAnythingV2/output/depth.ply'
     DEPTH_CHECKPOINT = 'DepthAnythingV2/metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth'
+    IMAGE_HEIGHT_LIMIT = 1024 # To avoid GPU OOM error
 
     # UprightNet

@@ -108,6 +108,7 @@ def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth
     encoder = 'vitl'
     max_depth = 20
     load_from = Path.DEPTH_CHECKPOINT.value
+    height_limit = Path.IMAGE_HEIGHT_LIMIT.value
 
     # Initialize the DepthAnythingV2 model with the specified configuration
     depth_anything = DepthAnythingV2(**{**model_configs[encoder], 'max_depth': max_depth})
@@ -127,11 +128,12 @@ def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth
 
         # Read the image using OpenCV
         image = cv2.imread(filename)
-        pred = depth_anything.infer_image(image, height)
-        np.save(depth_npy_path, pred)
+        infer_height = height if height < height_limit else height_limit
+        pred = depth_anything.infer_image(image, infer_height)
 
         # Resize depth prediction to match the original image size
         resized_pred = Image.fromarray(pred).resize((width, height), Image.NEAREST)
+        np.save(depth_npy_path, resized_pred)
 
         # Generate mesh grid and calculate point cloud coordinates
         FX = width * 0.6
