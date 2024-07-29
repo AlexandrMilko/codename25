@@ -1,5 +1,5 @@
-from postProcessing import ImageProcessor
-from tools import run_preprocessor
+from postprocessing.postProcessing import PostProcessor
+from preprocessing.preProcessSegment import ImageSegmentor
 from constants import Path
 from .Room import Room
 from ..furniture.Furniture import Furniture
@@ -27,10 +27,13 @@ class Kitchen(Room):
         furniture_image = Furniture.request_blender_render(scene_render_parameters)
         Room.process_rendered_image(furniture_image)
 
-        processor = ImageProcessor()
+        processor = PostProcessor()
         processor.execute()
 
-        run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, "seg_prerequisite.png", height)
+        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
+
+        segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value,PREPROCESSOR_RESOLUTION_LIMIT)
+        segment.execute()
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
     def calculate_kitchen_table_with_chairs_parameters(self, camera_angles_rad: tuple):

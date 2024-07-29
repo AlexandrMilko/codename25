@@ -1,0 +1,39 @@
+{
+  "19": {
+    "inputs": {
+      "resolution": 1024,
+      "image": [
+        "20",
+        0
+      ]
+    },
+    "class_type": "BAE-NormalMapPreprocessor",
+    "_meta": {
+      "title": "BAE Normal Map"
+    }
+  },
+  "20": {
+    "inputs": {
+      "image": "user_image.png",
+      "upload": "image"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "23": {
+    "inputs": {
+      "path": "./image.png",
+      "overwrite": "true",
+      "image": [
+        "19",
+        0
+      ]
+    },
+    "class_type": "JWImageSaveToPath",
+    "_meta": {
+      "title": "Image Save To Path"
+    }
+  }
+}

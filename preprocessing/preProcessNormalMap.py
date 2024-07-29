@@ -7,8 +7,11 @@ import urllib.parse
 
 from constants import Path
 
-class ImageProcessor:
-    def __init__(self):
+class ImageNormalMap:
+    def __init__(self, resolution, output_path, input_path):
+        self.resolution = resolution
+        self.output_path = output_path
+        self.input_path = input_path
         self.client_id = str(uuid.uuid4())
 
     def queue_prompt(self, prompt):
@@ -116,42 +119,29 @@ class ImageProcessor:
 
     def process_images(self):
         # Load the workflow and set up prompt
-        workflow = "workflow_api2.json"
+        workflow = "normalMap_api.json"
         with open(workflow, "r", encoding="utf-8") as f:
             workflow_data = f.read()
         prompt = json.loads(workflow_data)
 
         print("Uploading first image...")
-        with open(Path.PREREQUISITE_IMAGE.value, "rb") as f:
+        with open(self.input_path, "rb") as f:
             comfyui_path_image = self.upload_file(f, "", True)
             print(f"comfyui_path_image: {comfyui_path_image}")
 
-        print("Uploading second image...")
-        with open(Path.INPUT_IMAGE.value, "rb") as f:
-            comfyui_path_image1 = self.upload_file(f, "", True)
-            print(f"comfyui_path_image1: {comfyui_path_image1}")
 
         # Check if images were uploaded successfully before proceeding
-        if not comfyui_path_image or not comfyui_path_image1:
+        if not comfyui_path_image:
             print("Image upload failed. Exiting.")
             return
 
-        # Set the text prompt for our positive and negative CLIPTextEncode
-        print("Setting text prompts...")
-        prompt["4"]["inputs"]["text"] = "high resolution, high quality, 4k, cinematic light"
-        prompt["5"]["inputs"]["text"] = "bad quality, bad picture, cartoon, painting, illustration"
-
         # Set the image name for our LoadImage node
         print(f"Setting image paths for LoadImage nodes...")
-        prompt["9"]["inputs"]["image"] = comfyui_path_image
-        prompt["60"]["inputs"]["image"] = comfyui_path_image1
+        prompt["20"]["inputs"]["image"] = comfyui_path_image
 
-        # Set the seed for our KSampler node
-        prompt["19"]["inputs"]["seed"] = 100361857014337
+        prompt["19"]["inputs"]["resolution"] = self.resolution
 
-        # set model
-        prompt["2"]["inputs"]["ckpt_name"] = "epicrealism_naturalSinRC1VAE.safetensors"
-        prompt["37"]["inputs"]["ckpt_name"] = "iclight_sd15_fc.safetensors"
+        prompt["23"]["inputs"]["path"] = self.output_path
 
         # Connect to the WebSocket server
         ws = websocket.WebSocket()
@@ -169,7 +159,3 @@ class ImageProcessor:
 
     def execute(self):
         self.process_images()
-
-if __name__ == "__main__":
-    processor = ImageProcessor()
-    processor.execute()

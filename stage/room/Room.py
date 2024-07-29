@@ -1,4 +1,6 @@
-from tools import (move_file, run_preprocessor, copy_file, get_image_size, save_mask_of_size,
+from preprocessing.preProcessNormalMap import ImageNormalMap
+from preprocessing.preProcessSegment import ImageSegmentor
+from tools import (move_file, copy_file, get_image_size, save_mask_of_size,
                    convert_png_to_mask, overlay_masks, image_overlay, calculate_angle_from_top_view)
 from constants import Path
 from PIL import Image
@@ -20,7 +22,11 @@ class Room:
 
     def find_roll_pitch(self) -> tuple[float, float]:
         width, height = get_image_size(self.empty_room_image_path)
-        run_preprocessor("normal_dsine", self.empty_room_image_path, "users.png", height)
+        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
+
+        normalMap = ImageNormalMap(self.empty_room_image_path, Path.PREPROCESSED_USERS.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        normalMap.execute()
+
         copy_file(self.empty_room_image_path,
                   "UprightNet/imgs/rgb/users.png")  # We copy it because we will use it later in get_wall method and we want to have access to the image
         move_file(f"images/preprocessed/users.png",
@@ -36,13 +42,17 @@ class Room:
 
     def get_walls(self):
         width, height = get_image_size(self.empty_room_image_path)
-        run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
+        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
+        normalMap = ImageNormalMap(self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value,PREPROCESSOR_RESOLUTION_LIMIT)
+        normalMap.execute()
         import stage.Wall
         return stage.Wall.find_walls(Path.SEGMENTED_ES_IMAGE.value)
 
     def get_biggest_wall(self):
         width, height = get_image_size(self.empty_room_image_path)
-        run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
+        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
+        normalMap = ImageNormalMap(self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value,PREPROCESSOR_RESOLUTION_LIMIT)
+        normalMap.execute()
         import stage.Wall
         return stage.Wall.find_biggest_wall(Path.SEGMENTED_ES_IMAGE.value)
 
@@ -251,7 +261,10 @@ class Room:
 
         # Segment our empty space room. It is used in Room.save_windows_mask
         width, height = get_image_size(self.empty_room_image_path)
-        run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
+        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
+
+        segment = ImageSegmentor(Path.SEGMENTED_ES_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment.execute()
 
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 
