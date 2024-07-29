@@ -263,7 +263,7 @@ class Room:
         width, height = get_image_size(self.empty_room_image_path)
         PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
 
-        segment = ImageSegmentor(Path.SEGMENTED_ES_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment = ImageSegmentor(self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
         segment.execute()
 
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])

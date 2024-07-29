@@ -8,7 +8,7 @@ import urllib.parse
 from constants import Path
 
 class ImageNormalMap:
-    def __init__(self, resolution, output_path, input_path):
+    def __init__(self, input_path, output_path, resolution):
         self.resolution = resolution
         self.output_path = output_path
         self.input_path = input_path
