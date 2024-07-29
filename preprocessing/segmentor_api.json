@@ -1,0 +1,39 @@
+{
+  "24": {
+    "inputs": {
+      "image": "user_image.png",
+      "upload": "image"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "26": {
+    "inputs": {
+      "resolution": 512,
+      "image": [
+        "24",
+        0
+      ]
+    },
+    "class_type": "UniFormer-SemSegPreprocessor",
+    "_meta": {
+      "title": "UniFormer Segmentor"
+    }
+  },
+  "27": {
+    "inputs": {
+      "path": "./image.png",
+      "overwrite": "true",
+      "image": [
+        "26",
+        0
+      ]
+    },
+    "class_type": "JWImageSaveToPath",
+    "_meta": {
+      "title": "Image Save To Path"
+    }
+  }
+}
