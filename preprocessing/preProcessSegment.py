@@ -119,7 +119,7 @@ class ImageSegmentor:
 
     def process_images(self):
         # Load the workflow and set up prompt
-        workflow = "segmentor_api.json"
+        workflow = "preprocessing/segmentor_api.json"
         with open(workflow, "r", encoding="utf-8") as f:
             workflow_data = f.read()
         prompt = json.loads(workflow_data)

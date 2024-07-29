@@ -116,7 +116,7 @@ class PostProcessor:
 
     def process_images(self):
         # Load the workflow and set up prompt
-        workflow = "workflow_api2.json"
+        workflow = "postprocessing/workflow_api2.json"
         with open(workflow, "r", encoding="utf-8") as f:
             workflow_data = f.read()
         prompt = json.loads(workflow_data)
