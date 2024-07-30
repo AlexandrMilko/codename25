@@ -313,16 +313,16 @@ class Room:
             left = points_dict[point_name][0]
             right = points_dict[point_name][1]
             for point in left, right:
-                for x_3d, _, y_3d in point:
-                    print(point)
-                    pixel_x = int((x_3d - min_coords[0]) / (max_coords[0] - min_coords[0]) * (width - 1))
-                    pixel_y = int((y_3d - min_coords[2]) / (max_coords[2] - min_coords[2]) * (height - 1))
+                x_3d, _, y_3d = point
+                print(point)
+                pixel_x = int((x_3d - min_coords[0]) / (max_coords[0] - min_coords[0]) * (width - 1))
+                pixel_y = int((y_3d - min_coords[2]) / (max_coords[2] - min_coords[2]) * (height - 1))
 
-                    pixel_x = np.clip(pixel_x, 0, width - 1)  # May not be needed
-                    pixel_y = np.clip(pixel_y, 0, height - 1)  # May not be needed
-                    print(f"Points coords: x={pixel_x}, y={pixel_y}")  # Отладочное сообщение
-                    result[point_name] = [pixel_x, pixel_y]
-                    cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Красный цвет
+                pixel_x = np.clip(pixel_x, 0, width - 1)  # May not be needed
+                pixel_y = np.clip(pixel_y, 0, height - 1)  # May not be needed
+                print(f"Points coords: x={pixel_x}, y={pixel_y}")  # Отладочное сообщение
+                result[point_name] = [pixel_x, pixel_y]
+                cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Красный цвет
 
         if output_path is not None:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
