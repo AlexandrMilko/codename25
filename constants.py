@@ -27,8 +27,8 @@ class Path(Enum):
     WALL_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'wall_mask.png')
     WINDOWS_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask.png')
     WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask_inpainting.png')
+    PREPROCESSED_USERS = join(PREPROCESSED_IMAGES_DIR,  'users.png')
     APP_DIR = r"/home/app/codename25/"
-    PREPROCESSED_USERS = join(join(APP_DIR, PREPROCESSED_IMAGES_DIR), 'users.png')
 
 
     # /3Ds

@@ -3,6 +3,7 @@ from preprocessing.preProcessSegment import ImageSegmentor
 from constants import Path
 from .Room import Room
 from ..furniture.Furniture import Furniture
+import os
 
 class LivingRoom(Room):
     def stage(self):
@@ -31,7 +32,7 @@ class LivingRoom(Room):
         # Create windows mask for staged room
         PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
 
-        segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value,PREPROCESSOR_RESOLUTION_LIMIT)
+        segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, os.path.join(Path.APP_DIR.value, Path.SEG_PREREQUISITE_IMAGE.value) , PREPROCESSOR_RESOLUTION_LIMIT)
         segment.execute()
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
