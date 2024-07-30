@@ -67,7 +67,7 @@ class Room:
                 points_in_3d[name].append([left_point, right_point])
 
         print(points_in_3d)
-        self.offsets_to_floor_pixels(Path.PLY_SPACE.value, Path.DEPTH_IMAGE.value, horizontal_borders)
+        self.offsets_to_floor_pixels(Path.PLY_SPACE.value, Path.DEPTH_IMAGE.value, points_in_3d)
 
     @staticmethod
     def pixel_to_3d(x, y):
@@ -221,6 +221,7 @@ class Room:
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         bottom_pixels = {}
+        label_counters = {label: 0 for label in target_colors.keys()}  # Initialize counters for each label
 
         min_area_threshold = 800  # Adjust this value as needed
 
@@ -232,14 +233,17 @@ class Room:
             # Find contours in the cleaned mask
             contours, _ = cv2.findContours(cleaned_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-            # Initialize the pixel list for the current color
-            bottom_pixels[object_name] = []
-
             for contour in contours:
                 if cv2.contourArea(contour) > min_area_threshold:
                     leftmost_bottom_pixel = tuple(contour[contour[:, :, 0].argmin()][0])
                     rightmost_bottom_pixel = tuple(contour[contour[:, :, 0].argmax()][0])
-                    bottom_pixels[object_name].append((leftmost_bottom_pixel, rightmost_bottom_pixel))
+
+                    # Increment the counter for the current label
+                    label_counters[object_name] += 1
+                    # Create a unique label for the current object
+                    unique_label = f"{object_name}{label_counters[object_name]}"
+                    # Store the pixel coordinates in the bottom_pixels dictionary
+                    bottom_pixels[unique_label] = (leftmost_bottom_pixel, rightmost_bottom_pixel)
 
         return bottom_pixels
 
