@@ -137,11 +137,11 @@ class ImageNormalMap:
 
         # Set the image name for our LoadImage node
         print(f"Setting image paths for LoadImage nodes...")
-        prompt["20"]["inputs"]["image"] = comfyui_path_image
+        prompt["24"]["inputs"]["image"] = comfyui_path_image
 
-        prompt["19"]["inputs"]["resolution"] = self.resolution
+        prompt["29"]["inputs"]["resolution"] = self.resolution
 
-        prompt["23"]["inputs"]["path"] = self.output_path
+        prompt["27"]["inputs"]["path"] = self.output_path
 
         # Connect to the WebSocket server
         ws = websocket.WebSocket()
