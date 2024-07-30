@@ -63,7 +63,8 @@ class Room:
             points_in_3d[name] = []
             left_point = self.infer_3d(value[0], pitch_rad, roll_rad)
             right_point = self.infer_3d(value[1], pitch_rad, roll_rad)
-            points_in_3d[name].append([left_point, right_point])
+            points_in_3d[name].append(left_point)
+            points_in_3d[name].append(right_point)
 
         # Add camera
         points_in_3d['camera'] = [[0,0,0], [0,0,0]]
