@@ -70,7 +70,7 @@ class Room:
         points_in_3d['camera'] = [[0,0,0], [0,0,0]]
 
         print(points_in_3d)
-        self.offsets_to_floor_pixels(Path.PLY_SPACE.value, Path.DEPTH_IMAGE.value, points_in_3d)
+        Room.offsets_to_floor_pixels(Path.PLY_SPACE.value, Path.DEPTH_IMAGE.value, points_in_3d)
 
     @staticmethod
     def pixel_to_3d(x, y):
