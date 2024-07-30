@@ -283,6 +283,7 @@ class Room:
 
         # We add the user's specified points to floor points before normalization, so it does not neglect them
         for point_name in points_dict.keys():
+            print(points_dict[point_name], " points_dict[point_name]")
             left = points_dict[point_name][0]
             right = points_dict[point_name][1]
             # We reverse the x-axis because in a pixel coordinate system it is opposite to blender
