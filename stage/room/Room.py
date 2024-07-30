@@ -250,7 +250,8 @@ class Room:
 
         return bottom_pixels
 
-    def offsets_to_floor_pixels(self, ply_path, npy_path, points_dict: dict,
+    @staticmethod
+    def offsets_to_floor_pixels(ply_path, npy_path, points_dict: dict,
                                 output_path=Path.FLOOR_LAYOUT_IMAGE.value) -> dict:
 
         """
@@ -287,9 +288,14 @@ class Room:
             print(points_dict[point_name], " points_dict[point_name]")
             left = points_dict[point_name][0]
             right = points_dict[point_name][1]
+
             # We reverse the x-axis because in a pixel coordinate system it is opposite to blender
             left[0] = -left[0]
             right[0] = -right[0]
+            # We swap y, z because in Blender - z is the height
+            left[1], left[2] = left[2], left[1]
+            right[1], right[2] = right[2], right[1]
+
             floor_points = np.vstack([floor_points, np.array(left)])
             floor_points = np.vstack([floor_points, np.array(right)])
 
@@ -368,7 +374,7 @@ class Room:
             'point_for_calculating_ratio': [0.2, 0, 0.2]  # We can use any offsets to calculate ratio. But they should
             # be small enough, so they do not get out of floor layout boundaries and do not affect points normalization
         }
-        pixels = Room.offsets_to_floor_pixels(npy_path, offsets | render_offsets)
+        pixels = Room.offsets_to_floor_pixels(ply_path, npy_path, offsets | render_offsets)
         pixels_x_diff = pixels['camera'][0] - pixels['point_for_calculating_ratio'][0]
         pixels_y_diff = pixels['camera'][1] - pixels['point_for_calculating_ratio'][1]
         offsets_x_diff = offsets['camera'][0] - offsets['point_for_calculating_ratio'][0]
