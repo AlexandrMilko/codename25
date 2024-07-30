@@ -4,6 +4,7 @@ import uuid
 import json
 import urllib.request
 import urllib.parse
+import os
 
 from constants import Path
 
@@ -153,7 +154,7 @@ class PostProcessor:
         prompt["2"]["inputs"]["ckpt_name"] = "epicrealism_naturalSinRC1VAE.safetensors"
         prompt["37"]["inputs"]["ckpt_name"] = "iclight_sd15_fc.safetensors"
 
-        prompt["63"]["inputs"]["path"] = Path.OUTPUT_IMAGE.value
+        prompt["63"]["inputs"]["path"] = os.path.join(Path.APP_DIR.value, Path.OUTPUT_IMAGE.value)
 
         # Connect to the WebSocket server
         ws = websocket.WebSocket()
