@@ -1,18 +1,5 @@
 {
-  "19": {
-    "inputs": {
-      "resolution": 1024,
-      "image": [
-        "20",
-        0
-      ]
-    },
-    "class_type": "BAE-NormalMapPreprocessor",
-    "_meta": {
-      "title": "BAE Normal Map"
-    }
-  },
-  "20": {
+  "24": {
     "inputs": {
       "image": "user_image.png",
       "upload": "image"
@@ -22,18 +9,31 @@
       "title": "Load Image"
     }
   },
-  "23": {
+  "27": {
     "inputs": {
       "path": "./image.png",
       "overwrite": "true",
       "image": [
-        "19",
+        "29",
         0
       ]
     },
     "class_type": "JWImageSaveToPath",
     "_meta": {
       "title": "Image Save To Path"
+    }
+  },
+  "29": {
+    "inputs": {
+      "resolution": 512,
+      "image": [
+        "24",
+        0
+      ]
+    },
+    "class_type": "BAE-NormalMapPreprocessor",
+    "_meta": {
+      "title": "BAE Normal Map"
     }
   }
 }
