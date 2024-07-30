@@ -61,10 +61,12 @@ class Room:
         points_in_3d = {}
         for name, value in horizontal_borders.items():
             points_in_3d[name] = []
-            for points in value:
-                left_point = self.infer_3d(points[0], pitch_rad, roll_rad)
-                right_point = self.infer_3d(points[1], pitch_rad, roll_rad)
-                points_in_3d[name].append([left_point, right_point])
+            left_point = self.infer_3d(value[0], pitch_rad, roll_rad)
+            right_point = self.infer_3d(value[1], pitch_rad, roll_rad)
+            points_in_3d[name].append([left_point, right_point])
+
+        # Add camera
+        points_in_3d['camera'] = [[0,0,0], [0,0,0]]
 
         print(points_in_3d)
         self.offsets_to_floor_pixels(Path.PLY_SPACE.value, Path.DEPTH_IMAGE.value, points_in_3d)
@@ -258,9 +260,10 @@ class Room:
         (the dictionary with same keys will be returned along with converted values)
         Example:
         note: 3d point passed has to be in such: format y coordinate is height
-        {"camera": [x, y, z]} -> {"camera": [x, y]} (x - horizontal margin, y - vertical margin from top left corner)
+        {"window1": [[x, y, z], [x1, y1, z1]]} -> {"window1": [[x, y], [x1, y1]]} (x - horizontal margin, y - vertical margin from top left corner)
         :return:
-        {"camera": [228, 0]}
+        {"window1": [[228, 0], [228, 50]]}
+        NOTE: We have left 2 points for each object(left and right ones): {"window1": [[x, y, z], [x1, y1, z1]]}
         """
 
         # Загрузка облака точек
@@ -279,11 +282,14 @@ class Room:
         layout_image = np.zeros((height, width, 3), dtype=np.uint8)  # Изменение на цветное изображение
 
         # We add the user's specified points to floor points before normalization, so it does not neglect them
-        for point_name, point_value in points_dict.items():
-            if len(point_value) == 0: continue
+        for point_name in points_dict.keys():
+            left = points_dict[point_name][0]
+            right = points_dict[point_name][1]
             # We reverse the x-axis because in a pixel coordinate system it is opposite to blender
-            points_dict[point_name][0] = -points_dict[point_name][0]
-            floor_points = np.vstack([floor_points, np.array(points_dict[point_name])])
+            left[0] = -left[0]
+            right[0] = -right[0]
+            floor_points = np.vstack([floor_points, np.array(left)])
+            floor_points = np.vstack([floor_points, np.array(right)])
 
         # Нахождение минимальных и максимальных значений координат пола
         min_coords = floor_points.min(axis=0)
@@ -300,19 +306,21 @@ class Room:
 
         # Converting 3d points to 2d floor pixels
         result = dict()
-        for points_name, points_value in points_dict.items():
+        for point_name in points_dict.keys():
             print(points_dict)
-            if len(points_name) == 0: continue
-            for x_3d, _, y_3d in points_value:
-                print(points_value)
-                pixel_x = int((x_3d - min_coords[0]) / (max_coords[0] - min_coords[0]) * (width - 1))
-                pixel_y = int((y_3d - min_coords[2]) / (max_coords[2] - min_coords[2]) * (height - 1))
+            left = points_dict[point_name][0]
+            right = points_dict[point_name][1]
+            for point in left, right:
+                for x_3d, _, y_3d in point:
+                    print(point)
+                    pixel_x = int((x_3d - min_coords[0]) / (max_coords[0] - min_coords[0]) * (width - 1))
+                    pixel_y = int((y_3d - min_coords[2]) / (max_coords[2] - min_coords[2]) * (height - 1))
 
-                pixel_x = np.clip(pixel_x, 0, width - 1)  # May not be needed
-                pixel_y = np.clip(pixel_y, 0, height - 1)  # May not be needed
-                print(f"Points coords: x={pixel_x}, y={pixel_y}")  # Отладочное сообщение
-                result[points_name] = [pixel_x, pixel_y]
-                cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Красный цвет
+                    pixel_x = np.clip(pixel_x, 0, width - 1)  # May not be needed
+                    pixel_y = np.clip(pixel_y, 0, height - 1)  # May not be needed
+                    print(f"Points coords: x={pixel_x}, y={pixel_y}")  # Отладочное сообщение
+                    result[point_name] = [pixel_x, pixel_y]
+                    cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Красный цвет
 
         if output_path is not None:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
