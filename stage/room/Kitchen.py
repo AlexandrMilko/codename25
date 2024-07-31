@@ -33,6 +33,9 @@ class Kitchen(Room):
         run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, "seg_prerequisite.png", height)
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
+        room = Room(Path.INPUT_IMAGE.value)
+        room.pixel_mapping_floor_layout(pitch_rad, roll_rad)
+
     def calculate_kitchen_table_with_chairs_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
         from stage.Floor import Floor
