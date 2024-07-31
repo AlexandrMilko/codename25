@@ -4,10 +4,11 @@ import uuid
 import json
 import urllib.request
 import urllib.parse
+import os
 
 from constants import Path
 
-class ImageProcessor:
+class PostProcessor:
     def __init__(self):
         self.client_id = str(uuid.uuid4())
 
@@ -116,7 +117,7 @@ class ImageProcessor:
 
     def process_images(self):
         # Load the workflow and set up prompt
-        workflow = "workflow_api2.json"
+        workflow = "postprocessing/workflow_api2.json"
         with open(workflow, "r", encoding="utf-8") as f:
             workflow_data = f.read()
         prompt = json.loads(workflow_data)
@@ -153,6 +154,8 @@ class ImageProcessor:
         prompt["2"]["inputs"]["ckpt_name"] = "epicrealism_naturalSinRC1VAE.safetensors"
         prompt["37"]["inputs"]["ckpt_name"] = "iclight_sd15_fc.safetensors"
 
+        prompt["63"]["inputs"]["path"] = Path.OUTPUT_IMAGE.value
+
         # Connect to the WebSocket server
         ws = websocket.WebSocket()
         try:
@@ -170,6 +173,3 @@ class ImageProcessor:
     def execute(self):
         self.process_images()
 
-if __name__ == "__main__":
-    processor = ImageProcessor()
-    processor.execute()

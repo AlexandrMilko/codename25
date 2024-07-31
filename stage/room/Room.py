@@ -1,5 +1,8 @@
-from tools import (move_file, run_preprocessor, copy_file, get_image_size, save_mask_of_size,
-                   convert_png_to_mask, overlay_masks, image_overlay, calculate_angle_from_top_view)
+from preprocessing.preProcessNormalMap import ImageNormalMap
+from preprocessing.preProcessSegment import ImageSegmentor
+from tools import (move_file, copy_file, get_image_size, save_mask_of_size,
+                   convert_png_to_mask, overlay_masks, image_overlay, calculate_angle_from_top_view,
+                   resize_and_save_image)
 from constants import Path
 from PIL import Image
 import open3d as o3d
@@ -20,7 +23,11 @@ class Room:
 
     def find_roll_pitch(self) -> tuple[float, float]:
         width, height = get_image_size(self.empty_room_image_path)
-        run_preprocessor("normal_dsine", self.empty_room_image_path, "users.png", height)
+        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
+
+        normalMap = ImageNormalMap(self.empty_room_image_path, Path.PREPROCESSED_USERS.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        normalMap.execute()
+
         copy_file(self.empty_room_image_path,
                   "UprightNet/imgs/rgb/users.png")  # We copy it because we will use it later in get_wall method and we want to have access to the image
         move_file(f"images/preprocessed/users.png",
@@ -34,15 +41,13 @@ class Room:
             print("Returning default angles")
             return 0, 0
 
-    def get_walls(self):
-        width, height = get_image_size(self.empty_room_image_path)
-        run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
+    @staticmethod
+    def get_walls():
         import stage.Wall
         return stage.Wall.find_walls(Path.SEGMENTED_ES_IMAGE.value)
 
-    def get_biggest_wall(self):
-        width, height = get_image_size(self.empty_room_image_path)
-        run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
+    @staticmethod
+    def get_biggest_wall():
         import stage.Wall
         return stage.Wall.find_biggest_wall(Path.SEGMENTED_ES_IMAGE.value)
 
@@ -71,7 +76,7 @@ class Room:
 
         print(points_in_3d)
         Room.offsets_to_floor_pixels(Path.PLY_SPACE.value, Path.DEPTH_IMAGE.value, points_in_3d)
-
+        
     @staticmethod
     def pixel_to_3d(x, y):
         """
@@ -455,8 +460,12 @@ class Room:
 
         # Segment our empty space room. It is used in Room.save_windows_mask
         width, height = get_image_size(self.empty_room_image_path)
-        run_preprocessor("seg_ofade20k", self.empty_room_image_path, "segmented_es.png", height)
+        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
 
+        segment = ImageSegmentor(self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment.execute()
+        resize_and_save_image(Path.SEGMENTED_ES_IMAGE.value,
+                              Path.SEGMENTED_ES_IMAGE.value, height)
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 
         # Create an empty mask of same size as image
