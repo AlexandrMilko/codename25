@@ -106,11 +106,12 @@ def save_encoded_image(b64_image: str, output_path: str):
         image_file.write(base64.b64decode(b64_image))
 
 
-def resize_and_save_image(encoded_image, filepath, resolution):
-    image = decode_image(encoded_image)
-    resized_image = resize_image(image, resolution)
-    encoded_resized_image = encode_image(resized_image)
-    save_encoded_image(encoded_resized_image, filepath)
+def resize_and_save_image(input_path, output_path, height):
+    with Image.open(input_path) as img:
+        aspect_ratio = img.width / img.height
+        width = int(height * aspect_ratio)
+        resized_img = img.resize((width, height), Image.LANCZOS)
+        resized_img.save(output_path)
 
 
 def get_encoded_image_from_path(image_path):

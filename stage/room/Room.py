@@ -1,7 +1,8 @@
 from preprocessing.preProcessNormalMap import ImageNormalMap
 from preprocessing.preProcessSegment import ImageSegmentor
 from tools import (move_file, copy_file, get_image_size, save_mask_of_size,
-                   convert_png_to_mask, overlay_masks, image_overlay, calculate_angle_from_top_view)
+                   convert_png_to_mask, overlay_masks, image_overlay, calculate_angle_from_top_view,
+                   resize_and_save_image)
 from constants import Path
 from PIL import Image
 import open3d as o3d
@@ -40,19 +41,13 @@ class Room:
             print("Returning default angles")
             return 0, 0
 
-    def get_walls(self):
-        width, height = get_image_size(self.empty_room_image_path)
-        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
-        normalMap = ImageNormalMap(self.empty_room_image_path, os.path.join(Path.APP_DIR.value , Path.PREPROCESSED_USERS.value) ,PREPROCESSOR_RESOLUTION_LIMIT)
-        normalMap.execute()
+    @staticmethod
+    def get_walls():
         import stage.Wall
         return stage.Wall.find_walls(Path.SEGMENTED_ES_IMAGE.value)
 
-    def get_biggest_wall(self):
-        width, height = get_image_size(self.empty_room_image_path)
-        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
-        normalMap = ImageNormalMap(self.empty_room_image_path, os.path.join(Path.APP_DIR.value, Path.PREPROCESSED_USERS.value) ,PREPROCESSOR_RESOLUTION_LIMIT)
-        normalMap.execute()
+    @staticmethod
+    def get_biggest_wall():
         import stage.Wall
         return stage.Wall.find_biggest_wall(Path.SEGMENTED_ES_IMAGE.value)
 
@@ -64,7 +59,8 @@ class Room:
         offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
         return offset_relative_to_camera
 
-    def pixel_to_3d(self, x, y):
+    @staticmethod
+    def pixel_to_3d(x, y):
         """
         Args:
             x: x coordinate of the pixel
@@ -265,7 +261,8 @@ class Room:
 
         segment = ImageSegmentor(self.empty_room_image_path, os.path.join(Path.APP_DIR.value, Path.SEGMENTED_ES_IMAGE.value), PREPROCESSOR_RESOLUTION_LIMIT)
         segment.execute()
-
+        resize_and_save_image(os.path.join(Path.APP_DIR.value, Path.SEGMENTED_ES_IMAGE.value),
+                              os.path.join(Path.APP_DIR.value, Path.SEGMENTED_ES_IMAGE.value), height)
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 
         # Create an empty mask of same size as image
