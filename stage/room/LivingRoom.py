@@ -1,6 +1,7 @@
 from postprocessing.postProcessing import PostProcessor
 from preprocessing.preProcessSegment import ImageSegmentor
 from constants import Path
+from tools import resize_and_save_image
 from .Room import Room
 from ..furniture.Furniture import Furniture
 import os
@@ -34,6 +35,8 @@ class LivingRoom(Room):
 
         segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, os.path.join(Path.APP_DIR.value, Path.SEG_PREREQUISITE_IMAGE.value) , PREPROCESSOR_RESOLUTION_LIMIT)
         segment.execute()
+        resize_and_save_image(os.path.join(Path.APP_DIR.value, Path.SEG_PREREQUISITE_IMAGE.value),
+                              os.path.join(Path.APP_DIR.value, Path.SEG_PREREQUISITE_IMAGE.value), height)
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
     def calculate_sofa_with_table_parameters(self, camera_angles_rad: tuple):
