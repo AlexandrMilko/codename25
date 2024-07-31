@@ -106,11 +106,12 @@ def save_encoded_image(b64_image: str, output_path: str):
         image_file.write(base64.b64decode(b64_image))
 
 
-def resize_and_save_image(encoded_image, filepath, resolution):
-    image = decode_image(encoded_image)
-    resized_image = resize_image(image, resolution)
-    encoded_resized_image = encode_image(resized_image)
-    save_encoded_image(encoded_resized_image, filepath)
+def resize_and_save_image(input_path, output_path, height):
+    with Image.open(input_path) as img:
+        aspect_ratio = img.width / img.height
+        width = int(height * aspect_ratio)
+        resized_img = img.resize((width, height), Image.LANCZOS)
+        resized_img.save(output_path)
 
 
 def get_encoded_image_from_path(image_path):
@@ -121,37 +122,6 @@ def get_encoded_image_from_path(image_path):
     except cv2.error:
         retval, bytes = cv2.imencode('.jpg', img)
     return base64.b64encode(bytes).decode('utf-8')
-
-
-def run_preprocessor(preprocessor_name, image_path, filename, resolution):
-    PREPROCESSOR_RESOLUTION_LIMIT = 1024  # We set this limit to avoid GPU OOM errors
-    input_image = get_encoded_image_from_path(image_path)
-    data = {
-        "controlnet_module": preprocessor_name,
-        "controlnet_input_images": [input_image],
-        "controlnet_processor_res": resolution,
-        "controlnet_threshold_a": 64,
-        "controlnet_threshold_b": 64
-    }
-
-    if resolution > PREPROCESSOR_RESOLUTION_LIMIT: data['controlnet_processor_res'] = PREPROCESSOR_RESOLUTION_LIMIT
-
-    preprocessor_url = 'http://127.0.0.1:7861/controlnet/detect'
-    response = submit_post(preprocessor_url, data)
-    output_dir = Path.PREPROCESSED_IMAGES_DIR.value
-    output_filepath = os.path.join(output_dir, filename)
-
-    # If there was no such dir, we create it and try again
-    encoded_image = response.json()['images'][0]
-    try:
-        # IMPORTANT: We resize image everytime,
-        # so if Stable Diffusion sets default resolution of 512,
-        # when we exceed the limit,
-        # the result would still have same resolution(although, the quality is worse)
-        resize_and_save_image(encoded_image, output_filepath, resolution)
-    except FileNotFoundError as e:
-        create_directory_if_not_exists(output_dir)
-        resize_and_save_image(encoded_image, output_filepath, resolution)
 
 
 def convert_to_mask(image_path, output_path=None):

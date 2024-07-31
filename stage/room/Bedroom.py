@@ -1,6 +1,7 @@
-from postProcessing import ImageProcessor
-from tools import run_preprocessor
+from postprocessing.postProcessing import PostProcessor
+from preprocessing.preProcessSegment import ImageSegmentor
 from constants import Path
+from tools import resize_and_save_image
 from .Room import Room
 import os
 from ..furniture.Furniture import Furniture
@@ -28,12 +29,17 @@ class Bedroom(Room):
         furniture_image = Furniture.request_blender_render(scene_render_parameters)
         Room.process_rendered_image(furniture_image)
 
-        processor = ImageProcessor()
+        processor = PostProcessor()
         processor.execute()
 
         # Create windows mask for staged room
-        run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, "seg_prerequisite.png", height)
+        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
+        segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment.execute()
+        resize_and_save_image(Path.SEG_PREREQUISITE_IMAGE.value,
+                              Path.SEG_PREREQUISITE_IMAGE.value, height)
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
+
 
     def calculate_bed_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.Bed import Bed

@@ -8,7 +8,8 @@ def join(directory, file):
 
 class Path(Enum):
     # /image
-    IMAGES_DIR = 'images'
+    # pasiba Arsenu 😘😘😘
+    IMAGES_DIR = os.path.abspath('images')
     INPUT_IMAGE = join(IMAGES_DIR, 'user_image.png')
     OUTPUT_IMAGE = join(IMAGES_DIR, 'applied.jpg')
 
@@ -27,6 +28,8 @@ class Path(Enum):
     WALL_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'wall_mask.png')
     WINDOWS_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask.png')
     WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask_inpainting.png')
+    PREPROCESSED_USERS = join(PREPROCESSED_IMAGES_DIR,  'users.png')
+
 
     # /3Ds
     MODELS_DIR = '3Ds'
