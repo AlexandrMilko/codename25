@@ -275,7 +275,7 @@ class Room:
         points = np.asarray(pcd.points)
 
         # Фильтрация точек пола
-        quantile = 60
+        quantile = 80
         floor_height = np.percentile(points[:, 1], quantile)
         threshold = 0.05  # Допустимое отклонение от высоты пола
         floor_points = points[np.abs(points[:, 1] - floor_height) < threshold]
