@@ -71,9 +71,6 @@ class Room:
             points_in_3d[name].append(left_point)
             points_in_3d[name].append(right_point)
 
-        # Add camera
-        points_in_3d['camera'] = [[0,0,0], [0,0,0]]
-
         print(points_in_3d)
         Room.offsets_to_floor_pixels(Path.PLY_SPACE.value, Path.DEPTH_IMAGE.value, points_in_3d)
         
@@ -257,7 +254,7 @@ class Room:
 
     @staticmethod
     def offsets_to_floor_pixels(ply_path, npy_path, points_dict: dict,
-                                output_path=Path.FLOOR_LAYOUT_IMAGE.value) -> dict:
+                                output_path=Path.FLOOR_LAYOUT_IMAGE.value) -> (dict, tuple):
 
         """
         :param ply_path: path to the .ply file that represents 3d space
@@ -287,6 +284,10 @@ class Room:
         depth_map = np.load(npy_path)
         height, width = depth_map.shape
         layout_image = np.zeros((height, width, 3), dtype=np.uint8)  # Изменение на цветное изображение
+
+        # Add camera and relative point to calculate pixels_per_meter_ratio
+        points_dict['camera'] = [[0, 0, 0], [0, 0, 0]]
+        points_dict['point_for_calculating_ratio'] = [0.2, 0, 0.2]
 
         # We add the user's specified points to floor points before normalization, so it does not neglect them
         for point_name in points_dict.keys():
@@ -331,7 +332,7 @@ class Room:
 
                 pixel_x = np.clip(pixel_x, 0, width - 1)  # May not be needed
                 pixel_y = np.clip(pixel_y, 0, height - 1)  # May not be needed
-                print(f"Points coords: x={pixel_x}, y={pixel_y}")  # Отладочное сообщение
+                print(f"{x_3d, y_3d} ---> x={pixel_x}, y={pixel_y}")  # Отладочное сообщение
                 result[point_name] = [pixel_x, pixel_y]
                 cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Красный цвет
 
@@ -339,47 +340,18 @@ class Room:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             cv2.imwrite(output_path, layout_image)
 
-        return result
+        pixels_per_meter_ratio = Room.calculate_pixels_per_meter_ratio(points_dict, result)
+        print(pixels_per_meter_ratio)
+
+        return result, pixels_per_meter_ratio
 
     @staticmethod
-    def update_floor_layout(points_dict: dict, output_path=None):
+    def calculate_pixels_per_meter_ratio(offsets, pixels):
         """
-            Draws the points from points_dict on an existing image and saves the result.
-
-            :param image_path: Path to the existing image file
-            :param points_dict: Dictionary with point names and their (x, y) coordinates to draw
-            :param output_path: Path to save the modified image
-            """
-        # Load the existing image
-        image = cv2.imread(Path.FLOOR_LAYOUT_IMAGE.value)
-        if image is None:
-            raise FileNotFoundError(f"Image file {Path.FLOOR_LAYOUT_IMAGE.value} not found.")
-
-        # Draw each point on the image
-        for point_name, (x, y) in points_dict.items():
-            # Draw a circle at the point location
-            cv2.circle(image, (x, y), 5, (0, 0, 255), -1)  # Red color, -1 for filled circle
-            # Optionally, you can add text to label the point
-            cv2.putText(image, point_name, (x + 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-
-        # Save the result
-        cv2.imwrite(output_path, image)
-        print(f"Image saved to {output_path}")
-
-    @staticmethod
-    def calculate_pixels_per_meter_ratio(ply_path, npy_path, render_offsets):
+        offsets: points in 3d space that were converted to the pixels in dictionary format
+        pixels: pixel coordinates on floor layout image as result of conversion in dictionary format
+        WARNING! Both dictionaries must have 'camera' and 'point_for_calculating_ratio' keys
         """
-        ply_path - .ply space of room
-        npy_path - .npy image from depth estimation
-        # WARNING, when you use new offsets, you should recalculate floor layout and its pixels_per_meter_ratio.
-        Because if some of the offsets get out of boundaries, it will affect normalization
-        """
-        offsets = {
-            'camera': [0, 0, 0],
-            'point_for_calculating_ratio': [0.2, 0, 0.2]  # We can use any offsets to calculate ratio. But they should
-            # be small enough, so they do not get out of floor layout boundaries and do not affect points normalization
-        }
-        pixels = Room.offsets_to_floor_pixels(ply_path, npy_path, offsets | render_offsets)
         pixels_x_diff = pixels['camera'][0] - pixels['point_for_calculating_ratio'][0]
         pixels_y_diff = pixels['camera'][1] - pixels['point_for_calculating_ratio'][1]
         offsets_x_diff = offsets['camera'][0] - offsets['point_for_calculating_ratio'][0]
