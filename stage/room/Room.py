@@ -287,7 +287,7 @@ class Room:
 
         # Add camera and relative point to calculate pixels_per_meter_ratio
         points_dict['camera'] = [[0, 0, 0], [0, 0, 0]]
-        points_dict['point_for_calculating_ratio'] = [[0.2, 0, 0.2], [0.2, 0, 0.2]]
+        points_dict['point_for_calculating_ratio'] = [[0.2, 0.2, 0], [0.2, 0.2, 0]]
 
         # We add the user's specified points to floor points before normalization, so it does not neglect them
         for point_name in points_dict.keys():
