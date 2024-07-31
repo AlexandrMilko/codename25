@@ -25,7 +25,7 @@ class Room:
         width, height = get_image_size(self.empty_room_image_path)
         PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
 
-        normalMap = ImageNormalMap(self.empty_room_image_path, os.path.join(Path.APP_DIR.value,Path.PREPROCESSED_USERS.value), PREPROCESSOR_RESOLUTION_LIMIT)
+        normalMap = ImageNormalMap(self.empty_room_image_path, Path.PREPROCESSED_USERS.value, PREPROCESSOR_RESOLUTION_LIMIT)
         normalMap.execute()
 
         copy_file(self.empty_room_image_path,
@@ -259,10 +259,10 @@ class Room:
         width, height = get_image_size(self.empty_room_image_path)
         PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
 
-        segment = ImageSegmentor(self.empty_room_image_path, os.path.join(Path.APP_DIR.value, Path.SEGMENTED_ES_IMAGE.value), PREPROCESSOR_RESOLUTION_LIMIT)
+        segment = ImageSegmentor(self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
         segment.execute()
-        resize_and_save_image(os.path.join(Path.APP_DIR.value, Path.SEGMENTED_ES_IMAGE.value),
-                              os.path.join(Path.APP_DIR.value, Path.SEGMENTED_ES_IMAGE.value), height)
+        resize_and_save_image(Path.SEGMENTED_ES_IMAGE.value,
+                              Path.SEGMENTED_ES_IMAGE.value, height)
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 
         # Create an empty mask of same size as image
