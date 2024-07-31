@@ -6,6 +6,7 @@ from .Room import Room
 from ..furniture.Furniture import Furniture
 import os
 
+
 class LivingRoom(Room):
     def stage(self):
         camera_height, pitch_rad, roll_rad, height, scene_render_parameters = self.prepare_empty_room_data()
