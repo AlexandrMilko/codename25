@@ -287,7 +287,7 @@ class Room:
 
         # Add camera and relative point to calculate pixels_per_meter_ratio
         points_dict['camera'] = [[0, 0, 0], [0, 0, 0]]
-        points_dict['point_for_calculating_ratio'] = [0.2, 0, 0.2]
+        points_dict['point_for_calculating_ratio'] = [[0.2, 0, 0.2], [0.2, 0, 0.2]]
 
         # We add the user's specified points to floor points before normalization, so it does not neglect them
         for point_name in points_dict.keys():
@@ -352,10 +352,15 @@ class Room:
         pixels: pixel coordinates on floor layout image as result of conversion in dictionary format
         WARNING! Both dictionaries must have 'camera' and 'point_for_calculating_ratio' keys
         """
-        pixels_x_diff = pixels['camera'][0] - pixels['point_for_calculating_ratio'][0]
-        pixels_y_diff = pixels['camera'][1] - pixels['point_for_calculating_ratio'][1]
-        offsets_x_diff = offsets['camera'][0] - offsets['point_for_calculating_ratio'][0]
-        offsets_z_diff = offsets['camera'][2] - offsets['point_for_calculating_ratio'][2]
+        left_camera_pixel = pixels['camera'][0]
+        left_point_pixel = pixels['point_for_calculating_ratio'][0]
+
+        left_camera_offset = offsets['camera'][0]
+        left_point_offset = offsets['point_for_calculating_ratio'][0]
+        pixels_x_diff = left_camera_pixel[0] - left_point_pixel[0]
+        pixels_y_diff = left_camera_pixel[1] - left_point_pixel[1]
+        offsets_x_diff = left_camera_offset[0] - left_point_offset[0]
+        offsets_z_diff = left_camera_offset[2] - left_point_offset[2]
         ratio_x = pixels_x_diff / offsets_x_diff
         ratio_y = pixels_y_diff / offsets_z_diff
         return ratio_x, ratio_y
