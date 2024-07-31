@@ -324,6 +324,7 @@ class Room:
             print(points_dict)
             left = points_dict[point_name][0]
             right = points_dict[point_name][1]
+            result[point_name] = []
             for point in left, right:
                 x_3d, _, y_3d = point
                 print(point)
@@ -333,7 +334,7 @@ class Room:
                 pixel_x = np.clip(pixel_x, 0, width - 1)  # May not be needed
                 pixel_y = np.clip(pixel_y, 0, height - 1)  # May not be needed
                 print(f"{x_3d, y_3d} ---> x={pixel_x}, y={pixel_y}")  # Отладочное сообщение
-                result[point_name] = [pixel_x, pixel_y]
+                result[point_name].append([pixel_x, pixel_y])
                 cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Красный цвет
 
         if output_path is not None:
