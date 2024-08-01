@@ -13,6 +13,8 @@ from constants import Path
 
 depth_npy_path = Path.DEPTH_IMAGE.value
 depth_ply_path = Path.PLY_SPACE.value
+floor_npy_path = Path.FLOOR_NPY.value
+floor_ply_path = Path.FLOOR_PLY.value
 
 def image_pixel_to_3d(x, y, image_path, depth_npy_path=depth_npy_path):
     w, h = get_image_size(image_path)
@@ -150,6 +152,73 @@ def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(points)
         pcd.colors = o3d.utility.Vector3dVector(colors)
+        o3d.io.write_point_cloud(depth_ply_path,
+                                 pcd)
+
+def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.value, depth_npy_path=floor_npy_path, depth_ply_path=floor_ply_path):
+    mask = Image.open(floor_mask_path).convert('L')
+    mask = np.array(mask) > 0
+    mask_flat = mask.flatten()
+
+    from DepthAnythingV2.metric_depth.depth_anything_v2.dpt import DepthAnythingV2
+    # Determine the device to use (CUDA, MPS, or CPU)
+    DEVICE = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
+
+    # Model configuration based on the chosen encoder
+    model_configs = {
+        'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]},
+        'vitb': {'encoder': 'vitb', 'features': 128, 'out_channels': [96, 192, 384, 768]},
+        'vitl': {'encoder': 'vitl', 'features': 256, 'out_channels': [256, 512, 1024, 1024]},
+        'vitg': {'encoder': 'vitg', 'features': 384, 'out_channels': [1536, 1536, 1536, 1536]}
+    }
+
+    encoder = 'vitl'
+    max_depth = 20
+    load_from = Path.DEPTH_CHECKPOINT.value
+    height_limit = Path.IMAGE_HEIGHT_LIMIT.value
+
+    # Initialize the DepthAnythingV2 model with the specified configuration
+    depth_anything = DepthAnythingV2(**{**model_configs[encoder], 'max_depth': max_depth})
+    depth_anything.load_state_dict(torch.load(load_from, map_location='cpu'))
+    depth_anything = depth_anything.to(DEVICE).eval()
+
+    # Get the list of image files to process
+    filenames = [image_path]
+
+    # Process each image file
+    for k, filename in enumerate(filenames):
+        print(f'Processing {k + 1}/{len(filenames)}: {filename}')
+
+        # Load the image
+        color_image = Image.open(filename).convert('RGB')
+        width, height = color_image.size
+
+        # Read the image using OpenCV
+        image = cv2.imread(filename)
+        infer_height = height if height < height_limit else height_limit
+        pred = depth_anything.infer_image(image, infer_height)
+
+        # Resize depth prediction to match the original image size
+        resized_pred = Image.fromarray(pred).resize((width, height), Image.NEAREST)
+        np.save(depth_npy_path, resized_pred)
+
+        # Generate mesh grid and calculate point cloud coordinates
+        FX = width * 0.6
+        FY = height * 0.9
+        focal_length_x, focal_length_y = (FX, FY)
+        x, y = np.meshgrid(np.arange(width), np.arange(height))
+        x = (x - width / 2) / focal_length_x
+        y = (y - height / 2) / focal_length_y
+        z = np.array(resized_pred)
+        points = np.stack((np.multiply(x, z), np.multiply(y, z), z), axis=-1).reshape(-1, 3)
+        colors = np.array(color_image).reshape(-1, 3) / 255.0
+        filtered_points = points[mask_flat]
+        filtered_colors = colors[mask_flat]
+
+        # Create the point cloud and save it to the output directory
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(filtered_points)
+        pcd.colors = o3d.utility.Vector3dVector(filtered_colors)
         o3d.io.write_point_cloud(depth_ply_path,
                                  pcd)
 
