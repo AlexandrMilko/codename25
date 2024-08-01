@@ -1,5 +1,6 @@
 from preprocessing.preProcessNormalMap import ImageNormalMap
 from preprocessing.preProcessSegment import ImageSegmentor
+from stage import Floor
 from tools import (move_file, copy_file, get_image_size, save_mask_of_size,
                    convert_png_to_mask, overlay_masks, image_overlay, calculate_angle_from_top_view,
                    resize_and_save_image)
@@ -182,11 +183,8 @@ class Room:
         pcd = o3d.io.read_point_cloud(ply_path)
         points = np.asarray(pcd.points)
 
-        # Фильтрация точек пола
-        quantile = 60
-        floor_height = np.percentile(points[:, 1], quantile)
-        threshold = 0.05  # Допустимое отклонение от высоты пола
-        floor_points = points[np.abs(points[:, 1] - floor_height) < threshold]
+        # WARNING: be sure to path a separate floor ply path(where points are only floor points)
+        floor_points = points
 
         # Загрузка карты глубины
         depth_map = np.load(npy_path)
@@ -428,11 +426,10 @@ class Room:
     def prepare_empty_room_data(self):
         Image.open(self.empty_room_image_path).save(Path.PREREQUISITE_IMAGE.value)
         from DepthAnythingV2.depth_estimation import (image_pixels_to_point_cloud, depth_ply_path, depth_npy_path,
-                                                      image_pixels_to_3d, rotate_3d_points)
+                                                      create_floor_point_cloud)
         roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
 
         image_pixels_to_point_cloud(self.empty_room_image_path)
-        self.save_floor_layout_image(depth_ply_path, depth_npy_path)
         # image_pixels_to_3d(self.empty_room_image_path, "my_3d_space.txt")
         # rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", -pitch_rad, -roll_rad)
 
@@ -444,6 +441,10 @@ class Room:
         segment.execute()
         resize_and_save_image(Path.SEGMENTED_ES_IMAGE.value,
                               Path.SEGMENTED_ES_IMAGE.value, height)
+
+        Floor.save_mask(Path.SEGMENTED_ES_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
+        create_floor_point_cloud(self.empty_room_image_path)
+        self.save_floor_layout_image(Path.FLOOR_PLY.value, Path.FLOOR_NPY.value)
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 
         # Create an empty mask of same size as image
