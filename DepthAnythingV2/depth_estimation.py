@@ -204,7 +204,11 @@ def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.v
         if mask_array.shape != resized_pred.shape:
             print(mask_array.shape)
             print(resized_pred.shape)
-            raise ValueError("The mask and depth data must have the same dimensions.")
+            print("WARNING!!! The mask and depth data must have the same dimensions.")
+            print("WARNING!!! IGNORING IT. Resizing mask to image size")
+            mask_resized = mask.resize(resized_pred.shape[::-1], Image.NEAREST)
+            mask_array = np.array(mask_resized)
+            # raise ValueError("The mask and depth data must have the same dimensions.")
 
         white_pixel_indices = np.where(mask_array == 255)
         filtered_resized_pred = resized_pred[white_pixel_indices]
