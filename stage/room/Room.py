@@ -187,8 +187,8 @@ class Room:
         floor_points = points
 
         # Загрузка карты глубины
-        depth_map = np.load(npy_path)
-        height, width = depth_map.shape
+        # depth_map = np.load(npy_path)
+        height, width = 1024, 1024
         layout_image = np.zeros((height, width), dtype=np.uint8)
 
         # Нахождение минимальных и максимальных значений координат пола
