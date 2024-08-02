@@ -73,7 +73,7 @@ class Room:
             points_in_3d[name].append(right_point)
 
         print(points_in_3d)
-        Room.offsets_to_floor_pixels(Path.FLOOR_PLY.value, Path.FLOOR_NPY.value, points_in_3d)
+        Room.offsets_to_floor_pixels(Path.FLOOR_PLY.value, points_in_3d)
         
     @staticmethod
     def pixel_to_3d(x, y):
@@ -216,7 +216,7 @@ class Room:
         return bottom_pixels
 
     @staticmethod
-    def offsets_to_floor_pixels(ply_path, npy_path, points_dict: dict,
+    def offsets_to_floor_pixels(ply_path, points_dict: dict,
                                 output_path=Path.FLOOR_LAYOUT_IMAGE.value) -> (dict, tuple):
 
         """
@@ -241,8 +241,8 @@ class Room:
         floor_points = points
 
         # Загрузка карты глубины
-        depth_map = np.load(npy_path)
-        height, width = depth_map.shape
+        # depth_map = np.load(npy_path)
+        height, width = 1024, 1024
         layout_image = np.zeros((height, width, 3), dtype=np.uint8)  # Изменение на цветное изображение
 
         # Add camera and relative point to calculate pixels_per_meter_ratio
