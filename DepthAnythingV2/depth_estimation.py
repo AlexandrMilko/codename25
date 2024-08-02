@@ -199,6 +199,7 @@ def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.v
 
         # Resize depth prediction to match the original image size
         resized_pred = np.array(Image.fromarray(pred).resize((width, height), Image.NEAREST))
+        print(resized_pred)
 
         # Ensure that the depth data and mask have the same dimensions
         if mask_array.shape != resized_pred.shape:
@@ -218,17 +219,19 @@ def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.v
         FX = width * 0.6
         FY = height * 0.9
         focal_length_x, focal_length_y = (FX, FY)
-        x, y = np.meshgrid(np.arange(width), np.arange(height))
-        x = (x - width / 2) / focal_length_x
-        y = (y - height / 2) / focal_length_y
-        z = np.array(filtered_resized_pred)
+        y_indices, x_indices = white_pixel_indices
+        # x, y = np.meshgrid(np.arange(width), np.arange(height))
+        x = (x_indices - width / 2) / focal_length_x
+        y = (y_indices - height / 2) / focal_length_y
+        z = filtered_resized_pred
         points = np.stack((np.multiply(x, z), np.multiply(y, z), z), axis=-1).reshape(-1, 3)
-        colors = np.array(color_image).reshape(-1, 3) / 255.0
+        color_image_array = np.array(color_image)
+        filtered_colors = color_image_array[y_indices, x_indices] / 255.0
 
         # Create the point cloud and save it to the output directory
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(points)
-        pcd.colors = o3d.utility.Vector3dVector(colors)
+        pcd.colors = o3d.utility.Vector3dVector(filtered_colors)
         o3d.io.write_point_cloud(depth_ply_path,
                                  pcd)
 
