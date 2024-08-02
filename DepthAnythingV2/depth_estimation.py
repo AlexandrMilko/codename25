@@ -157,8 +157,7 @@ def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth
 
 def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.value, depth_npy_path=floor_npy_path, depth_ply_path=floor_ply_path):
     mask = Image.open(floor_mask_path).convert('L')
-    mask = np.array(mask) > 0
-    mask_flat = mask.flatten()
+    mask_array = np.array(mask)
 
     from DepthAnythingV2.metric_depth.depth_anything_v2.dpt import DepthAnythingV2
     # Determine the device to use (CUDA, MPS, or CPU)
@@ -199,8 +198,15 @@ def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.v
         pred = depth_anything.infer_image(image, infer_height)
 
         # Resize depth prediction to match the original image size
-        resized_pred = Image.fromarray(pred).resize((width, height), Image.NEAREST)
-        np.save(depth_npy_path, resized_pred)
+        resized_pred = np.array(Image.fromarray(pred).resize((width, height), Image.NEAREST))
+
+        # Ensure that the depth data and mask have the same dimensions
+        if mask_array.shape != resized_pred.shape:
+            raise ValueError("The mask and depth data must have the same dimensions.")
+
+        white_pixel_indices = np.where(mask_array == 255)
+        filtered_resized_pred = resized_pred[white_pixel_indices]
+        np.save(depth_npy_path, filtered_resized_pred)
 
         # Generate mesh grid and calculate point cloud coordinates
         FX = width * 0.6
@@ -209,16 +215,14 @@ def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.v
         x, y = np.meshgrid(np.arange(width), np.arange(height))
         x = (x - width / 2) / focal_length_x
         y = (y - height / 2) / focal_length_y
-        z = np.array(resized_pred)
+        z = np.array(filtered_resized_pred)
         points = np.stack((np.multiply(x, z), np.multiply(y, z), z), axis=-1).reshape(-1, 3)
         colors = np.array(color_image).reshape(-1, 3) / 255.0
-        filtered_points = points[mask_flat]
-        filtered_colors = colors[mask_flat]
 
         # Create the point cloud and save it to the output directory
         pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(filtered_points)
-        pcd.colors = o3d.utility.Vector3dVector(filtered_colors)
+        pcd.points = o3d.utility.Vector3dVector(points)
+        pcd.colors = o3d.utility.Vector3dVector(colors)
         o3d.io.write_point_cloud(depth_ply_path,
                                  pcd)
 
