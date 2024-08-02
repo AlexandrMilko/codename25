@@ -202,6 +202,8 @@ def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.v
 
         # Ensure that the depth data and mask have the same dimensions
         if mask_array.shape != resized_pred.shape:
+            print(mask_array.shape)
+            print(resized_pred.shape)
             raise ValueError("The mask and depth data must have the same dimensions.")
 
         white_pixel_indices = np.where(mask_array == 255)
