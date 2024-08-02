@@ -178,41 +178,6 @@ class Room:
         cv2.imwrite(output_windows_mask_path, bw_mask)
 
     @staticmethod
-    def save_floor_layout_image(ply_path: str, npy_path: str, output_path=Path.FLOOR_LAYOUT_IMAGE.value) -> None:
-        # Загрузка облака точек
-        pcd = o3d.io.read_point_cloud(ply_path)
-        points = np.asarray(pcd.points)
-
-        # WARNING: be sure to path a separate floor ply path(where points are only floor points)
-        floor_points = points
-
-        # Загрузка карты глубины
-        # depth_map = np.load(npy_path)
-        height, width = 1024, 1024
-        layout_image = np.zeros((height, width), dtype=np.uint8)
-
-        # Нахождение минимальных и максимальных значений координат пола
-        min_coords = floor_points.min(axis=0)
-        max_coords = floor_points.max(axis=0)
-
-        # Нормализация координат пола
-        norm_points = (floor_points - min_coords) / (max_coords - min_coords)
-        norm_points[:, 0] = norm_points[:, 0] * (width - 1)
-        norm_points[:, 2] = norm_points[:, 2] * (height - 1)
-
-        # Создание заполненного контура
-        hull = cv2.convexHull(norm_points[:, [0, 2]].astype(int))
-        cv2.fillPoly(layout_image, [hull], (255, 255, 255))
-
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        cv2.imwrite(output_path, layout_image)
-
-        # Визуализация результатов
-        # cv2.imshow('Layout Image', layout_image)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-
-    @staticmethod
     def find_horizontal_borders():
         target_colors = {
             "door": np.array([8, 255, 51]),  # #08FF33
@@ -272,11 +237,8 @@ class Room:
         pcd = o3d.io.read_point_cloud(ply_path)
         points = np.asarray(pcd.points)
 
-        # Фильтрация точек пола
-        quantile = 80
-        floor_height = np.percentile(points[:, 1], quantile)
-        threshold = 0.05  # Допустимое отклонение от высоты пола
-        floor_points = points[np.abs(points[:, 1] - floor_height) < threshold]
+        # WARNING: be sure to path a separate floor ply path(where points are only floor points)
+        floor_points = points
 
         # Загрузка карты глубины
         depth_map = np.load(npy_path)
@@ -444,7 +406,7 @@ class Room:
 
         Floor.save_mask(Path.SEGMENTED_ES_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
         create_floor_point_cloud(self.empty_room_image_path)
-        self.save_floor_layout_image(Path.FLOOR_PLY.value, Path.FLOOR_NPY.value)
+        # self.offsets_to_floor_pixels(Path.FLOOR_PLY.value, Path.FLOOR_NPY.value)
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 
         # Create an empty mask of same size as image
