@@ -216,70 +216,69 @@ class Room:
         return bottom_pixels
 
     @staticmethod
-    def offsets_to_floor_pixels(ply_path, points_dict: dict,
-                                output_path=Path.FLOOR_LAYOUT_IMAGE.value) -> (dict, tuple):
-
+    def offsets_to_floor_pixels(ply_path="output/floor.ply", points_dict=a, output_path="output/floor_layout.png") -> (
+    dict, tuple):
         """
         :param ply_path: path to the .ply file that represents 3d space
-        :param npy_path: path to the .npy file that is the result of depth estimation
         :param output_path: path to save the debug layout image
-        :param points_dict: 3d points to be converted into 2d layout pixel coords in the following format
-        (the dictionary with same keys will be returned along with converted values)
-        Example:
-        note: 3d point passed has to be in such: format y coordinate is height
-        {"window1": [[x, y, z], [x1, y1, z1]]} -> {"window1": [[x, y], [x1, y1]]} (x - horizontal margin, y - vertical margin from top left corner)
-        :return:
-        {"window1": [[228, 0], [228, 50]]}
-        NOTE: We have left 2 points for each object(left and right ones): {"window1": [[x, y, z], [x1, y1, z1]]}
+        :param points_dict: 3d points to be converted into 2d layout pixel coords
+        :return: dictionary of converted 2D points and pixels-per-meter ratio
         """
 
-        # Загрузка облака точек
-        print(points_dict, "points_dict")
+        # Load the point cloud
         pcd = o3d.io.read_point_cloud(ply_path)
         points = np.asarray(pcd.points)
 
-        # WARNING: be sure to path a separate floor ply path(where points are only floor points)
+        # WARNING: Ensure path only contains floor points
         floor_points = points
 
-        # Загрузка карты глубины
-        # depth_map = np.load(npy_path)
+        # Initialize layout image
         height, width = 1024, 1024
-        layout_image = np.zeros((height, width, 3), dtype=np.uint8)  # Изменение на цветное изображение
+        layout_image = np.zeros((height, width, 3), dtype=np.uint8)
 
-        # Add camera and relative point to calculate pixels_per_meter_ratio
+        # Add camera and relative point for pixel-per-meter calculation
         points_dict['camera'] = [[0, 0, 0], [0, 0, 0]]
         points_dict['point_for_calculating_ratio'] = [[0.2, 0.2, 0], [0.2, 0.2, 0]]
 
-        # We add the user's specified points to floor points before normalization, so it does not neglect them
+        # Process user's points
         for point_name in points_dict.keys():
             print(points_dict[point_name], " points_dict[point_name]")
             left = points_dict[point_name][0]
             right = points_dict[point_name][1]
 
-            # We reverse the x-axis because in a pixel coordinate system it is opposite to blender
-            left[0] = -left[0]
-            right[0] = -right[0]
-            # We swap y, z because in Blender - z is the height
             left[1], left[2] = left[2], left[1]
             right[1], right[2] = right[2], right[1]
 
+            # Append user points to floor points
             floor_points = np.vstack([floor_points, np.array(left)])
             floor_points = np.vstack([floor_points, np.array(right)])
 
-        # Нахождение минимальных и максимальных значений координат пола
+        # Find min and max coordinates of the floor
         min_coords = floor_points.min(axis=0)
         max_coords = floor_points.max(axis=0)
 
-        # Нормализация координат пола
+        # Print min and max coordinates for debugging
+        print("Min coordinates:", min_coords)
+        print("Max coordinates:", max_coords)
+
+        # Normalize floor points to image dimensions
         norm_points = (floor_points - min_coords) / (max_coords - min_coords)
         norm_points[:, 0] = norm_points[:, 0] * (width - 1)
         norm_points[:, 2] = norm_points[:, 2] * (height - 1)
 
-        # Создание заполненного контура
         hull = cv2.convexHull(norm_points[:, [0, 2]].astype(int))
         cv2.fillPoly(layout_image, [hull], (255, 255, 255))
 
-        # Converting 3d points to 2d floor pixels
+        # Print normalized points for debugging
+        print("Normalized points (first 5):", norm_points[:5])
+
+        # # Visualize all points on the image
+        # for point in norm_points:
+        #     pixel_x = int(point[0])
+        #     pixel_y = int(point[2])
+        #     cv2.circle(layout_image, (pixel_x, pixel_y), 1, (255, 255, 255), -1)  # White color for all points
+
+        # Convert 3D points to 2D pixels
         result = dict()
         for point_name in points_dict.keys():
             print(points_dict)
@@ -288,15 +287,16 @@ class Room:
             result[point_name] = []
             for point in left, right:
                 x_3d, _, y_3d = point
-                print(point)
+                print(f"3D Point: {point}")
                 pixel_x = int((x_3d - min_coords[0]) / (max_coords[0] - min_coords[0]) * (width - 1))
                 pixel_y = int((y_3d - min_coords[2]) / (max_coords[2] - min_coords[2]) * (height - 1))
 
-                pixel_x = np.clip(pixel_x, 0, width - 1)  # May not be needed
-                pixel_y = np.clip(pixel_y, 0, height - 1)  # May not be needed
-                print(f"{x_3d, y_3d} ---> x={pixel_x}, y={pixel_y}")  # Отладочное сообщение
+                # Ensure pixel coordinates are within bounds
+                pixel_x = np.clip(pixel_x, 0, width - 1)
+                pixel_y = np.clip(pixel_y, 0, height - 1)
+                print(f"Mapped to 2D: x={pixel_x}, y={pixel_y}")  # Debug message
                 result[point_name].append([pixel_x, pixel_y])
-                cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Красный цвет
+                cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Red color for specific points
 
         if output_path is not None:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
