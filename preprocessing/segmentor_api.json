@@ -1,7 +1,7 @@
 {
   "24": {
     "inputs": {
-      "image": "user_image.png",
+      "image": "7Before.jpg",
       "upload": "image"
     },
     "class_type": "LoadImage",
@@ -9,7 +9,7 @@
       "title": "Load Image"
     }
   },
-  "26": {
+  "38": {
     "inputs": {
       "resolution": 512,
       "image": [
@@ -17,17 +17,17 @@
         0
       ]
     },
-    "class_type": "UniFormer-SemSegPreprocessor",
+    "class_type": "OneFormer-ADE20K-SemSegPreprocessor",
     "_meta": {
-      "title": "UniFormer Segmentor"
+      "title": "OneFormer ADE20K Segmentor"
     }
   },
-  "27": {
+  "45": {
     "inputs": {
       "path": "./image.png",
       "overwrite": "true",
       "image": [
-        "26",
+        "38",
         0
       ]
     },
