@@ -216,7 +216,7 @@ class Room:
         return bottom_pixels
 
     @staticmethod
-    def offsets_to_floor_pixels(ply_path="output/floor.ply", points_dict=a, output_path="output/floor_layout.png") -> (
+    def offsets_to_floor_pixels(ply_path, points_dict, output_path=Path.FLOOR_LAYOUT_IMAGE.value) -> (
     dict, tuple):
         """
         :param ply_path: path to the .ply file that represents 3d space
