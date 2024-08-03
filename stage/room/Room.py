@@ -234,6 +234,7 @@ class Room:
         """
 
         # Загрузка облака точек
+        print(points_dict, "points_dict")
         pcd = o3d.io.read_point_cloud(ply_path)
         points = np.asarray(pcd.points)
 
