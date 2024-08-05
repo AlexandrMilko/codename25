@@ -388,8 +388,8 @@ class Room:
 
     def prepare_empty_room_data(self):
         Image.open(self.empty_room_image_path).save(Path.PREREQUISITE_IMAGE.value)
-        from DepthAnythingV2.depth_estimation import (image_pixels_to_point_cloud, depth_ply_path, depth_npy_path,
-                                                      create_floor_point_cloud)
+        from DepthAnythingV2.depth_estimation import (image_pixels_to_point_cloud, depth_ply_path,
+                                                      create_floor_point_cloud, rotate_ply_file_with_colors)
         roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
 
         image_pixels_to_point_cloud(self.empty_room_image_path)
@@ -407,7 +407,7 @@ class Room:
 
         Floor.save_mask(Path.SEGMENTED_ES_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
         create_floor_point_cloud(self.empty_room_image_path)
-        # self.offsets_to_floor_pixels(Path.FLOOR_PLY.value, Path.FLOOR_NPY.value)
+        rotate_ply_file_with_colors(depth_ply_path, depth_ply_path, -pitch_rad, -roll_rad)
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 
         # Create an empty mask of same size as image

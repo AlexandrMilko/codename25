@@ -280,3 +280,45 @@ def rotate_3d_point(point: tuple[float, float, float], pitch_rad, roll_rad):
     point = np.array(point)
     rotated_point = point.dot(rotation_matrix_x(pitch_rad).T).dot(rotation_matrix_y(roll_rad).T)
     return rotated_point
+
+def rotate_ply_file_with_colors(input_path: str, output_path: str, pitch_rad: float, roll_rad: float):
+    def rotation_matrix_x(theta):
+        return np.array([
+            [1, 0, 0],
+            [0, np.cos(theta), -np.sin(theta)],
+            [0, np.sin(theta), np.cos(theta)]
+        ])
+
+    def rotation_matrix_y(theta):
+        return np.array([
+            [np.cos(theta), 0, np.sin(theta)],
+            [0, 1, 0],
+            [-np.sin(theta), 0, np.cos(theta)]
+        ])
+
+    # Load the .ply file using Open3D
+    pcd = o3d.io.read_point_cloud(input_path)
+    points = np.asarray(pcd.points)
+
+    # Check if the point cloud has colors
+    has_colors = pcd.has_colors()
+
+    if has_colors:
+        colors = np.asarray(pcd.colors)
+
+    # Calculate the combined rotation matrix
+    rotation_matrix = rotation_matrix_x(pitch_rad).dot(rotation_matrix_y(roll_rad))
+
+    # Apply the rotation matrix to each point
+    rotated_points = points.dot(rotation_matrix.T)
+
+    # Create a new point cloud with rotated points
+    rotated_pcd = o3d.geometry.PointCloud()
+    rotated_pcd.points = o3d.utility.Vector3dVector(rotated_points)
+
+    # Retain colors if they exist
+    if has_colors:
+        rotated_pcd.colors = o3d.utility.Vector3dVector(colors)
+
+    # Save the rotated point cloud to the output file
+    o3d.io.write_point_cloud(output_path, rotated_pcd)
