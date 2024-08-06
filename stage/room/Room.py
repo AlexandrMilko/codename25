@@ -393,8 +393,6 @@ class Room:
         roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
 
         image_pixels_to_point_cloud(self.empty_room_image_path)
-        # image_pixels_to_3d(self.empty_room_image_path, "my_3d_space.txt")
-        # rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", -pitch_rad, -roll_rad)
 
         # Segment our empty space room. It is used in Room.save_windows_mask
         width, height = get_image_size(self.empty_room_image_path)

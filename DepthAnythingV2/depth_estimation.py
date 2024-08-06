@@ -1,10 +1,5 @@
-import argparse
-import time
-
 from PIL import Image
-import torchvision.transforms as transforms
 import torch
-import gc
 import numpy as np
 from tools import get_image_size
 import open3d as o3d
@@ -18,56 +13,7 @@ floor_ply_path = Path.FLOOR_PLY.value
 
 def image_pixel_to_3d(x, y, image_path, depth_npy_path=depth_npy_path):
     w, h = get_image_size(image_path)
-    return transform_to_blender_xyz(*pixel_to_3d(x, y, w, h, depth_npy_path))
-
-def image_pixels_to_3d(image_path, output_path, depth_npy_path=depth_npy_path):
-    # WARNING! DOnt forget to use transform_to_blender_xyz
-    pixel_coords_3d = get_pixel_3d_coords(image_path, depth_npy_path)
-    with open(output_path, "w") as f:
-        for coord in pixel_coords_3d:
-            f.write(f"{coord[0]},{coord[1]},{coord[2]}\n")
-
-def image_pixel_list_to_3d(image_path, pixels_coordinates: list[list[int,int]], depth_npy_path=depth_npy_path):
-    points_3d = []
-    w, h = get_image_size(image_path)
-    for x, y in pixels_coordinates:
-        point_3d = transform_to_blender_xyz(*pixel_to_3d(x, y, w, h, depth_npy_path))
-        points_3d.append(point_3d)
-    return points_3d
-
-
-def get_pixel_3d_coords(image_path, depth_npy_path):
-    """
-    Get 3D coordinates for each pixel in the image.
-
-    Args:
-        image_path: path to the image which was used as input
-        depth_npy_path: Depth map in .npy format
-
-    Returns:
-        List of 3D coordinates for each pixel.
-    """
-    w, h = get_image_size(image_path)
-
-    # Create arrays to store 3D coordinates
-    pixel_coords_3d = []
-
-    for y in range(0, h, 2): # TODO WARNING! Iterating each 10th pixel only to speed up the debug
-        for x in range(0, w, 5):
-            # Calculate 3D coordinates for each pixel
-            pixel_3d = transform_to_blender_xyz(*pixel_to_3d(x, y, w, h, depth_npy_path))
-            print(f"Iterating the image: {x, y} -> {pixel_3d}")
-            pixel_coords_3d.append(pixel_3d)
-
-    return pixel_coords_3d
-
-
-def transform_to_blender_xyz(x, y, z):  # TODO test it and visualize the whole depth estimation
-    # 1. Invert the y
-    # 2. Swap the z and y
-    # 3. Invert x
-    return -x, z, y
-
+    return pixel_to_3d(x, y, w, h, depth_npy_path)
 
 def pixel_to_3d(x, y, w, h, depth_npy_path):
     """
@@ -90,8 +36,6 @@ def pixel_to_3d(x, y, w, h, depth_npy_path):
     X_3D = (x - w / 2) * Z_depth / FX
     Y_3D = (y - h / 2) * Z_depth / FY
     Z_3D = Z_depth
-    X_3D *= -1
-    Y_3D *= -1
     return X_3D, Y_3D, Z_3D
 
 def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth_ply_path=depth_ply_path):
@@ -138,6 +82,7 @@ def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth
         np.save(depth_npy_path, resized_pred)
 
         # Generate mesh grid and calculate point cloud coordinates
+        # WARNING! This processing must be the same as in pixel_to_3d
         FX = width * 0.6
         FY = height * 0.9
         focal_length_x, focal_length_y = (FX, FY)
@@ -216,6 +161,7 @@ def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.v
         np.save(depth_npy_path, filtered_resized_pred)
 
         # Generate mesh grid and calculate point cloud coordinates
+        # WARNING! This processing must be the same as in pixel_to_3d
         FX = width * 0.6
         FY = height * 0.9
         focal_length_x, focal_length_y = (FX, FY)
