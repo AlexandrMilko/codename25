@@ -32,11 +32,11 @@ def pixel_to_3d(x, y, w, h, depth_npy_path):
     depth_image = np.load(depth_npy_path)
     resized_pred = Image.fromarray(depth_image).resize((w, h), Image.NEAREST)
 
-    Z_depth = np.array(resized_pred)[y, x]
-    X_3D = (x - w / 2) * Z_depth / FX
-    Y_3D = (y - h / 2) * Z_depth / FY
-    Z_3D = Z_depth
-    return X_3D, Y_3D, Z_3D
+    Y_depth = np.array(resized_pred)[y, x]
+    X_3D = (x - w / 2) * Y_depth / FX
+    Z_3D = -1 * (y - h / 2) * Y_depth / FY
+    Y_3D = Y_depth
+    return X_3D, Z_3D, Y_3D
 
 def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth_ply_path=depth_ply_path):
     from DepthAnythingV2.metric_depth.depth_anything_v2.dpt import DepthAnythingV2
@@ -86,11 +86,11 @@ def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth
         FX = width * 0.6
         FY = height * 0.9
         focal_length_x, focal_length_y = (FX, FY)
-        x, y = np.meshgrid(np.arange(width), np.arange(height))
+        x, z = np.meshgrid(np.arange(width), np.arange(height))
         x = (x - width / 2) / focal_length_x
-        y = (y - height / 2) / focal_length_y
-        z = np.array(resized_pred)
-        points = np.stack((np.multiply(x, z), np.multiply(y, z), z), axis=-1).reshape(-1, 3)
+        z = -1 * (z - height / 2) / focal_length_y
+        y = np.array(resized_pred)
+        points = np.stack((np.multiply(x, y), np.multiply(z, y), y), axis=-1).reshape(-1, 3)
         colors = np.array(color_image).reshape(-1, 3) / 255.0
 
         # Create the point cloud and save it to the output directory
@@ -144,7 +144,6 @@ def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.v
 
         # Resize depth prediction to match the original image size
         resized_pred = np.array(Image.fromarray(pred).resize((width, height), Image.NEAREST))
-        print(resized_pred)
 
         # Ensure that the depth data and mask have the same dimensions
         if mask_array.shape != resized_pred.shape:
@@ -168,9 +167,9 @@ def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.v
         y_indices, x_indices = white_pixel_indices
         # x, y = np.meshgrid(np.arange(width), np.arange(height))
         x = (x_indices - width / 2) / focal_length_x
-        y = (y_indices - height / 2) / focal_length_y
-        z = filtered_resized_pred
-        points = np.stack((np.multiply(x, z), np.multiply(y, z), z), axis=-1).reshape(-1, 3)
+        z = -1 * (y_indices - height / 2) / focal_length_y
+        y = filtered_resized_pred
+        points = np.stack((np.multiply(x, y), np.multiply(z, y), y), axis=-1).reshape(-1, 3)
         color_image_array = np.array(color_image)
         filtered_colors = color_image_array[y_indices, x_indices] / 255.0
 
