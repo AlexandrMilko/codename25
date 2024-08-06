@@ -5,6 +5,7 @@ from tools import resize_and_save_image
 from .Room import Room
 import os
 from ..furniture.Furniture import Furniture
+from ..Floor import Floor
 
 
 class Bedroom(Room):
@@ -50,7 +51,7 @@ class Bedroom(Room):
         wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
         pixel_for_placing = bed.find_placement_pixel(os.path.join(render_directory, 'wall_mask.png'))
         print(f"BED placement pixel: {pixel_for_placing}")
-        yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
+        yaw_angle = Floor.find_angle_from_floor_layout(pitch_rad, roll_rad)
         render_parameters = (
             bed.calculate_rendering_parameters(self, pixel_for_placing, yaw_angle, (roll_rad, pitch_rad)))
         return render_parameters

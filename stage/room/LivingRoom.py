@@ -3,6 +3,7 @@ from preprocessing.preProcessSegment import ImageSegmentor
 from constants import Path
 from tools import resize_and_save_image
 from .Room import Room
+from .. import Floor
 from ..furniture.Furniture import Furniture
 import os
 
@@ -48,7 +49,7 @@ class LivingRoom(Room):
         wall.save_mask(Path.WINDOWS_MASK_IMAGE.value)
         pixel_for_placing = sofa_with_table.find_placement_pixel(Path.WINDOWS_MASK_IMAGE.value)
         print(f"SofaWithTable placement pixel: {pixel_for_placing}")
-        yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
+        yaw_angle = Floor.find_angle_from_floor_layout(pitch_rad, roll_rad)
         render_parameters = (
             sofa_with_table.calculate_rendering_parameters(self, pixel_for_placing, yaw_angle, (roll_rad, pitch_rad)))
         return render_parameters
