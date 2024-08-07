@@ -76,7 +76,7 @@ class Room:
         Room.offsets_to_floor_pixels(Path.FLOOR_PLY.value, points_in_3d)
         
     @staticmethod
-    def pixel_to_3d(x, y):
+    def pixel_to_3d(x, y): #TODO rewrite to use floor layout image
         """
         Args:
             x: x coordinate of the pixel
@@ -246,9 +246,6 @@ class Room:
             left = points_dict[point_name][0]
             right = points_dict[point_name][1]
 
-            left[1], left[2] = left[2], left[1]
-            right[1], right[2] = right[2], right[1]
-
             # Append user points to floor points
             floor_points = np.vstack([floor_points, np.array(left)])
             floor_points = np.vstack([floor_points, np.array(right)])
@@ -264,9 +261,9 @@ class Room:
         # Normalize floor points to image dimensions
         norm_points = (floor_points - min_coords) / (max_coords - min_coords)
         norm_points[:, 0] = norm_points[:, 0] * (width - 1)
-        norm_points[:, 2] = norm_points[:, 2] * (height - 1)
+        norm_points[:, 1] = norm_points[:, 1] * (height - 1)
 
-        hull = cv2.convexHull(norm_points[:, [0, 2]].astype(int))
+        hull = cv2.convexHull(norm_points[:, [0, 1]].astype(int))
         cv2.fillPoly(layout_image, [hull], (255, 255, 255))
 
         # Print normalized points for debugging
@@ -275,7 +272,7 @@ class Room:
         # # Visualize all points on the image
         # for point in norm_points:
         #     pixel_x = int(point[0])
-        #     pixel_y = int(point[2])
+        #     pixel_y = int(point[1])
         #     cv2.circle(layout_image, (pixel_x, pixel_y), 1, (255, 255, 255), -1)  # White color for all points
 
         # Convert 3D points to 2D pixels
@@ -286,10 +283,10 @@ class Room:
             right = points_dict[point_name][1]
             result[point_name] = []
             for point in left, right:
-                x_3d, _, y_3d = point
+                x_3d, y_3d, _  = point
                 print(f"3D Point: {point}")
                 pixel_x = int((x_3d - min_coords[0]) / (max_coords[0] - min_coords[0]) * (width - 1))
-                pixel_y = int((y_3d - min_coords[2]) / (max_coords[2] - min_coords[2]) * (height - 1))
+                pixel_y = int((y_3d - min_coords[1]) / (max_coords[1] - min_coords[1]) * (height - 1))
 
                 # Ensure pixel coordinates are within bounds
                 pixel_x = np.clip(pixel_x, 0, width - 1)
@@ -322,9 +319,9 @@ class Room:
         pixels_x_diff = left_camera_pixel[0] - left_point_pixel[0]
         pixels_y_diff = left_camera_pixel[1] - left_point_pixel[1]
         offsets_x_diff = left_camera_offset[0] - left_point_offset[0]
-        offsets_z_diff = left_camera_offset[2] - left_point_offset[2]
+        offsets_y_diff = left_camera_offset[1] - left_point_offset[1]
         ratio_x = pixels_x_diff / offsets_x_diff
-        ratio_y = pixels_y_diff / offsets_z_diff
+        ratio_y = pixels_y_diff / offsets_y_diff
         return ratio_x, ratio_y
 
     @staticmethod
@@ -338,8 +335,8 @@ class Room:
         """
         pixel_x_diff, pixel_y_diff = pixels_diff
         ratio_x, ratio_y = ratio
-        offset_x, offset_z = pixel_x_diff / ratio_x, pixel_y_diff / ratio_y
-        return offset_x, offset_z
+        offset_x, offset_y = pixel_x_diff / ratio_x, pixel_y_diff / ratio_y
+        return offset_x, offset_y
 
     def calculate_curtains_parameters(self, camera_height, camera_angles_rad: tuple):
         from stage.furniture.Curtain import Curtain
