@@ -253,7 +253,7 @@ class Room:
             floor_points = np.vstack([floor_points, np.array(right)])
 
         # We reverse x axis, because in blender it points to the opposite than in image pixel coordinate system
-        floor_points[0] = -floor_points[0]
+        floor_points[:, 0] = -floor_points[:, 0]
 
         # Find min and max coordinates of the floor
         min_coords = floor_points.min(axis=0)
