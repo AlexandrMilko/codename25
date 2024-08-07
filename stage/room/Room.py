@@ -248,8 +248,8 @@ class Room:
             right = points_dict[point_name][1]
 
             # We reverse x axis, because in blender it points to the opposite than in image pixel coordinate system
-            left[0] = -left[0]
-            right[0] = -right[0]
+            # left[0] = -left[0]
+            # right[0] = -right[0]
 
             # Append user points to floor points
             floor_points = np.vstack([floor_points, np.array(left)])
