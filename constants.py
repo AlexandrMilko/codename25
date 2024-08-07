@@ -17,6 +17,7 @@ class Path(Enum):
     PREPROCESSED_IMAGES_DIR = join(IMAGES_DIR, 'preprocessed')
     DESIGNED_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'designed.png')
     FLOOR_LAYOUT_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_layout.png')
+    POINTS_DEBUG_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_points.png')
     FLOOR_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_mask.png')
     FURNITURE_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'furniture_mask.png')
     FURNITURE_PIECE_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'furniture_piece_mask.png')
