@@ -235,6 +235,7 @@ class Room:
         # Initialize layout image
         height, width = 1024, 1024
         layout_image = np.zeros((height, width, 3), dtype=np.uint8)
+        points_image = np.zeros((height, width, 3), dtype=np.uint8)
 
         # Add camera and relative point for pixel-per-meter calculation
         points_dict['camera'] = [[0, 0, 0], [0, 0, 0]]
@@ -273,11 +274,11 @@ class Room:
         # Print normalized points for debugging
         print("Normalized points (first 5):", norm_points[:5])
 
-        # # Visualize all points on the image
-        # for point in norm_points:
-        #     pixel_x = int(point[0])
-        #     pixel_y = int(point[1])
-        #     cv2.circle(layout_image, (pixel_x, pixel_y), 1, (255, 255, 255), -1)  # White color for all points
+        # Visualize all points on the image
+        for point in norm_points:
+            pixel_x = int(point[0])
+            pixel_y = int(point[1])
+            cv2.circle(points_image, (pixel_x, pixel_y), 1, (255, 255, 255), -1)  # White color for all points
 
         # Convert 3D points to 2D pixels
         result = dict()
@@ -302,6 +303,7 @@ class Room:
         if output_path is not None:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             cv2.imwrite(output_path, layout_image)
+            cv2.imwrite(Path.POINTS_DEBUG_IMAGE.value, points_image)
 
         pixels_per_meter_ratio = Room.calculate_pixels_per_meter_ratio(points_dict, result)
         print(pixels_per_meter_ratio)
