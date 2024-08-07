@@ -36,7 +36,7 @@ def pixel_to_3d(x, y, w, h, depth_npy_path):
     X_3D = (x - w / 2) * Y_depth / FX
     Z_3D = -1 * (y - h / 2) * Y_depth / FY
     Y_3D = Y_depth
-    return X_3D, Z_3D, Y_3D
+    return X_3D, Y_3D, Z_3D
 
 def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth_ply_path=depth_ply_path):
     from DepthAnythingV2.metric_depth.depth_anything_v2.dpt import DepthAnythingV2
@@ -90,7 +90,7 @@ def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth
         x = (x - width / 2) / focal_length_x
         z = -1 * (z - height / 2) / focal_length_y
         y = np.array(resized_pred)
-        points = np.stack((np.multiply(x, y), np.multiply(z, y), y), axis=-1).reshape(-1, 3)
+        points = np.stack((np.multiply(x, y), y, np.multiply(z, y)), axis=-1).reshape(-1, 3)
         colors = np.array(color_image).reshape(-1, 3) / 255.0
 
         # Create the point cloud and save it to the output directory
@@ -169,7 +169,7 @@ def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.v
         x = (x_indices - width / 2) / focal_length_x
         z = -1 * (y_indices - height / 2) / focal_length_y
         y = filtered_resized_pred
-        points = np.stack((np.multiply(x, y), np.multiply(z, y), y), axis=-1).reshape(-1, 3)
+        points = np.stack((np.multiply(x, y), y, np.multiply(z, y)), axis=-1).reshape(-1, 3)
         color_image_array = np.array(color_image)
         filtered_colors = color_image_array[y_indices, x_indices] / 255.0
 
