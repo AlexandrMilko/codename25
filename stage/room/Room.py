@@ -232,6 +232,9 @@ class Room:
         # WARNING: Ensure path only contains floor points
         floor_points = points
 
+        # We reverse x axis, because in blender it points to the opposite than in image pixel coordinate system
+        floor_points[:, 0] = -floor_points[:, 0]
+
         # Initialize layout image
         height, width = 1024, 1024
         layout_image = np.zeros((height, width, 3), dtype=np.uint8)
@@ -247,13 +250,13 @@ class Room:
             left = points_dict[point_name][0]
             right = points_dict[point_name][1]
 
+            # We reverse x axis, because in blender it points to the opposite than in image pixel coordinate system
+            left[0] = -left[0]
+            right[0] = -right[0]
 
             # Append user points to floor points
             floor_points = np.vstack([floor_points, np.array(left)])
             floor_points = np.vstack([floor_points, np.array(right)])
-
-        # We reverse x axis, because in blender it points to the opposite than in image pixel coordinate system
-        floor_points[:, 0] = -floor_points[:, 0]
 
         # Find min and max coordinates of the floor
         min_coords = floor_points.min(axis=0)
