@@ -23,6 +23,9 @@ class Bedroom(Room):
         bed_offset = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
         print(bed_offset, "Bed offset")
 
+        wall_angle = self.floor_layout.calculate_wall_angle(middle_point, longest_side_points)
+        print(wall_angle, "Wall angle")
+
         # Add curtains
         # curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
 
