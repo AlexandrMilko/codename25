@@ -12,6 +12,13 @@ class Bedroom(Room):
     def stage(self):
         camera_height, pitch_rad, roll_rad, height, scene_render_parameters = self.prepare_empty_room_data()
 
+        middle_point, longest_side_points = self.floor_layout.find_middle_of_longest_side()
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        pixels_dict = self.floor_layout.get_pixels_dict()
+
+        print(middle_point, pixels_dict)
+        print(ratio_x, ratio_y, "ratios")
+
         # Add curtains
         curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
 
