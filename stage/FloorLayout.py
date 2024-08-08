@@ -156,7 +156,7 @@ class FloorLayout:
         # Define the point to exclude sides near it
         camera = self.pixels_dict['camera'][0]
         print('camera position in pixels on the floor layout: ', camera)
-        exclude_distance = 50  # Distance threshold to exclude sides
+        exclude_distance = 200  # Distance threshold to exclude sides
 
         max_length = 0
         middle_point = None
