@@ -95,7 +95,7 @@ class FloorLayout:
                 pixel_y = np.clip(pixel_y, 0, height - 1)
                 print(f"Mapped to 2D: x={pixel_x}, y={pixel_y}")  # Debug message
                 result[point_name].append([pixel_x, pixel_y])
-                # cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Red color for specific points
+                cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Red color for specific points
 
         if self.output_image_path is not None:
             os.makedirs(os.path.dirname(self.output_image_path), exist_ok=True)

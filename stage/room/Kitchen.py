@@ -41,7 +41,7 @@ class Kitchen(Room):
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
         # room = Room(Path.INPUT_IMAGE.value)
-        # room.pixel_mapping_floor_layout(pitch_rad, roll_rad)
+        # room.create_floor_layout(pitch_rad, roll_rad)
 
     def calculate_kitchen_table_with_chairs_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
