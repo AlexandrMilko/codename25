@@ -19,7 +19,7 @@ class Room:
     door_color = (51, 255, 8)
     floor_color = (50, 50, 80)
     blind_color = (255, 61, 0)  # blind that is set on windows, kinda curtains
-
+    floor_layout = None
     def __init__(self, empty_room_image_path):  # Original image path is an empty space image
         self.empty_room_image_path = empty_room_image_path
 
@@ -74,7 +74,7 @@ class Room:
             points_in_3d[name].append(right_point)
 
         print(points_in_3d)
-        floor_layout = FloorLayout(Path.FLOOR_PLY.value, points_in_3d)
+        self.floor_layout = FloorLayout(Path.FLOOR_PLY.value, points_in_3d)
         
     @staticmethod
     def pixel_to_3d(x, y): #TODO rewrite to use floor layout image
@@ -215,20 +215,6 @@ class Room:
                     bottom_pixels[unique_label] = (leftmost_bottom_pixel, rightmost_bottom_pixel)
 
         return bottom_pixels
-
-    @staticmethod
-    def calculate_offset_from_pixel_diff(pixels_diff, ratio):
-        """
-        pixels_diff: has the following format [pixels_x_diff, pixels_y_diff].
-        Represents difference in pixel coordinates between 2 points
-
-        ratio: has the following format [ratio_x, ratio_y]
-        Represents pixels_per_meter_ratio for a floor layout. For both axes.
-        """
-        pixel_x_diff, pixel_y_diff = pixels_diff
-        ratio_x, ratio_y = ratio
-        offset_x, offset_y = pixel_x_diff / ratio_x, pixel_y_diff / ratio_y
-        return offset_x, offset_y
 
     def calculate_curtains_parameters(self, camera_height, camera_angles_rad: tuple):
         from stage.furniture.Curtain import Curtain

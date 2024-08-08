@@ -3,7 +3,7 @@ import open3d as o3d
 import numpy as np
 import os
 import cv2
-from .room import Room
+import math
 
 class FloorLayout:
     def __init__(self, ply_path, points_dict, output_image_path=Path.FLOOR_LAYOUT_IMAGE.value):
@@ -95,7 +95,7 @@ class FloorLayout:
                 pixel_y = np.clip(pixel_y, 0, height - 1)
                 print(f"Mapped to 2D: x={pixel_x}, y={pixel_y}")  # Debug message
                 result[point_name].append([pixel_x, pixel_y])
-                cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Red color for specific points
+                # cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Red color for specific points
 
         if self.output_image_path is not None:
             os.makedirs(os.path.dirname(self.output_image_path), exist_ok=True)
@@ -130,9 +130,6 @@ class FloorLayout:
     def pixel_to_offset(self):
         pass
 
-    def calculate_wall_angle(self):
-        pass
-
     def get_pixels_per_meter_ratio(self):
         return self.ratio_x, self.ratio_y
 
@@ -141,3 +138,79 @@ class FloorLayout:
 
     def get_pixels_dict(self):
         return self.pixels_dict
+
+    def find_middle_of_longest_side(self):
+        image = cv2.imread(self.output_image_path)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        _, thresh = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY)
+
+        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        approx_contours = []
+        for cnt in contours:
+            epsilon = 0.001 * cv2.arcLength(cnt, True)
+            approx = cv2.approxPolyDP(cnt, epsilon, True)
+            approx_contours.append(approx)
+
+        # Define the point to exclude sides near it
+        camera = self.pixels_dict['camera'][0]
+        print('camera position in pixels on the floor layout: ', camera)
+        exclude_distance = 50  # Distance threshold to exclude sides
+
+        max_length = 0
+        middle_point = None
+        longest_side_points = None
+
+        for contour in approx_contours:
+            for i in range(len(contour)):
+                pt1 = contour[i][0]
+                pt2 = contour[(i + 1) % len(contour)][0]
+
+                # Exclude sides that are too close to the camera
+                if (np.linalg.norm(pt1 - camera) < exclude_distance or
+                        np.linalg.norm(pt2 - camera) < exclude_distance):
+                    continue
+
+                length = np.linalg.norm(pt1 - pt2)
+                if length > max_length:
+                    max_length = length
+                    middle_point = (pt1 + pt2) // 2
+                    longest_side_points = (pt1, pt2)
+
+        return middle_point, longest_side_points
+
+    @staticmethod
+    def calculate_wall_angle(middle_point, longest_side_points):
+        # Define the vertical line
+        top_point = (middle_point[0], 0)
+
+        # Calculate the vector from the top point to the middle point
+        vector_top_to_middle = np.array(middle_point) - np.array(top_point)
+
+        # Calculate the vector perpendicular to the longest side
+        vector_longest_side = np.array(longest_side_points[1]) - np.array(longest_side_points[0])
+        perpendicular_vector = np.array([-vector_longest_side[1], vector_longest_side[0]])
+
+        # Calculate the angle between the vertical line and perpendicular one
+        angle_radians = math.atan2(
+            np.linalg.det([vector_top_to_middle, perpendicular_vector]),
+            np.dot(vector_top_to_middle, perpendicular_vector)
+        )
+        angle_degrees = math.degrees(angle_radians)
+
+        return angle_degrees
+
+    @staticmethod
+    def calculate_offset_from_pixel_diff(pixels_diff, ratio):
+        """
+        pixels_diff: has the following format [pixels_x_diff, pixels_y_diff].
+        Represents difference in pixel coordinates between 2 points
+
+        ratio: has the following format [ratio_x, ratio_y]
+        Represents pixels_per_meter_ratio for a floor layout. For both axes.
+        """
+        pixel_x_diff, pixel_y_diff = pixels_diff
+        ratio_x, ratio_y = ratio
+        offset_x, offset_y = pixel_x_diff / ratio_x, pixel_y_diff / ratio_y
+        return offset_x, offset_y
