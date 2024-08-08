@@ -61,7 +61,7 @@ class Room:
         offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
         return offset_relative_to_camera
 
-    def pixel_mapping_floor_layout(self, pitch_rad: float, roll_rad: float):
+    def create_floor_layout(self, pitch_rad: float, roll_rad: float):
         horizontal_borders = self.find_horizontal_borders()
         print(horizontal_borders)
 
@@ -299,7 +299,7 @@ class Room:
         scene_render_parameters['resolution_y'] = height
         scene_render_parameters['objects'] = dict()
 
-        self.pixel_mapping_floor_layout(pitch_rad, roll_rad)
+        self.create_floor_layout(pitch_rad, roll_rad)
 
         return camera_height, pitch_rad, roll_rad, height, scene_render_parameters
 
