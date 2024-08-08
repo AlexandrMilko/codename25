@@ -299,6 +299,8 @@ class Room:
         scene_render_parameters['resolution_y'] = height
         scene_render_parameters['objects'] = dict()
 
+        self.pixel_mapping_floor_layout(pitch_rad, roll_rad)
+
         return camera_height, pitch_rad, roll_rad, height, scene_render_parameters
 
     @staticmethod
