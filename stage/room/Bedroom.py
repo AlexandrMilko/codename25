@@ -26,6 +26,9 @@ class Bedroom(Room):
         wall_angle = self.floor_layout.calculate_wall_angle(middle_point, longest_side_points)
         print(wall_angle, "Wall angle")
 
+        area = self.floor_layout.estimate_area_from_floor_layout()
+        print(area, "AREA in m2")
+
         # Add curtains
         # curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
 
