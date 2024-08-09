@@ -214,3 +214,20 @@ class FloorLayout:
         ratio_x, ratio_y = ratio
         offset_x, offset_y = pixel_x_diff / ratio_x, pixel_y_diff / ratio_y
         return offset_x, offset_y
+
+    def estimate_area_from_floor_layout(self):
+        # Загрузка изображения планировки
+        layout_image = cv2.imread(self.output_image_path, cv2.IMREAD_GRAYSCALE)
+
+        # Изменение размера изображения так, чтобы ratio_x стало равно ratio_y
+        height, width = layout_image.shape
+        new_height = int(height * (self.ratio_y / self.ratio_x))
+        resized_layout_image = cv2.resize(layout_image, (width, new_height), interpolation=cv2.INTER_NEAREST)
+
+        # Подсчет количества белых пикселей
+        white_pixel_count = np.sum(resized_layout_image == 255)
+
+        # Перевод количества белых пикселей в квадратные метры
+        meter_area = white_pixel_count / (self.ratio_x * self.ratio_y)
+
+        return meter_area
