@@ -5,6 +5,7 @@ import cv2
 
 
 class Bed(FloorFurniture):
+    default_angles = 0, 0, 90
     def __init__(self, model_path=Path.BED_MODEL.value):
         super().__init__(model_path)
 
