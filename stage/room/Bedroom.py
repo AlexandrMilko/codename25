@@ -16,13 +16,12 @@ class Bedroom(Room):
         print(area, "AREA in m2")
 
         bed_parameters = self.calculate_bed_parameters((pitch_rad, roll_rad))
+        curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
 
-        scene_render_parameters['objects'] = [bed_parameters]
+        scene_render_parameters['objects'] = [*curtains_parameters, bed_parameters]
         import json
         print(json.dumps(scene_render_parameters, indent = 4))
 
-        # Add curtains
-        # curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
 
         # # Add plant
         # # TODO change algo for plant with new Kyrylo algorithm
