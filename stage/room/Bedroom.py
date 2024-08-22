@@ -12,22 +12,13 @@ class Bedroom(Room):
     def stage(self):
         camera_height, pitch_rad, roll_rad, height, scene_render_parameters = self.prepare_empty_room_data()
 
-        middle_point, longest_side_points = self.floor_layout.find_middle_of_longest_side()
-        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
-        pixels_dict = self.floor_layout.get_pixels_dict()
-
-        print(middle_point, pixels_dict)
-        print(ratio_x, ratio_y, "ratios")
-
-        pixel_diff = middle_point[0] - pixels_dict['camera'][0][0], middle_point[1] - pixels_dict['camera'][0][1]
-        bed_offset = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
-        print(bed_offset, "Bed offset")
-
-        wall_angle = self.floor_layout.calculate_wall_angle(middle_point, longest_side_points)
-        print(wall_angle, "Wall angle")
-
         area = self.floor_layout.estimate_area_from_floor_layout()
         print(area, "AREA in m2")
+
+        bed_parameters = self.calculate_bed_parameters((pitch_rad, roll_rad))
+
+        scene_render_parameters['objects'] = [bed_parameters]
+        print(scene_render_parameters)
 
         # Add curtains
         # curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
@@ -61,14 +52,22 @@ class Bedroom(Room):
 
     def calculate_bed_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.Bed import Bed
+
+        middle_point, longest_side_points = self.floor_layout.find_middle_of_longest_side()
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        pixels_dict = self.floor_layout.get_pixels_dict()
+
+        print(middle_point, pixels_dict)
+        print(ratio_x, ratio_y, "ratios")
+
+        pixel_diff = middle_point[0] - pixels_dict['camera'][0][0], middle_point[1] - pixels_dict['camera'][0][1]
+        bed_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
+        print(bed_offset_x_y, "Bed offset")
+
         pitch_rad, roll_rad = camera_angles_rad
         bed = Bed()
-        wall = self.get_biggest_wall()
-        render_directory = f'images/preprocessed'
-        wall.save_mask(os.path.join(render_directory, 'wall_mask.png'))
-        pixel_for_placing = bed.find_placement_pixel(os.path.join(render_directory, 'wall_mask.png'))
-        print(f"BED placement pixel: {pixel_for_placing}")
-        yaw_angle = Floor.find_angle_from_floor_layout(pitch_rad, roll_rad)
+        print(f"BED floor placement pixel: {middle_point}")
+        yaw_angle = self.floor_layout.calculate_wall_angle(middle_point, longest_side_points)
         render_parameters = (
-            bed.calculate_rendering_parameters(self, pixel_for_placing, yaw_angle, (roll_rad, pitch_rad)))
+            bed.calculate_rendering_parameters(self, bed_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
         return render_parameters
