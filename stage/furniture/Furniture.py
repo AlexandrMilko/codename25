@@ -63,7 +63,7 @@ class FloorFurniture(Furniture):
                                        camera_angles_rad: tuple[float, float]):
         roll, pitch = camera_angles_rad
         # We set negative rotation to compensate
-        obj_offsets = *obj_offsets_x_y, 0
+        obj_offsets = [*obj_offsets_x_y, 0]
         # TODO Perform camera height estimation not here, but in stage() function to save computing power
         print("Started estimating camera height")
         camera_height = room.estimate_camera_height((pitch, roll))
