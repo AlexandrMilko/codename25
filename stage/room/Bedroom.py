@@ -66,6 +66,7 @@ class Bedroom(Room):
         bed = Bed()
         print(f"BED floor placement pixel: {middle_point}")
         yaw_angle = self.floor_layout.calculate_wall_angle(middle_point, longest_side_points)
+        print(yaw_angle, "BED yaw angle in degrees")
         render_parameters = (
             bed.calculate_rendering_parameters(self, bed_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
         return render_parameters
