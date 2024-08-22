@@ -199,7 +199,7 @@ class FloorLayout:
         )
         angle_degrees = math.degrees(angle_radians)
 
-        return angle_degrees
+        return -angle_degrees # We return with minus to make it a Blender angle
 
     @staticmethod
     def calculate_offset_from_pixel_diff(pixels_diff, ratio):
