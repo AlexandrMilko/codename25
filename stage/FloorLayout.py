@@ -5,6 +5,7 @@ import os
 import cv2
 import math
 
+
 class FloorLayout:
     def __init__(self, ply_path, points_dict, output_image_path=Path.FLOOR_LAYOUT_IMAGE.value):
 
@@ -26,7 +27,7 @@ class FloorLayout:
         # WARNING: Ensure path only contains floor points
         floor_points = points
 
-        # We reverse x axis, because in blender it points to the opposite than in image pixel coordinate system
+        # We reverse x-axis, because in blender it points to the opposite than in image pixel coordinate system
         floor_points[:, 0] = -floor_points[:, 0]
 
         # Initialize layout image
@@ -44,7 +45,7 @@ class FloorLayout:
             left = self.points_dict[point_name][0]
             right = self.points_dict[point_name][1]
 
-            # We reverse x axis, because in blender it points to the opposite than in image pixel coordinate system
+            # We reverse x-axis, because in blender it points to the opposite than in image pixel coordinate system
             left[0] = -left[0]
             right[0] = -right[0]
 
@@ -139,7 +140,17 @@ class FloorLayout:
     def get_pixels_dict(self):
         return self.pixels_dict
 
-    def find_middle_of_longest_side(self):
+    @staticmethod
+    def is_tangent_to_any(point1, point2, exclusion_zones, exclude_distance):
+        for zone in exclusion_zones.values():
+            for exclusion_point in zone:
+                if (np.linalg.norm(point1 - exclusion_point) < exclude_distance or
+                        np.linalg.norm(point2 - exclusion_point) < exclude_distance):
+                    return True
+        return False
+
+    def find_middle_of_longest_side(self, exclude_distance=50):
+        exclusion_zones = self.pixels_dict
         image = cv2.imread(self.output_image_path)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -149,14 +160,9 @@ class FloorLayout:
 
         approx_contours = []
         for cnt in contours:
-            epsilon = 0.001 * cv2.arcLength(cnt, True)
+            epsilon = 0.01 * cv2.arcLength(cnt, True)
             approx = cv2.approxPolyDP(cnt, epsilon, True)
             approx_contours.append(approx)
-
-        # Define the point to exclude sides near it
-        camera = self.pixels_dict['camera'][0]
-        print('camera position in pixels on the floor layout: ', camera)
-        exclude_distance = 200  # Distance threshold to exclude sides
 
         max_length = 0
         middle_point = None
@@ -166,10 +172,9 @@ class FloorLayout:
             for i in range(len(contour)):
                 pt1 = contour[i][0]
                 pt2 = contour[(i + 1) % len(contour)][0]
-
-                # Exclude sides that are too close to the camera
-                if (np.linalg.norm(pt1 - camera) < exclude_distance or
-                        np.linalg.norm(pt2 - camera) < exclude_distance):
+                print(exclusion_zones)
+                # Exclude sides that are too close to the camera, windows, or doors
+                if self.is_tangent_to_any(pt1, pt2, exclusion_zones, exclude_distance):
                     continue
 
                 length = np.linalg.norm(pt1 - pt2)
@@ -199,7 +204,7 @@ class FloorLayout:
         )
         angle_degrees = math.degrees(angle_radians)
 
-        return -angle_degrees # We return with minus to make it a Blender angle
+        return -angle_degrees  # We return with minus to make it a Blender angle
 
     @staticmethod
     def calculate_offset_from_pixel_diff(pixels_diff, ratio):
