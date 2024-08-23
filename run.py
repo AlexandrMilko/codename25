@@ -1,10 +1,8 @@
 from tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image_from_path
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from sdquery import apply_style
 from constants import Path
 import os
-
 
 app = Flask(__name__)
 CORS(app)
@@ -24,6 +22,22 @@ def get_insane_image_1337():
 
     output_image = get_encoded_image_from_path(Path.OUTPUT_IMAGE.value)
     return jsonify({'output_image': output_image})
+
+
+def apply_style(es_path, room_choice, style_budget_choice):
+    import stage
+
+    if room_choice.lower() == "bedroom":
+        room = stage.Bedroom(es_path)
+        room.stage()
+    elif room_choice.lower() == "kitchen":
+        room = stage.Kitchen(es_path)
+        room.stage()
+    elif room_choice.lower() == "living room":
+        room = stage.LivingRoom(es_path)
+        room.stage()
+    else:
+        raise Exception(f"Wrong Room Type was specified: {room_choice.lower()}")
 
 
 def is_port_in_use(port: int) -> bool:
