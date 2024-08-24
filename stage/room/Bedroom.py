@@ -1,3 +1,5 @@
+import random
+
 from postprocessing.postProcessing import PostProcessor
 from preprocessing.preProcessSegment import ImageSegmentor
 from constants import Path
@@ -16,9 +18,10 @@ class Bedroom(Room):
         print(area, "AREA in m2")
 
         bed_parameters = self.calculate_bed_parameters((pitch_rad, roll_rad))
+        plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
         curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
 
-        scene_render_parameters['objects'] = [*curtains_parameters, bed_parameters]
+        scene_render_parameters['objects'] = [*curtains_parameters, plant_parameters, bed_parameters]
         import json
         print(json.dumps(scene_render_parameters, indent=4))
 
@@ -48,9 +51,10 @@ class Bedroom(Room):
     def calculate_bed_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.Bed import Bed
 
-        middle_point, longest_side_points = self.floor_layout.find_middle_of_longest_side()
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         pixels_dict = self.floor_layout.get_pixels_dict()
+        # TODO move find_middle_of_longest_side to BED class?
+        middle_point, longest_side_points = self.floor_layout.find_middle_of_longest_side()
 
         print(middle_point, pixels_dict)
         print(ratio_x, ratio_y, "ratios")
@@ -66,4 +70,23 @@ class Bedroom(Room):
         print(yaw_angle, "BED yaw angle in degrees")
         render_parameters = (
             bed.calculate_rendering_parameters(self, bed_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
+        return render_parameters
+
+    def calculate_plant_parameters(self, camera_angles_rad: tuple):
+        from stage.furniture.Plant import Plant
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        pixels_dict = self.floor_layout.get_pixels_dict()
+
+        plant_pixels = Plant.find_floor_layout_placement_pixels(self.floor_layout.output_image_path)
+        random_index = random.randint(0, len(plant_pixels) - 1)
+        plant_point = plant_pixels[random_index]
+
+        pixel_diff = -1 * (plant_point[0] - pixels_dict['camera'][0][0]), plant_point[1] - pixels_dict['camera'][0][1]
+        plant_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
+
+        pitch_rad, roll_rad = camera_angles_rad
+        plant = Plant()
+        yaw_angle = 0
+        render_parameters = (
+            plant.calculate_rendering_parameters(self, plant_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
         return render_parameters
