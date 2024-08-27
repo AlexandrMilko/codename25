@@ -4,6 +4,7 @@ import numpy as np
 import os
 import cv2
 import math
+from .LayoutSide import LayoutSide
 
 
 class FloorLayout:
@@ -165,7 +166,6 @@ class FloorLayout:
             approx_contours.append(approx)
 
         max_length = 0
-        middle_point = None
         longest_side_points = None
 
         for contour in approx_contours:
@@ -180,31 +180,9 @@ class FloorLayout:
                 length = np.linalg.norm(pt1 - pt2)
                 if length > max_length:
                     max_length = length
-                    middle_point = (pt1 + pt2) // 2
                     longest_side_points = (pt1, pt2)
 
-        return middle_point, longest_side_points
-
-    @staticmethod
-    def calculate_wall_angle(middle_point, longest_side_points):
-        # Define the vertical line
-        top_point = (middle_point[0], 0)
-
-        # Calculate the vector from the top point to the middle point
-        vector_top_to_middle = np.array(middle_point) - np.array(top_point)
-
-        # Calculate the vector perpendicular to the longest side
-        vector_longest_side = np.array(longest_side_points[1]) - np.array(longest_side_points[0])
-        perpendicular_vector = np.array([-vector_longest_side[1], vector_longest_side[0]])
-
-        # Calculate the angle between the vertical line and perpendicular one
-        angle_radians = math.atan2(
-            np.linalg.det([vector_top_to_middle, perpendicular_vector]),
-            np.dot(vector_top_to_middle, perpendicular_vector)
-        )
-        angle_degrees = math.degrees(angle_radians)
-
-        return -angle_degrees  # We return with minus to make it a Blender angle
+        return LayoutSide(longest_side_points)
 
     @staticmethod
     def calculate_offset_from_pixel_diff(pixels_diff, ratio):
