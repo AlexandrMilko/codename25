@@ -29,5 +29,8 @@ class LayoutSide:
     def get_middle_point(self):
         return self.middle_point
 
+    def calculate_length(self):
+        return np.linalg.norm(self.points[0] - self.points[1])
+
     def __repr__(self):
-        return f"Floor Layout Side: {self.points}, {self.middle_point}"
+        return f"Floor Layout Side: {self.points}, {self.middle_point}, length: {self.calculate_length()}"
