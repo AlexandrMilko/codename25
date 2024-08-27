@@ -237,7 +237,9 @@ class Room:
                     # So we avoid differences in their height level attachment
                     # If you want to avoid it and calculate attachment for each separately:
                     # curtains_height = camera_height + render_parameters['obj_offsets'][2]
-                    render_parameters['obj_offsets'][2] = left_curtain_offset[2]
+                    render_parameters['obj_offsets'][2] = (render_parameters['obj_offsets'][0],
+                                                           render_parameters['obj_offsets'][1],
+                                                           left_curtain_offset[2])
                     curtains_height = camera_height + left_curtain_offset[2]
 
                     height_scale = curtain.calculate_height_scale(curtains_height)
