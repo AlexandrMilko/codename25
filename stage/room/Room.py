@@ -227,12 +227,17 @@ class Room:
         for window in pixels_for_placing:
             try:
                 left_top_point, right_top_point = window
-                yaw_angle = calculate_angle_from_top_view(*[self.infer_3d(pixel, pitch_rad, roll_rad) for
-                                                            pixel in (left_top_point, right_top_point)])
+                left_curtain_offset, right_curtain_offset = [self.infer_3d(pixel, pitch_rad, roll_rad) for
+                                                            pixel in (left_top_point, right_top_point)]
+                yaw_angle = calculate_angle_from_top_view(left_curtain_offset, right_curtain_offset)
                 for pixel in (left_top_point, right_top_point):
                     render_parameters = curtain.calculate_rendering_parameters(self, pixel, yaw_angle,
                                                                                (roll_rad, pitch_rad))
-                    curtains_height = camera_height + render_parameters['obj_offsets'][2]
+                    # WARNING! We set both left and right curtains height equal to the height of left curtain.
+                    # So we avoid differences in their height level attachment
+                    # If you want to avoid it and calculate attachment for each separately:
+                    # curtains_height = camera_height + render_parameters['obj_offsets'][2]
+                    curtains_height = camera_height + left_curtain_offset[2]
                     height_scale = curtain.calculate_height_scale(curtains_height)
                     render_parameters['obj_scale'] = (render_parameters['obj_scale'][0],
                                                       render_parameters['obj_scale'][1],
