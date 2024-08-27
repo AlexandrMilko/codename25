@@ -54,11 +54,12 @@ class Bedroom(Room):
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         pixels_dict = self.floor_layout.get_pixels_dict()
         # TODO move find_middle_of_longest_side to BED class?
-        middle_point, longest_side_points = self.floor_layout.find_middle_of_longest_side()
+        longest_side = self.floor_layout.find_middle_of_longest_side()
 
-        print(middle_point, pixels_dict)
+        print(longest_side, pixels_dict)
         print(ratio_x, ratio_y, "ratios")
 
+        middle_point = longest_side.get_middle_point()
         pixel_diff = -1 * (middle_point[0] - pixels_dict['camera'][0][0]), middle_point[1] - pixels_dict['camera'][0][1]
         bed_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
         print(bed_offset_x_y, "Bed offset")
@@ -66,7 +67,7 @@ class Bedroom(Room):
         pitch_rad, roll_rad = camera_angles_rad
         bed = Bed()
         print(f"BED floor placement pixel: {middle_point}")
-        yaw_angle = self.floor_layout.calculate_wall_angle(middle_point, longest_side_points)
+        yaw_angle = longest_side.calculate_wall_angle()
         print(yaw_angle, "BED yaw angle in degrees")
         render_parameters = (
             bed.calculate_rendering_parameters(self, bed_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
