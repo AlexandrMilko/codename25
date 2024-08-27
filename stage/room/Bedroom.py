@@ -22,10 +22,15 @@ class Bedroom(Room):
 
         bed_parameters = self.calculate_bed_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
         wardrobe_parameters = self.calculate_wardrobe_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
+        commode_parameters = self.calculate_commode_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
         plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
         curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
 
-        scene_render_parameters['objects'] = [*curtains_parameters, plant_parameters, bed_parameters, wardrobe_parameters]
+        scene_render_parameters['objects'] = [
+                                            *curtains_parameters, plant_parameters,
+                                            bed_parameters, wardrobe_parameters,
+                                            commode_parameters,
+                                            ]
         import json
         print(json.dumps(scene_render_parameters, indent=4))
 
@@ -91,6 +96,24 @@ class Bedroom(Room):
         yaw_angle = side.calculate_wall_angle()
         render_parameters = (
             wardrobe.calculate_rendering_parameters(self, wardrobe_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
+        return render_parameters
+
+    def calculate_commode_parameters(self, side, camera_angles_rad: tuple):
+        from stage.furniture.Commode import Commode
+
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        pixels_dict = self.floor_layout.get_pixels_dict()
+
+        middle_point = side.get_middle_point()
+        pixel_diff = -1 * (middle_point[0] - pixels_dict['camera'][0][0]), middle_point[1] - pixels_dict['camera'][0][1]
+        commode_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
+        print(commode_offset_x_y, "Bed offset")
+
+        pitch_rad, roll_rad = camera_angles_rad
+        commode = Commode()
+        yaw_angle = side.calculate_wall_angle()
+        render_parameters = (
+            commode.calculate_rendering_parameters(self, commode_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
         return render_parameters
 
     def calculate_plant_parameters(self, camera_angles_rad: tuple):
