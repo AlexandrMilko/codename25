@@ -56,6 +56,9 @@ class Bedroom(Room):
         # TODO move find_middle_of_longest_side to BED class?
         longest_side = self.floor_layout.find_middle_of_longest_side()
 
+        all_sides = self.floor_layout.find_all_sides_sorted_by_length()
+        print(all_sides, "ALL SIDES")
+
         print(longest_side, pixels_dict)
         print(ratio_x, ratio_y, "ratios")
 
