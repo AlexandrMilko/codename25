@@ -184,7 +184,7 @@ class FloorLayout:
 
         return LayoutSide(longest_side_points)
 
-    def find_all_sides_sorted_by_length(self, exclude_distance=50):
+    def find_all_sides_sorted_by_length(self, exclude_distance=50, exclude_length=300):
         exclusion_zones = self.pixels_dict
         image = cv2.imread(self.output_image_path)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -206,10 +206,10 @@ class FloorLayout:
                 pt2 = contour[(i + 1) % len(contour)][0]
                 print(exclusion_zones)
                 # Exclude sides that are too close to the camera, windows, or doors
-                if self.is_tangent_to_any(pt1, pt2, exclusion_zones, exclude_distance):
+                side = LayoutSide((pt1, pt2))
+                if self.is_tangent_to_any(pt1, pt2, exclusion_zones, exclude_distance) and side.calculate_length() < exclude_length:
                     continue
 
-                side = LayoutSide((pt1, pt2))
                 sides.append(side)
 
         sides.sort(reverse=True, key=lambda x: x.calculate_length())
