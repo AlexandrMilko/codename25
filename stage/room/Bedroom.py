@@ -18,6 +18,7 @@ class Bedroom(Room):
         print(area, "AREA in m2")
 
         bed_parameters = self.calculate_bed_parameters((pitch_rad, roll_rad))
+        print(bed_parameters)
         plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
         curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
 
@@ -55,6 +56,7 @@ class Bedroom(Room):
         pixels_dict = self.floor_layout.get_pixels_dict()
         # TODO move find_middle_of_longest_side to BED class?
         longest_side = self.floor_layout.find_middle_of_longest_side()
+        longest_side_length = longest_side.calculate_wall_length(ratio_x, ratio_y)
 
         all_sides = self.floor_layout.find_all_sides_sorted_by_length()
         print(all_sides, "ALL SIDES")
@@ -68,7 +70,10 @@ class Bedroom(Room):
         print(bed_offset_x_y, "Bed offset")
 
         pitch_rad, roll_rad = camera_angles_rad
-        bed = Bed()
+
+        # number 3 is hardcoded length of model table with chairs
+        bed = Bed(Path.BED_WITH_TABLES_MODEL.value if longest_side_length > 3 else Path.BED_MODEL.value)
+
         print(f"BED floor placement pixel: {middle_point}")
         yaw_angle = longest_side.calculate_wall_angle()
         print(yaw_angle, "BED yaw angle in degrees")

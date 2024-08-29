@@ -34,9 +34,9 @@ class LayoutSide:
         return np.linalg.norm(self.points[0] - self.points[1])
 
     def calculate_wall_length(self, ratio_x, ratio_y):
-        first_cathetus = abs(self.points[0][0] - self.points[1][0]) / ratio_x
-        second_cathetus = abs(self.points[0][1] - self.points[1][1]) / ratio_y
-        return math.sqrt(first_cathetus ** 2 + second_cathetus ** 2)
+        first_leg = abs(self.points[0][0] - self.points[1][0]) / ratio_x
+        second_leg = abs(self.points[0][1] - self.points[1][1]) / ratio_y
+        return math.sqrt(first_leg ** 2 + second_leg ** 2)
 
     def __repr__(self):
         return f"Floor Layout Side: {self.points}, {self.middle_point}, length: {self.calculate_length()}"
