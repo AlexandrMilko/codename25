@@ -216,6 +216,20 @@ class Room:
 
         return bottom_pixels
 
+    def calculate_painting_parameters(self, camera_angles_rad: tuple):
+        from ..furniture.Painting import Painting
+        pitch_rad, roll_rad = camera_angles_rad
+        painting = Painting()
+        left, center, right = painting.find_placement_pixel(Path.SEG_PREREQUISITE_IMAGE.value)
+        if not all(left, center, right): return None
+        left_offset, right_offset =  [self.infer_3d(pixel, pitch_rad, roll_rad) for
+                                                            pixel in (left, right)]
+        yaw_angle = calculate_angle_from_top_view(left_offset, right_offset)
+        render_parameters = painting.calculate_rendering_parameters(self, center, yaw_angle,
+                                                                   (roll_rad, pitch_rad))
+        return render_parameters
+
+    #TODO move calculate_curtains_parameters to Curtain?
     def calculate_curtains_parameters(self, camera_height, camera_angles_rad: tuple):
         from stage.furniture.Curtain import Curtain
         pitch_rad, roll_rad = camera_angles_rad
@@ -251,6 +265,8 @@ class Room:
             except IndexError as e:
                 print(f"{e}, we skip adding curtains for a window.")
         return curtains_parameters
+
+    # TODO move calculate_plant_parameters to Plant?
 
     def calculate_plant_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.Plant import Plant
@@ -314,6 +330,7 @@ class Room:
 
     @staticmethod
     def process_rendered_image(furniture_image):
+        # TODO remove working with FURNITURE PIECES: we render one scene at the same time
         furniture_image.save(Path.FURNITURE_PIECE_MASK_IMAGE.value)
         convert_png_to_mask(Path.FURNITURE_PIECE_MASK_IMAGE.value)
         overlay_masks(Path.FURNITURE_PIECE_MASK_IMAGE.value, Path.FURNITURE_MASK_IMAGE.value,
