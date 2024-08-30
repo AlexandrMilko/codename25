@@ -117,7 +117,7 @@ class PostProcessor:
 
     def process_images(self):
         # Load the workflow and set up prompt
-        workflow = "postprocessing/workflow_api2.json"
+        workflow = "postprocessing/TheBestWorkflow_api.json"
         with open(workflow, "r", encoding="utf-8") as f:
             workflow_data = f.read()
         prompt = json.loads(workflow_data)
@@ -139,22 +139,25 @@ class PostProcessor:
 
         # Set the text prompt for our positive and negative CLIPTextEncode
         print("Setting text prompts...")
-        prompt["4"]["inputs"]["text"] = "high resolution, high quality, 4k, cinematic light"
-        prompt["5"]["inputs"]["text"] = "bad quality, bad picture, cartoon, painting, illustration"
+        prompt["4"]["inputs"]["text"] = "window light, colour preserving"
+        prompt["5"]["inputs"]["text"] = ""
 
         # Set the image name for our LoadImage node
         print(f"Setting image paths for LoadImage nodes...")
         prompt["9"]["inputs"]["image"] = comfyui_path_image
-        prompt["60"]["inputs"]["image"] = comfyui_path_image1
+        prompt["113"]["inputs"]["width"] = 1549
+        prompt["113"]["inputs"]["height"] = 1024
 
         # Set the seed for our KSampler node
         prompt["19"]["inputs"]["seed"] = 100361857014337
+        prompt["44"]["inputs"]["multiplier"] = 0.4
+
 
         # set model
         prompt["2"]["inputs"]["ckpt_name"] = "epicrealism_naturalSinRC1VAE.safetensors"
         prompt["37"]["inputs"]["ckpt_name"] = "iclight_sd15_fc.safetensors"
 
-        prompt["63"]["inputs"]["path"] = Path.OUTPUT_IMAGE.value
+        prompt["117"]["inputs"]["path"] = Path.OUTPUT_IMAGE.value
 
         # Connect to the WebSocket server
         ws = websocket.WebSocket()

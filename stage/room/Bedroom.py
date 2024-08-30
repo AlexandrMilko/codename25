@@ -17,12 +17,20 @@ class Bedroom(Room):
         area = self.floor_layout.estimate_area_from_floor_layout()
         print(area, "AREA in m2")
 
-        bed_parameters = self.calculate_bed_parameters((pitch_rad, roll_rad))
-        print(bed_parameters)
+        all_sides = self.floor_layout.find_all_sides_sorted_by_length()
+        print(all_sides, "ALL SIDES")
+
+        bed_parameters = self.calculate_bed_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
+        wardrobe_parameters = self.calculate_wardrobe_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
+        commode_parameters = self.calculate_commode_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
         plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
         curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
 
-        scene_render_parameters['objects'] = [*curtains_parameters, plant_parameters, bed_parameters]
+        scene_render_parameters['objects'] = [
+                                            *curtains_parameters, plant_parameters,
+                                            bed_parameters, wardrobe_parameters,
+                                            commode_parameters,
+                                            ]
         import json
         print(json.dumps(scene_render_parameters, indent=4))
 
@@ -49,22 +57,16 @@ class Bedroom(Room):
         #                       Path.SEG_PREREQUISITE_IMAGE.value, height)
         # Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
-    def calculate_bed_parameters(self, camera_angles_rad: tuple):
+    def calculate_bed_parameters(self, side, camera_angles_rad: tuple):
         from stage.furniture.Bed import Bed
 
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         pixels_dict = self.floor_layout.get_pixels_dict()
-        # TODO move find_middle_of_longest_side to BED class?
-        longest_side = self.floor_layout.find_middle_of_longest_side()
-        longest_side_length = longest_side.calculate_wall_length(ratio_x, ratio_y)
 
-        all_sides = self.floor_layout.find_all_sides_sorted_by_length()
-        print(all_sides, "ALL SIDES")
-
-        print(longest_side, pixels_dict)
+        print(side, pixels_dict)
         print(ratio_x, ratio_y, "ratios")
 
-        middle_point = longest_side.get_middle_point()
+        middle_point = side.get_middle_point()
         pixel_diff = -1 * (middle_point[0] - pixels_dict['camera'][0][0]), middle_point[1] - pixels_dict['camera'][0][1]
         bed_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
         print(bed_offset_x_y, "Bed offset")
@@ -75,10 +77,46 @@ class Bedroom(Room):
         bed = Bed(Path.BED_WITH_TABLES_MODEL.value if longest_side_length > 3 else Path.BED_MODEL.value)
 
         print(f"BED floor placement pixel: {middle_point}")
-        yaw_angle = longest_side.calculate_wall_angle()
+        yaw_angle = side.calculate_wall_angle()
         print(yaw_angle, "BED yaw angle in degrees")
         render_parameters = (
             bed.calculate_rendering_parameters(self, bed_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
+        return render_parameters
+
+    def calculate_wardrobe_parameters(self, side, camera_angles_rad: tuple):
+        from stage.furniture.Wardrobe import Wardrobe
+
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        pixels_dict = self.floor_layout.get_pixels_dict()
+
+        middle_point = side.get_middle_point()
+        pixel_diff = -1 * (middle_point[0] - pixels_dict['camera'][0][0]), middle_point[1] - pixels_dict['camera'][0][1]
+        wardrobe_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
+        print(wardrobe_offset_x_y, "Bed offset")
+
+        pitch_rad, roll_rad = camera_angles_rad
+        wardrobe = Wardrobe()
+        yaw_angle = side.calculate_wall_angle()
+        render_parameters = (
+            wardrobe.calculate_rendering_parameters(self, wardrobe_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
+        return render_parameters
+
+    def calculate_commode_parameters(self, side, camera_angles_rad: tuple):
+        from stage.furniture.Commode import Commode
+
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        pixels_dict = self.floor_layout.get_pixels_dict()
+
+        middle_point = side.get_middle_point()
+        pixel_diff = -1 * (middle_point[0] - pixels_dict['camera'][0][0]), middle_point[1] - pixels_dict['camera'][0][1]
+        commode_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
+        print(commode_offset_x_y, "Bed offset")
+
+        pitch_rad, roll_rad = camera_angles_rad
+        commode = Commode()
+        yaw_angle = side.calculate_wall_angle()
+        render_parameters = (
+            commode.calculate_rendering_parameters(self, commode_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
         return render_parameters
 
     def calculate_plant_parameters(self, camera_angles_rad: tuple):
