@@ -53,6 +53,7 @@ class Path(Enum):
     BED_WITH_TABLES_MODEL = join(BEDROOM_MODELS_DIR, 'bedwithtables/bedwithtables.usdc')
     WARDROBE_MODEL = join(BEDROOM_MODELS_DIR, 'Madrid_Shafa-3-V2__whithe.usdc')
     COMMODE_MODEL = join(BEDROOM_MODELS_DIR, 'commode2.usdc')
+    PAINTING_MODEL = join(BEDROOM_MODELS_DIR, 'painting.usdc')
 
     # DepthAnything
     DEPTH_IMAGE = 'DepthAnythingV2/output/depth.npy'
