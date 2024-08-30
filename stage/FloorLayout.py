@@ -113,7 +113,7 @@ class FloorLayout:
     def calculate_pixels_per_meter_ratio(self):
         """
         offsets: points in 3d space that were converted to the pixels in dictionary format
-        pixels: pixel coordinates on floor layout image as result of conversion in dictionary format
+        pixels: pixel coordinates on floor layout image as a result of conversion in dictionary format
         WARNING! Both dictionaries must have 'camera' and 'point_for_calculating_ratio' keys
         """
         left_camera_pixel = self.pixels_dict['camera'][0]
@@ -220,7 +220,7 @@ class FloorLayout:
     def calculate_offset_from_pixel_diff(pixels_diff, ratio):
         """
         pixels_diff: has the following format [pixels_x_diff, pixels_y_diff].
-        Represents difference in pixel coordinates between 2 points
+        Represents a difference in pixel coordinates between 2 points
 
         ratio: has the following format [ratio_x, ratio_y]
         Represents pixels_per_meter_ratio for a floor layout. For both axes.

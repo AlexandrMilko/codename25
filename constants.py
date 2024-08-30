@@ -29,8 +29,7 @@ class Path(Enum):
     WALL_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'wall_mask.png')
     WINDOWS_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask.png')
     WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask_inpainting.png')
-    PREPROCESSED_USERS = join(PREPROCESSED_IMAGES_DIR,  'users.png')
-
+    PREPROCESSED_USERS = join(PREPROCESSED_IMAGES_DIR, 'users.png')
 
     # /3Ds
     MODELS_DIR = '3Ds'
@@ -51,6 +50,7 @@ class Path(Enum):
     # /3Ds/bedroom
     BEDROOM_MODELS_DIR = join(MODELS_DIR, 'bedroom')
     BED_MODEL = join(BEDROOM_MODELS_DIR, 'bed2.usdc')
+    BED_WITH_TABLES_MODEL = join(BEDROOM_MODELS_DIR, 'bedwithtables/bedwithtables.usdc')
     WARDROBE_MODEL = join(BEDROOM_MODELS_DIR, 'Madrid_Shafa-3-V2__whithe.usdc')
     COMMODE_MODEL = join(BEDROOM_MODELS_DIR, 'commode2.usdc')
 
@@ -58,8 +58,6 @@ class Path(Enum):
     DEPTH_IMAGE = 'DepthAnythingV2/output/depth.npy'
     PLY_SPACE = 'DepthAnythingV2/output/depth.ply'
     DEPTH_CHECKPOINT = 'DepthAnythingV2/metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth'
-    IMAGE_HEIGHT_LIMIT = 512 # To avoid GPU OOM error
+    IMAGE_HEIGHT_LIMIT = 512  # To avoid GPU OOM error
     FLOOR_NPY = 'DepthAnythingV2/output/floor.npy'
     FLOOR_PLY = 'DepthAnythingV2/output/floor.ply'
-
-    # UprightNet
