@@ -82,7 +82,7 @@ class Bedroom(Room):
         pitch_rad, roll_rad = camera_angles_rad
 
         # number 3 is hardcoded length of model table with chairs
-        bed = Bed(Path.BED_WITH_TABLES_MODEL.value if longest_side_length > 3 else Path.BED_MODEL.value)
+        bed = Bed(Path.BED_WITH_TABLES_MODEL.value if side.calculate_wall_length(ratio_x, ratio_y) > 3 else Path.BED_MODEL.value)
 
         print(f"BED floor placement pixel: {middle_point}")
         yaw_angle = side.calculate_wall_angle()
