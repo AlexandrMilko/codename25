@@ -50,7 +50,7 @@ class Path(Enum):
     # /3Ds/bedroom
     BEDROOM_MODELS_DIR = join(MODELS_DIR, 'bedroom')
     BED_MODEL = join(BEDROOM_MODELS_DIR, 'bed2.usdc')
-    BED_WITH_TABLES_MODEL = join(BEDROOM_MODELS_DIR, 'bedwithtables/bedwithtables.usdc')
+    BED_WITH_TABLES_MODEL = join(BEDROOM_MODELS_DIR, 'bedwithtables.usdc')
     WARDROBE_MODEL = join(BEDROOM_MODELS_DIR, 'Madrid_Shafa-3-V2__whithe.usdc')
     COMMODE_MODEL = join(BEDROOM_MODELS_DIR, 'commode2.usdc')
     PAINTING_MODEL = join(BEDROOM_MODELS_DIR, 'painting.usdc')
