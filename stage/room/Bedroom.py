@@ -56,13 +56,10 @@ class Bedroom(Room):
                               Path.SEG_PREREQUISITE_IMAGE.value, height)
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
-        try:
-            painting_parameters = self.calculate_painting_parameters((pitch_rad, roll_rad))
-            scene_render_parameters['objects'] = [painting_parameters]
-            furniture_image = Furniture.request_blender_render(scene_render_parameters)
-            Room.process_rendered_image(furniture_image)
-        except:
-            print("Failed to add painting.")
+        painting_parameters = self.calculate_painting_parameters((pitch_rad, roll_rad))
+        scene_render_parameters['objects'] = [painting_parameters]
+        furniture_image = Furniture.request_blender_render(scene_render_parameters)
+        Room.process_rendered_image(furniture_image)
 
         processor = PostProcessor()
         processor.execute()
