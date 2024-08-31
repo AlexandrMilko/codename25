@@ -66,13 +66,13 @@ class FloorLayout:
         norm_points = (floor_points - min_coords) / (max_coords - min_coords)
         norm_points[:, 0] = norm_points[:, 0] * (width - 1)
         norm_points[:, 1] = norm_points[:, 1] * (height - 1)
-        norm_points[:, :2] = norm_points[:, :2].astype(int) # Because pixels have to be ints
 
         # hull = cv2.convexHull(norm_points[:, [0, 1]].astype(int))
         # cv2.fillPoly(layout_image, [hull], (255, 255, 255))
         for point in norm_points:
-            print(tuple(point[:2]))
-            cv2.circle(layout_image, tuple(point[:2]), 5, (255, 255, 255), -1)
+            pixel_x = int(point[0])
+            pixel_y = int(point[1])
+            cv2.circle(layout_image, (pixel_x, pixel_y), 5, (255, 255, 255), -1)
         # Apply dilation and erosion to fill the gaps between points. We use erosion to remove leftover points(camera point for example)
         kernel = np.ones((10, 10), np.uint8)
         # Dilate the image to fill the gaps
