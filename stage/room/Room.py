@@ -222,6 +222,7 @@ class Room:
         painting = Painting()
         left, center, right = painting.find_placement_pixel(Path.SEG_PREREQUISITE_IMAGE.value)
         if not all([left, center, right]): raise Exception("No place for painting found")
+        print(left, center, right, "PAINTING PIXELS")
         left_offset, right_offset =  [self.infer_3d(pixel, pitch_rad, roll_rad) for
                                                             pixel in (left, right)]
         yaw_angle = calculate_angle_from_top_view(left_offset, right_offset)
