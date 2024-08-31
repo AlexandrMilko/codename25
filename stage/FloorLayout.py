@@ -71,6 +71,7 @@ class FloorLayout:
         # hull = cv2.convexHull(norm_points[:, [0, 1]].astype(int))
         # cv2.fillPoly(layout_image, [hull], (255, 255, 255))
         for point in norm_points:
+            print(tuple(point[:2]))
             cv2.circle(layout_image, tuple(point[:2]), 5, (255, 255, 255), -1)
         # Apply dilation and erosion to fill the gaps between points. We use erosion to remove leftover points(camera point for example)
         kernel = np.ones((10, 10), np.uint8)
