@@ -64,8 +64,8 @@ class Bedroom(Room):
         except:
             print("Failed to add painting.")
 
-        # processor = PostProcessor()
-        # processor.execute()
+        processor = PostProcessor()
+        processor.execute()
 
     def calculate_bed_parameters(self, side, camera_angles_rad: tuple):
         from stage.furniture.Bed import Bed
