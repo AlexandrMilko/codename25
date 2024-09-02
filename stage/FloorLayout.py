@@ -155,7 +155,7 @@ class FloorLayout:
                     return True
         return False
 
-    def find_all_sides_sorted_by_length(self, exclude_distance=100, exclude_length=1.5):
+    def find_all_sides_sorted_by_length(self, exclude_distance=200, exclude_length=1.5):
         exclusion_zones = self.pixels_dict
         image = cv2.imread(self.output_image_path)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
