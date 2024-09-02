@@ -108,7 +108,8 @@ class FloorLayout:
             cv2.imwrite(Path.POINTS_DEBUG_IMAGE.value, points_image)
 
         self.pixels_dict = result
-        FloorLayout.fill_layout_with_camera(self.output_image_path, self.pixels_dict['camera'], self.output_image_path)
+        left_camera_pixel = self.pixels_dict['camera'][0]
+        FloorLayout.fill_layout_with_camera(self.output_image_path, left_camera_pixel, self.output_image_path)
         pixels_per_meter_ratio = self.calculate_pixels_per_meter_ratio()
         print(pixels_per_meter_ratio)
 
