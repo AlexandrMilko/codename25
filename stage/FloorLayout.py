@@ -155,41 +155,7 @@ class FloorLayout:
                     return True
         return False
 
-    def find_middle_of_longest_side(self, exclude_distance=50):
-        exclusion_zones = self.pixels_dict
-        image = cv2.imread(self.output_image_path)
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-        _, thresh = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY)
-
-        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-        approx_contours = []
-        for cnt in contours:
-            epsilon = 0.01 * cv2.arcLength(cnt, True)
-            approx = cv2.approxPolyDP(cnt, epsilon, True)
-            approx_contours.append(approx)
-
-        max_length = 0
-        longest_side_points = None
-
-        for contour in approx_contours:
-            for i in range(len(contour)):
-                pt1 = contour[i][0]
-                pt2 = contour[(i + 1) % len(contour)][0]
-                print(exclusion_zones)
-                # Exclude sides that are too close to the camera, windows, or doors
-                if self.is_tangent_to_any(pt1, pt2, exclusion_zones, exclude_distance):
-                    continue
-
-                length = np.linalg.norm(pt1 - pt2)
-                if length > max_length:
-                    max_length = length
-                    longest_side_points = (pt1, pt2)
-
-        return LayoutSide(longest_side_points)
-
-    def find_all_sides_sorted_by_length(self, exclude_distance=50, exclude_length=300):
+    def find_all_sides_sorted_by_length(self, exclude_distance=50, exclude_length=2):
         exclusion_zones = self.pixels_dict
         image = cv2.imread(self.output_image_path)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -212,7 +178,7 @@ class FloorLayout:
                 print(exclusion_zones)
                 # Exclude sides that are too close to the camera, windows, or doors
                 side = LayoutSide((pt1, pt2))
-                if self.is_tangent_to_any(pt1, pt2, exclusion_zones, exclude_distance) and side.calculate_length() < exclude_length:
+                if self.is_tangent_to_any(pt1, pt2, exclusion_zones, exclude_distance) or side.calculate_wall_length(self.ratio_x, self.ratio_y) < exclude_length:
                     continue
 
                 sides.append(side)
