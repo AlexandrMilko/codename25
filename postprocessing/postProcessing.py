@@ -150,7 +150,7 @@ class PostProcessor:
 
         # Set the seed for our KSampler node
         prompt["19"]["inputs"]["seed"] = 100361857014337
-        prompt["44"]["inputs"]["multiplier"] = 0.4
+        prompt["44"]["inputs"]["multiplier"] = 0.6
 
 
         # set model
