@@ -20,21 +20,21 @@ class Bedroom(Room):
         all_sides = self.floor_layout.find_all_sides_sorted_by_length()
         print(all_sides, "ALL SIDES")
 
-        try:
-            bed_parameters = self.calculate_bed_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
-            wardrobe_parameters = self.calculate_wardrobe_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
-            commode_parameters = self.calculate_commode_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
-            plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
-        except IndexError:
-            print("Ran out of walls")
+        bed_parameters = self.calculate_bed_parameters(all_sides, (pitch_rad, roll_rad))
+        wardrobe_parameters = self.calculate_wardrobe_parameters(all_sides, (pitch_rad, roll_rad))
+        commode_parameters = self.calculate_commode_parameters(all_sides, (pitch_rad, roll_rad))
+        plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
 
         curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
 
         scene_render_parameters['objects'] = [
-                                            *curtains_parameters, plant_parameters,
-                                            bed_parameters, wardrobe_parameters,
-                                            commode_parameters,
-                                            ]
+            *curtains_parameters, plant_parameters,
+            bed_parameters, wardrobe_parameters,
+            commode_parameters,
+        ]
+        # After our parameters calculation som of them will be equal to None, we have to remove them
+        scene_render_parameters['objects'] = [item for item in scene_render_parameters['objects'] if item is not None]
+
         import json
         print(json.dumps(scene_render_parameters, indent=4))
 
@@ -71,7 +71,11 @@ class Bedroom(Room):
         processor = PostProcessor()
         processor.execute()
 
-    def calculate_bed_parameters(self, side, camera_angles_rad: tuple):
+    def calculate_bed_parameters(self, all_sides, camera_angles_rad: tuple):
+        if len(all_sides) > 0:
+            side = all_sides.pop(0)
+        else:
+            return None
         from stage.furniture.Bed import Bed
 
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
@@ -97,7 +101,12 @@ class Bedroom(Room):
             bed.calculate_rendering_parameters(self, bed_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
         return render_parameters
 
-    def calculate_wardrobe_parameters(self, side, camera_angles_rad: tuple):
+    def calculate_wardrobe_parameters(self, all_sides, camera_angles_rad: tuple):
+        if len(all_sides) > 0:
+            side = all_sides.pop(0)
+        else:
+            return None
+
         from stage.furniture.Wardrobe import Wardrobe
 
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
@@ -115,7 +124,12 @@ class Bedroom(Room):
             wardrobe.calculate_rendering_parameters(self, wardrobe_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
         return render_parameters
 
-    def calculate_commode_parameters(self, side, camera_angles_rad: tuple):
+    def calculate_commode_parameters(self, all_sides, camera_angles_rad: tuple):
+        if len(all_sides) > 0:
+            side = all_sides.pop(0)
+        else:
+            return None
+
         from stage.furniture.Commode import Commode
 
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
