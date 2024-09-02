@@ -20,10 +20,14 @@ class Bedroom(Room):
         all_sides = self.floor_layout.find_all_sides_sorted_by_length()
         print(all_sides, "ALL SIDES")
 
-        bed_parameters = self.calculate_bed_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
-        wardrobe_parameters = self.calculate_wardrobe_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
-        commode_parameters = self.calculate_commode_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
-        plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
+        try:
+            bed_parameters = self.calculate_bed_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
+            wardrobe_parameters = self.calculate_wardrobe_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
+            commode_parameters = self.calculate_commode_parameters(all_sides.pop(0), (pitch_rad, roll_rad))
+            plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
+        except IndexError:
+            print("Ran out of walls")
+
         curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
 
         scene_render_parameters['objects'] = [
