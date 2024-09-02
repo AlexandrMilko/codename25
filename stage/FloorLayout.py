@@ -67,18 +67,10 @@ class FloorLayout:
         norm_points[:, 0] = norm_points[:, 0] * (width - 1)
         norm_points[:, 1] = norm_points[:, 1] * (height - 1)
 
-        # hull = cv2.convexHull(norm_points[:, [0, 1]].astype(int))
-        # cv2.fillPoly(layout_image, [hull], (255, 255, 255))
         for point in norm_points:
             pixel_x = int(point[0])
             pixel_y = int(point[1])
             cv2.circle(layout_image, (pixel_x, pixel_y), 5, (255, 255, 255), -1)
-        # Apply dilation and erosion to fill the gaps between points. We use erosion to remove leftover points(camera point for example)
-        kernel = np.ones((10, 10), np.uint8)
-        # Dilate the image to fill the gaps
-        dilated_image = cv2.dilate(layout_image, kernel, iterations=1)
-        # Erode the image to bring it back to original size
-        layout_image = cv2.erode(dilated_image, kernel, iterations=1)
 
         # Print normalized points for debugging
         print("Normalized points (first 5):", norm_points[:5])
@@ -112,9 +104,11 @@ class FloorLayout:
         if self.output_image_path is not None:
             os.makedirs(os.path.dirname(self.output_image_path), exist_ok=True)
             cv2.imwrite(self.output_image_path, layout_image)
+            FloorLayout.clear_floor_layout(self.output_image_path, self.output_image_path)
             cv2.imwrite(Path.POINTS_DEBUG_IMAGE.value, points_image)
 
         self.pixels_dict = result
+        FloorLayout.fill_layout_with_camera(self.output_image_path, self.pixels_dict['camera'], self.output_image_path)
         pixels_per_meter_ratio = self.calculate_pixels_per_meter_ratio()
         print(pixels_per_meter_ratio)
 
@@ -256,3 +250,92 @@ class FloorLayout:
         meter_area = white_pixel_count / (self.ratio_x * self.ratio_y)
 
         return meter_area
+
+    @staticmethod
+    def clear_floor_layout(image_path, output_path):
+        # Removes lonely points and makes the edges smoother for floor layout
+
+        # Create an empty black image
+        layout_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+
+        # Apply a threshold to ensure the image is binary
+        _, binary_image = cv2.threshold(layout_image, 127, 255, cv2.THRESH_BINARY)
+
+        # Define a kernel for morphological operations
+        kernel = np.ones((10, 10), np.uint8)
+
+        # Apply morphological opening to remove noise (small dots)
+        opened_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, kernel)
+
+        # Apply morphological closing to smooth the edges and close small holes
+        closed_image = cv2.morphologyEx(opened_image, cv2.MORPH_CLOSE, kernel)
+
+        # Find contours in the processed image
+        contours, _ = cv2.findContours(closed_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Fill the contours on the original layout image (using the processed image as a mask)
+        final_image = np.zeros_like(layout_image)
+        cv2.fillPoly(final_image, contours, (255, 255, 255))
+
+        # Display the final processed image
+        # cv2.imshow("Final Layout Image", final_image)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
+        cv2.imwrite(output_path, final_image)
+
+    @staticmethod
+    def fill_layout_with_camera(image_path, camera_pixel, output_path):
+        """
+        Finds the two topmost corners in a binary image, visualizes them, and draws a triangle using a given third point.
+
+        Parameters:
+        - image_path: str, path to the input binary image.
+        - third_point: tuple, the (x, y) coordinate of the third point for the triangle.
+        - output_path: str, path to save the image with the drawn triangle.
+
+        Returns:
+        - top_corners: list of tuples, the (x, y) coordinates of the two topmost corners.
+        """
+        # Load the binary image
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        color_image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)  # Convert to color image for visualization
+
+        # Find contours
+        contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # List to store potential topmost corners
+        potential_corners = []
+
+        # Iterate over contours to find the topmost points
+        for contour in contours:
+            # Approximate the contour to reduce the number of points
+            epsilon = 0.01 * cv2.arcLength(contour, True)
+            approx = cv2.approxPolyDP(contour, epsilon, True)
+
+            for point in approx:
+                x, y = point[0]
+                potential_corners.append((x, y))
+
+        # Sort potential corners by y-coordinate (ascending)
+        sorted_corners = sorted(potential_corners, key=lambda pt: pt[1])
+
+        # Get the two topmost points (having smallest y-coordinates)
+        top_corners = sorted_corners[:2]
+
+        # Visualize the two topmost corners by drawing circles
+        # for corner in top_corners:
+        #     cv2.circle(color_image, corner, 5, (0, 0, 255), -1)  # Red circles for topmost corners
+
+        # Visualize the third point as well
+        # cv2.circle(color_image, third_point, 5, (0, 255, 0), -1)  # Green circle for the third point
+
+        # Draw a triangle using the two topmost corners and the given third point
+        triangle_points = np.array([top_corners[0], top_corners[1], camera_pixel], np.int32)
+        triangle_points = triangle_points.reshape((-1, 1, 2))
+
+        # Fill the triangle on the image
+        cv2.fillPoly(color_image, [triangle_points], (255, 255, 255))
+
+        # Save the result
+        cv2.imwrite(output_path, color_image)
