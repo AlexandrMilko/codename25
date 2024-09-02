@@ -229,7 +229,7 @@ class FloorLayout:
         _, binary_image = cv2.threshold(layout_image, 127, 255, cv2.THRESH_BINARY)
 
         # Define a kernel for morphological operations
-        kernel = np.ones((20, 20), np.uint8)
+        kernel = np.ones((80, 80), np.uint8)
 
         # Apply morphological opening to remove noise (small dots)
         opened_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, kernel)
