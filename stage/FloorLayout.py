@@ -70,7 +70,7 @@ class FloorLayout:
         for point in norm_points:
             pixel_x = int(point[0])
             pixel_y = int(point[1])
-            cv2.circle(points_image, (pixel_x, pixel_y), 20, (255, 255, 255), -1)  # White color for all points
+            cv2.circle(points_image, (pixel_x, pixel_y), 10, (255, 255, 255), -1)  # White color for all points
 
         # Convert 3D points to 2D pixels
         result = dict()
