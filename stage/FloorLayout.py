@@ -33,7 +33,6 @@ class FloorLayout:
 
         # Initialize layout image
         height, width = 1024, 1024
-        layout_image = np.zeros((height, width, 3), dtype=np.uint8)
         points_image = np.zeros((height, width, 3), dtype=np.uint8)
 
         # Add camera and relative point for pixel-per-meter calculation
@@ -67,19 +66,11 @@ class FloorLayout:
         norm_points[:, 0] = norm_points[:, 0] * (width - 1)
         norm_points[:, 1] = norm_points[:, 1] * (height - 1)
 
-        for point in norm_points:
-            pixel_x = int(point[0])
-            pixel_y = int(point[1])
-            cv2.circle(layout_image, (pixel_x, pixel_y), 5, (255, 255, 255), -1)
-
-        # Print normalized points for debugging
-        print("Normalized points (first 5):", norm_points[:5])
-
         # Visualize all points on the image
         for point in norm_points:
             pixel_x = int(point[0])
             pixel_y = int(point[1])
-            cv2.circle(points_image, (pixel_x, pixel_y), 1, (255, 255, 255), -1)  # White color for all points
+            cv2.circle(points_image, (pixel_x, pixel_y), 20, (255, 255, 255), -1)  # White color for all points
 
         # Convert 3D points to 2D pixels
         result = dict()
@@ -99,13 +90,13 @@ class FloorLayout:
                 pixel_y = np.clip(pixel_y, 0, height - 1)
                 print(f"Mapped to 2D: x={pixel_x}, y={pixel_y}")  # Debug message
                 result[point_name].append([pixel_x, pixel_y])
-                # cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Red color for specific points
+                # cv2.circle(points_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Red color for specific points
 
         if self.output_image_path is not None:
             os.makedirs(os.path.dirname(self.output_image_path), exist_ok=True)
             cv2.imwrite(self.output_image_path, points_image)
-            FloorLayout.clear_floor_layout(self.output_image_path, self.output_image_path)
             cv2.imwrite(Path.POINTS_DEBUG_IMAGE.value, points_image)
+            FloorLayout.clear_floor_layout(self.output_image_path, self.output_image_path)
 
         self.pixels_dict = result
         left_camera_pixel = self.pixels_dict['camera'][0]
