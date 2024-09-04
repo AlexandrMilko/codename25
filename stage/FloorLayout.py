@@ -103,7 +103,7 @@ class FloorLayout:
 
         if self.output_image_path is not None:
             os.makedirs(os.path.dirname(self.output_image_path), exist_ok=True)
-            cv2.imwrite(self.output_image_path, layout_image)
+            cv2.imwrite(self.output_image_path, points_image)
             FloorLayout.clear_floor_layout(self.output_image_path, self.output_image_path)
             cv2.imwrite(Path.POINTS_DEBUG_IMAGE.value, points_image)
 
