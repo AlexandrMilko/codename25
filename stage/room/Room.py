@@ -43,16 +43,6 @@ class Room:
             print("Returning default angles")
             return 0, 0
 
-    @staticmethod
-    def get_walls():
-        import stage.Wall
-        return stage.Wall.find_walls(Path.SEGMENTED_ES_IMAGE.value)
-
-    @staticmethod
-    def get_biggest_wall():
-        import stage.Wall
-        return stage.Wall.find_biggest_wall(Path.SEGMENTED_ES_IMAGE.value)
-
     def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
         from DepthAnythingV2.depth_estimation import image_pixel_to_3d, rotate_3d_point
         print(self.empty_room_image_path, pixel, "IMAGE PATH and PIXEL")
