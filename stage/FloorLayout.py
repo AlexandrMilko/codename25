@@ -211,36 +211,32 @@ class FloorLayout:
 
     @staticmethod
     def clear_floor_layout(image_path, output_path):
-        # Removes lonely points and makes the edges smoother for floor layout
+        # Step 1: Load the image in grayscale
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
-        # Create an empty black image
-        layout_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        # Step 2: Threshold the image to create a binary image
+        _, binary_image = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
 
-        # Apply a threshold to ensure the image is binary
-        _, binary_image = cv2.threshold(layout_image, 127, 255, cv2.THRESH_BINARY)
+        # Step 3: Apply morphological closing to close gaps in the border
+        kernel = np.ones((10, 10), np.uint8)
+        closed_image = cv2.morphologyEx(binary_image, cv2.MORPH_CLOSE, kernel)
 
-        # Define a kernel for morphological operations
-        kernel = np.ones((20, 20), np.uint8)
+        # Step 4: Invert the image so the background is black (0) and the object is white (255)
+        inverted_image = cv2.bitwise_not(closed_image)
 
-        # Apply morphological opening to remove noise (small dots)
-        opened_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, kernel)
+        # Step 5: Perform flood fill from a point outside the object
+        h, w = inverted_image.shape
+        mask = np.zeros((h + 2, w + 2), np.uint8)
+        flood_filled_image = inverted_image.copy()
 
-        # Apply morphological closing to smooth the edges and close small holes
-        closed_image = cv2.morphologyEx(opened_image, cv2.MORPH_CLOSE, kernel)
+        # Start filling from point (0, 0) which should be background
+        cv2.floodFill(flood_filled_image, mask, (0, 0), (255, 255, 255))
 
-        # Find contours in the processed image
-        contours, _ = cv2.findContours(closed_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Step 6: Invert the flood-filled image back to get the object filled
+        filled_image = cv2.bitwise_not(flood_filled_image)
 
-        # Fill the contours on the original layout image (using the processed image as a mask)
-        final_image = np.zeros_like(layout_image)
-        cv2.fillPoly(final_image, contours, (255, 255, 255))
-
-        # Display the final processed image
-        # cv2.imshow("Final Layout Image", final_image)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-
-        cv2.imwrite(output_path, final_image)
+        # Step 7: Save the resulting filled image
+        cv2.imwrite(output_path, filled_image)
 
     @staticmethod
     def fill_layout_with_camera(image_path, camera_pixel, output_path):
@@ -297,3 +293,5 @@ class FloorLayout:
 
         # Save the result
         cv2.imwrite(output_path, color_image)
+        # To remove the gap between triangle and floor points
+        FloorLayout.clear_floor_layout(output_path, output_path)
