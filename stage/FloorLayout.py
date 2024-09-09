@@ -40,6 +40,7 @@ class FloorLayout:
         self.points_dict['point_for_calculating_ratio'] = [[0.2, 0.2, 0], [0.2, 0.2, 0]]
 
         # Process user's points
+        all_points = floor_points.copy()
         for point_name in self.points_dict.keys():
             print(self.points_dict[point_name], " self.points_dict[point_name]")
             left = self.points_dict[point_name][0]
@@ -50,12 +51,12 @@ class FloorLayout:
             right[0] = -right[0]
 
             # Append user points to floor points
-            floor_points = np.vstack([floor_points, np.array(left)])
-            floor_points = np.vstack([floor_points, np.array(right)])
+            all_points = np.vstack([all_points, np.array(left)])
+            all_points = np.vstack([all_points, np.array(right)])
 
         # Find min and max coordinates of the floor
-        min_coords = floor_points.min(axis=0)
-        max_coords = floor_points.max(axis=0)
+        min_coords = all_points.min(axis=0)
+        max_coords = all_points.max(axis=0)
 
         # Print min and max coordinates for debugging
         print("Min coordinates:", min_coords)
