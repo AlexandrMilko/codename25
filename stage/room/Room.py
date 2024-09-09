@@ -212,7 +212,10 @@ class Room:
                     # Create a unique label for the current object
                     unique_label = f"{object_name}{label_counters[object_name]}"
                     # Store the pixel coordinates in the bottom_pixels dictionary
-                    bottom_pixels[unique_label] = (leftmost_bottom_pixel, rightmost_bottom_pixel)
+                    midpoint_x = (leftmost_bottom_pixel[0] + rightmost_bottom_pixel[0]) // 2
+                    midpoint_y = (leftmost_bottom_pixel[1] + rightmost_bottom_pixel[1]) // 2
+                    midpoint = (midpoint_x, midpoint_y)
+                    bottom_pixels[unique_label] = (midpoint, midpoint)
 
         return bottom_pixels
 

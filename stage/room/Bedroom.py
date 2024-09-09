@@ -68,8 +68,8 @@ class Bedroom(Room):
         except TypeError as e:
             print(e, "FAILED TO ADD PAINTING")
 
-        processor = PostProcessor()
-        processor.execute()
+        # processor = PostProcessor()
+        # processor.execute()
 
     def calculate_bed_parameters(self, all_sides, camera_angles_rad: tuple):
         if len(all_sides) > 0:

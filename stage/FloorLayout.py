@@ -96,7 +96,7 @@ class FloorLayout:
         if self.output_image_path is not None:
             os.makedirs(os.path.dirname(self.output_image_path), exist_ok=True)
             cv2.imwrite(self.output_image_path, points_image)
-            cv2.imwrite(Path.POINTS_DEBUG_IMAGE.value, points_image)
+            cv2.imwrite(Path.FLOOR_POINTS_IMAGE.value, points_image)
             FloorLayout.clear_floor_layout(self.output_image_path, self.output_image_path)
 
         self.pixels_dict = result
@@ -147,7 +147,19 @@ class FloorLayout:
                     return True
         return False
 
-    def find_all_sides_sorted_by_length(self, exclude_distance=200, exclude_length=1.5):
+    @staticmethod
+    def draw_points(exclusion_zones, exclude_distance):
+        image = cv2.imread(Path.FLOOR_LAYOUT_IMAGE.value)
+        for key, points in exclusion_zones.items():
+            for point in points:
+                # Draw the exclusion circle
+                cv2.circle(image, (point[0], point[1]), exclude_distance, (0, 255, 0), 2)
+                # Draw the point itself
+                cv2.circle(image, (point[0], point[1]), 5, (0, 0, 255), -1)
+
+        cv2.imwrite(Path.POINTS_DEBUG_IMAGE.value, image)
+
+    def find_all_sides_sorted_by_length(self, exclude_distance=50, exclude_length=1.5):
         exclusion_zones = self.pixels_dict
         image = cv2.imread(self.output_image_path)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -176,6 +188,8 @@ class FloorLayout:
                 sides.append(side)
 
         sides.sort(reverse=True, key=lambda x: x.calculate_wall_length(self.ratio_x, self.ratio_y))
+
+        self.draw_points(exclusion_zones, exclude_distance)
 
         return sides
 
@@ -219,7 +233,7 @@ class FloorLayout:
         _, binary_image = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
 
         # Step 3: Apply morphological closing to close gaps in the border
-        kernel = np.ones((10, 10), np.uint8)
+        kernel = np.ones((20, 20), np.uint8)
         closed_image = cv2.morphologyEx(binary_image, cv2.MORPH_CLOSE, kernel)
 
         # Step 4: Invert the image so the background is black (0) and the object is white (255)
