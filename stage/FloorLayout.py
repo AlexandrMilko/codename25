@@ -109,15 +109,15 @@ class FloorLayout:
         pixels: pixel coordinates on floor layout image as a result of conversion in dictionary format
         WARNING! Both dictionaries must have 'camera' and 'point_for_calculating_ratio' keys
         """
-        left_camera_pixel = self.pixels_dict['camera'][0]
-        left_point_pixel = self.pixels_dict['point_for_calculating_ratio'][0]
+        camera_pixel = self.pixels_dict['camera']
+        point_pixel = self.pixels_dict['point_for_calculating_ratio']
 
-        left_camera_offset = self.points_dict['camera'][0]
-        left_point_offset = self.points_dict['point_for_calculating_ratio'][0]
-        pixels_x_diff = left_camera_pixel[0] - left_point_pixel[0]
-        pixels_y_diff = left_camera_pixel[1] - left_point_pixel[1]
-        offsets_x_diff = left_camera_offset[0] - left_point_offset[0]
-        offsets_y_diff = left_camera_offset[1] - left_point_offset[1]
+        camera_offset = self.points_dict['camera']
+        point_offset = self.points_dict['point_for_calculating_ratio']
+        pixels_x_diff = camera_pixel[0] - point_pixel[0]
+        pixels_y_diff = camera_pixel[1] - point_pixel[1]
+        offsets_x_diff = camera_offset[0] - point_offset[0]
+        offsets_y_diff = camera_offset[1] - point_offset[1]
         ratio_x = pixels_x_diff / offsets_x_diff
         ratio_y = pixels_y_diff / offsets_y_diff
         return ratio_x, ratio_y
