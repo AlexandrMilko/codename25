@@ -36,23 +36,20 @@ class FloorLayout:
         points_image = np.zeros((height, width, 3), dtype=np.uint8)
 
         # Add camera and relative point for pixel-per-meter calculation
-        self.points_dict['camera'] = [[0, 0, 0], [0, 0, 0]]
-        self.points_dict['point_for_calculating_ratio'] = [[0.2, 0.2, 0], [0.2, 0.2, 0]]
+        self.points_dict['camera'] = [0, 0, 0]
+        self.points_dict['point_for_calculating_ratio'] = [0.2, 0.2, 0]
 
         # Process user's points
         all_points = floor_points.copy()
         for point_name in self.points_dict.keys():
             print(self.points_dict[point_name], " self.points_dict[point_name]")
-            left = self.points_dict[point_name][0]
-            right = self.points_dict[point_name][1]
+            middle_point = self.points_dict[point_name]
 
             # We reverse x-axis, because in blender it points to the opposite than in image pixel coordinate system
-            left[0] = -left[0]
-            right[0] = -right[0]
+            middle_point[0] = -middle_point[0]
 
             # Append user points to floor points
-            all_points = np.vstack([all_points, np.array(left)])
-            all_points = np.vstack([all_points, np.array(right)])
+            all_points = np.vstack([all_points, np.array(middle_point)])
 
         # Find min and max coordinates of the floor
         min_coords = all_points.min(axis=0)
@@ -77,21 +74,20 @@ class FloorLayout:
         result = dict()
         for point_name in self.points_dict.keys():
             print(self.points_dict)
-            left = self.points_dict[point_name][0]
-            right = self.points_dict[point_name][1]
+            middle_point = self.points_dict[point_name]
             result[point_name] = []
-            for point in left, right:
-                x_3d, y_3d, _ = point
-                print(f"3D Point: {point}")
-                pixel_x = int((x_3d - min_coords[0]) / (max_coords[0] - min_coords[0]) * (width - 1))
-                pixel_y = int((y_3d - min_coords[1]) / (max_coords[1] - min_coords[1]) * (height - 1))
 
-                # Ensure pixel coordinates are within bounds
-                pixel_x = np.clip(pixel_x, 0, width - 1)
-                pixel_y = np.clip(pixel_y, 0, height - 1)
-                print(f"Mapped to 2D: x={pixel_x}, y={pixel_y}")  # Debug message
-                result[point_name].append([pixel_x, pixel_y])
-                # cv2.circle(points_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Red color for specific points
+            x_3d, y_3d, _ = middle_point
+            print(f"3D Point: {middle_point}")
+            pixel_x = int((x_3d - min_coords[0]) / (max_coords[0] - min_coords[0]) * (width - 1))
+            pixel_y = int((y_3d - min_coords[1]) / (max_coords[1] - min_coords[1]) * (height - 1))
+
+            # Ensure pixel coordinates are within bounds
+            pixel_x = np.clip(pixel_x, 0, width - 1)
+            pixel_y = np.clip(pixel_y, 0, height - 1)
+            print(f"Mapped to 2D: x={pixel_x}, y={pixel_y}")  # Debug message
+            result[point_name].append([pixel_x, pixel_y])
+            # cv2.circle(points_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Red color for specific points
 
         if self.output_image_path is not None:
             os.makedirs(os.path.dirname(self.output_image_path), exist_ok=True)
