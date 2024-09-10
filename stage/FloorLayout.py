@@ -135,11 +135,10 @@ class FloorLayout:
 
     @staticmethod
     def is_tangent_to_any(point1, point2, exclusion_zones, exclude_distance):
-        for zone in exclusion_zones.values():
-            for exclusion_point in zone:
-                if (np.linalg.norm(point1 - exclusion_point) < exclude_distance or
-                        np.linalg.norm(point2 - exclusion_point) < exclude_distance):
-                    return True
+        for exclusion_point in exclusion_zones.values():
+            if (np.linalg.norm(point1 - exclusion_point) < exclude_distance or
+                    np.linalg.norm(point2 - exclusion_point) < exclude_distance):
+                return True
         return False
 
     @staticmethod
