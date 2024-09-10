@@ -173,6 +173,7 @@ class FloorLayout:
             approx_contours.append(approx)
 
         sides = []
+        valid_contours = [] # Used for debug
         for contour in approx_contours:
             for i in range(len(contour)):
                 pt1 = contour[i][0]
@@ -183,13 +184,13 @@ class FloorLayout:
                 if (self.is_tangent_to_any(pt1, pt2, exclusion_zones, exclude_distance) or
                         side.calculate_wall_length(self.ratio_x, self.ratio_y) < exclude_length):
                     continue
-
+                valid_contours.append(contour)
                 sides.append(side)
 
         sides.sort(reverse=True, key=lambda x: x.calculate_wall_length(self.ratio_x, self.ratio_y))
         print(len(sides), "sides found!!!!!!!!!!!!!!")
 
-        self.draw_points_and_contours(exclusion_zones, exclude_distance, approx_contours)
+        self.draw_points_and_contours(exclusion_zones, exclude_distance, valid_contours)
 
         return sides
 
