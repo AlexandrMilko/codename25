@@ -59,9 +59,9 @@ class Room:
             left_pixel, right_pixel = value
             left_offset = self.infer_3d(left_pixel, pitch_rad, roll_rad)
             right_offset = self.infer_3d(right_pixel, pitch_rad, roll_rad)
-            middle_offset = ((left_offset[0] + right_offset[0]) / 2,
+            middle_offset = [(left_offset[0] + right_offset[0]) / 2,
                             (left_offset[1] + right_offset[1]) / 2,
-                             (left_offset[2] + right_offset[2]) / 2)
+                             (left_offset[2] + right_offset[2]) / 2]
             points_in_3d[name] = middle_offset
 
         print(points_in_3d)
