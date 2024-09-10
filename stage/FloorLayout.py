@@ -145,12 +145,11 @@ class FloorLayout:
     @staticmethod
     def draw_points(exclusion_zones, exclude_distance):
         image = cv2.imread(Path.FLOOR_LAYOUT_IMAGE.value)
-        for key, points in exclusion_zones.items():
-            for point in points:
-                # Draw the exclusion circle
-                cv2.circle(image, (point[0], point[1]), exclude_distance, (0, 255, 0), 2)
-                # Draw the point itself
-                cv2.circle(image, (point[0], point[1]), 5, (0, 0, 255), -1)
+        for key, point in exclusion_zones.items():
+            # Draw the exclusion circle
+            cv2.circle(image, point, exclude_distance, (0, 255, 0), 2)
+            # Draw the point itself
+            cv2.circle(image, point, 5, (0, 0, 255), -1)
 
         cv2.imwrite(Path.POINTS_DEBUG_IMAGE.value, image)
 
