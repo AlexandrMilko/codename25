@@ -75,7 +75,6 @@ class FloorLayout:
         for point_name in self.points_dict.keys():
             print(self.points_dict)
             middle_point = self.points_dict[point_name]
-            result[point_name] = []
             print(middle_point)
             x_3d, y_3d, _ = middle_point
             print(f"3D Point: {middle_point}")
@@ -86,7 +85,7 @@ class FloorLayout:
             pixel_x = np.clip(pixel_x, 0, width - 1)
             pixel_y = np.clip(pixel_y, 0, height - 1)
             print(f"Mapped to 2D: x={pixel_x}, y={pixel_y}")  # Debug message
-            result[point_name].append([pixel_x, pixel_y])
+            result[point_name]= [pixel_x, pixel_y]
             # cv2.circle(points_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Red color for specific points
 
         if self.output_image_path is not None:
