@@ -143,13 +143,17 @@ class FloorLayout:
         return False
 
     @staticmethod
-    def draw_points(exclusion_zones, exclude_distance):
+    def draw_points_and_contours(exclusion_zones, exclude_distance, contours):
         image = cv2.imread(Path.FLOOR_LAYOUT_IMAGE.value)
+
+        for contour in contours:
+            cv2.drawContours(image, [contour], -1, (255, 0, 0), 2)  # Blue contours
+
         for key, point in exclusion_zones.items():
             # Draw the exclusion circle
-            cv2.circle(image, point, exclude_distance, (0, 255, 0), 2)
+            cv2.circle(image, point, exclude_distance, (0, 255, 0), 2)  # Green circles
             # Draw the point itself
-            cv2.circle(image, point, 5, (0, 0, 255), -1)
+            cv2.circle(image, point, 5, (0, 0, 255), -1)  # Red points
 
         cv2.imwrite(Path.POINTS_DEBUG_IMAGE.value, image)
 
@@ -176,14 +180,16 @@ class FloorLayout:
                 print(exclusion_zones)
                 # Exclude sides that are too close to the camera, windows, or doors
                 side = LayoutSide((pt1, pt2))
-                if self.is_tangent_to_any(pt1, pt2, exclusion_zones, exclude_distance) or side.calculate_wall_length(self.ratio_x, self.ratio_y) < exclude_length:
+                if (self.is_tangent_to_any(pt1, pt2, exclusion_zones, exclude_distance) or
+                        side.calculate_wall_length(self.ratio_x, self.ratio_y) < exclude_length):
                     continue
 
                 sides.append(side)
 
         sides.sort(reverse=True, key=lambda x: x.calculate_wall_length(self.ratio_x, self.ratio_y))
+        print(len(sides), "sides found!!!!!!!!!!!!!!")
 
-        self.draw_points(exclusion_zones, exclude_distance)
+        self.draw_points_and_contours(exclusion_zones, exclude_distance, approx_contours)
 
         return sides
 
