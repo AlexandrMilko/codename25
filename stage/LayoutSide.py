@@ -27,6 +27,9 @@ class LayoutSide:
 
         return -angle_degrees  # We return with minus to make it a Blender angle
 
+    def get_points(self):
+        return self.points
+
     def get_middle_point(self):
         return self.middle_point
 
