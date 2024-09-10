@@ -95,8 +95,8 @@ class FloorLayout:
             FloorLayout.clear_floor_layout(self.output_image_path, self.output_image_path)
 
         self.pixels_dict = result
-        left_camera_pixel = self.pixels_dict['camera'][0]
-        FloorLayout.fill_layout_with_camera(self.output_image_path, left_camera_pixel, self.output_image_path)
+        camera_pixel = self.pixels_dict['camera']
+        FloorLayout.fill_layout_with_camera(self.output_image_path, camera_pixel, self.output_image_path)
         pixels_per_meter_ratio = self.calculate_pixels_per_meter_ratio()
         print(pixels_per_meter_ratio)
 
