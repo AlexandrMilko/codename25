@@ -197,18 +197,17 @@ class FloorLayout:
 
         sides = []
         valid_contours = [] # Used for debug
-        for contour in approx_contours:
-            for i in range(len(contour)):
-                pt1 = contour[i][0]
-                pt2 = contour[(i + 1) % len(contour)][0]
-                print(exclusion_zones)
-                # Exclude sides that are too close to the camera, windows, or doors
-                side = LayoutSide((pt1, pt2))
-                if (self.is_tangent_to_any(pt1, pt2, exclusion_zones, exclude_distance) or
-                        side.calculate_wall_length(self.ratio_x, self.ratio_y) < exclude_length):
-                    continue
-                valid_contours.append(contour)
-                sides.append(side)
+        contour = approx_contours[0]
+        for i in range(len(contour)):
+            pt1 = contour[i][0]
+            pt2 = contour[(i + 1) % len(contour)][0]
+            print(exclusion_zones)
+            # Exclude sides that are too close to the camera, windows, or doors
+            side = LayoutSide((pt1, pt2))
+            if (self.is_tangent_to_any(pt1, pt2, exclusion_zones, exclude_distance) or
+                    side.calculate_wall_length(self.ratio_x, self.ratio_y) < exclude_length):
+                continue
+            sides.append(side)
 
         sides.sort(reverse=True, key=lambda x: x.calculate_wall_length(self.ratio_x, self.ratio_y))
         print(len(sides), "sides found!!!!!!!!!!!!!!")
