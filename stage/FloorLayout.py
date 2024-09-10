@@ -76,7 +76,7 @@ class FloorLayout:
             print(self.points_dict)
             middle_point = self.points_dict[point_name]
             result[point_name] = []
-
+            print(middle_point)
             x_3d, y_3d, _ = middle_point
             print(f"3D Point: {middle_point}")
             pixel_x = int((x_3d - min_coords[0]) / (max_coords[0] - min_coords[0]) * (width - 1))

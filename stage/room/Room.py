@@ -56,12 +56,11 @@ class Room:
 
         points_in_3d = {}
         for name, value in horizontal_borders.items():
-            points_in_3d[name] = []
             left_point, right_point = value
             middle_point = ((left_point[0] + right_point[0]) // 2,
                             (left_point[1] + right_point[1]) // 2)
             offset = self.infer_3d(middle_point, pitch_rad, roll_rad)
-            points_in_3d[name].append(offset)
+            points_in_3d[name] = offset
 
         print(points_in_3d)
         self.floor_layout = FloorLayout(Path.FLOOR_PLY.value, points_in_3d)
@@ -220,7 +219,9 @@ class Room:
                                                                                         direction='right')
 
                     bottom_pixels[object_name + str(object_counter[object_name])] = (
-                    leftmost_bottom_pixel_adjusted, rightmost_bottom_pixel_adjusted)
+                        leftmost_bottom_pixel_adjusted, rightmost_bottom_pixel_adjusted
+                    )
+
                     object_counter[object_name] += 1
 
         return bottom_pixels
