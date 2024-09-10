@@ -166,11 +166,12 @@ class FloorLayout:
         return False
 
     @staticmethod
-    def draw_points_and_contours(exclusion_zones, exclude_distance, contours):
+    def draw_points_and_contours(exclusion_zones, exclude_distance, sides):
         image = cv2.imread(Path.FLOOR_LAYOUT_IMAGE.value)
 
-        for contour in contours:
-            cv2.drawContours(image, [contour], -1, (255, 0, 0), 2)  # Blue contours
+        for side in sides:
+            pt1, pt2 = side.get_points()
+            cv2.line(image, pt1, pt2, (255, 0, 0), 2)  # Blue contours
 
         for key, point in exclusion_zones.items():
             # Draw the exclusion circle
@@ -196,7 +197,6 @@ class FloorLayout:
             approx_contours.append(approx)
 
         sides = []
-        valid_contours = [] # Used for debug
         contour = approx_contours[0]
         for i in range(len(contour)):
             pt1 = contour[i][0]
@@ -210,9 +210,8 @@ class FloorLayout:
             sides.append(side)
 
         sides.sort(reverse=True, key=lambda x: x.calculate_wall_length(self.ratio_x, self.ratio_y))
-        print(len(sides), "sides found!!!!!!!!!!!!!!")
 
-        self.draw_points_and_contours(exclusion_zones, exclude_distance, valid_contours)
+        self.draw_points_and_contours(exclusion_zones, exclude_distance, sides)
 
         return sides
 
