@@ -135,11 +135,34 @@ class FloorLayout:
 
     @staticmethod
     def is_tangent_to_any(point1, point2, exclusion_zones, exclude_distance):
-        for exclusion_point in exclusion_zones.values():
-            exclusion_point = np.array(exclusion_point)  # Convert exclusion point to numpy array
-            if (np.linalg.norm(np.array(point1) - exclusion_point) < exclude_distance or
-                    np.linalg.norm(np.array(point2) - exclusion_point) < exclude_distance):
+        for zone_name, zone_coords in exclusion_zones.items():
+            exclusion_point = np.array(zone_coords)
+
+            # Vector from point1 to point2 (the line segment)
+            line_vec = np.array(point2) - np.array(point1)
+
+            # Vector from point1 to the exclusion point
+            point_vec = exclusion_point - np.array(point1)
+
+            # Project point_vec onto the line_vec to find the closest point on the line
+            line_len = np.linalg.norm(line_vec)
+            if line_len == 0:
+                continue  # Skip degenerate lines (though they shouldn't occur here)
+
+            projection = np.dot(point_vec, line_vec) / (line_len ** 2)
+            if projection < 0:
+                closest_point = np.array(point1)
+            elif projection > 1:
+                closest_point = np.array(point2)
+            else:
+                closest_point = np.array(point1) + projection * line_vec
+
+            # Calculate the distance from the exclusion point to the closest point on the line
+            distance_to_line = np.linalg.norm(closest_point - exclusion_point)
+
+            if distance_to_line < exclude_distance:
                 return True
+
         return False
 
     @staticmethod
