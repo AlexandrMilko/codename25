@@ -1,9 +1,8 @@
 from preprocessing.preProcessNormalMap import ImageNormalMap
 from preprocessing.preProcessSegment import ImageSegmentor
 from stage import Floor
-from tools import (move_file, copy_file, get_image_size, save_mask_of_size,
-                   convert_png_to_mask, overlay_masks, image_overlay, calculate_angle_from_top_view,
-                   resize_and_save_image)
+from tools import (move_file, copy_file, get_image_size, save_mask_of_size, convert_png_to_mask,
+                   overlay_masks, image_overlay, calculate_angle_from_top_view, resize_and_save_image)
 from constants import Path
 from PIL import Image
 import open3d as o3d
@@ -58,10 +57,11 @@ class Room:
         points_in_3d = {}
         for name, value in horizontal_borders.items():
             points_in_3d[name] = []
-            left_point = self.infer_3d(value[0], pitch_rad, roll_rad)
-            right_point = self.infer_3d(value[1], pitch_rad, roll_rad)
-            points_in_3d[name].append(left_point)
-            points_in_3d[name].append(right_point)
+            left_point, right_point = value
+            middle_point = ((left_point[0] + right_point[0]) // 2,
+                            (left_point[1] + right_point[1]) // 2)
+            offset = self.infer_3d(middle_point, pitch_rad, roll_rad)
+            points_in_3d[name].append(offset)
 
         print(points_in_3d)
         self.floor_layout = FloorLayout(Path.FLOOR_PLY.value, points_in_3d)
@@ -169,43 +169,59 @@ class Room:
         cv2.imwrite(output_windows_mask_path, bw_mask)
 
     @staticmethod
-    def find_horizontal_borders():
+    def move_to_target_color(pixel, img, direction):
+        target_color = (120, 120, 120)
+        x, y = pixel
+
+        if direction == 'left':
+            while x > 0 and not np.array_equal(img[y, x], target_color):
+                x -= 1
+        elif direction == 'right':
+            while x < img.shape[1] - 1 and not np.array_equal(img[y, x], target_color):
+                x += 1
+
+        return x, y
+
+    def find_horizontal_borders(self):
         target_colors = {
             "door": np.array([8, 255, 51]),  # #08FF33
             "window": np.array([230, 230, 230]),  # #E6E6E6
             # Add more colors here as needed
         }
 
+        object_counter = {
+            "door": 0,
+            "window": 0
+        }
+
+        min_area_threshold = 800
+
         image = cv2.imread(Path.SEGMENTED_ES_IMAGE.value)
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         bottom_pixels = {}
-        label_counters = {label: 0 for label in target_colors.keys()}  # Initialize counters for each label
-
-        min_area_threshold = 800  # Adjust this value as needed
 
         for object_name, color_value in target_colors.items():
-            # Create mask for the current color
+            # Create mask for each target color
             mask = cv2.inRange(image_rgb, color_value, color_value)
             cleaned_mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
-
-            # Find contours in the cleaned mask
             contours, _ = cv2.findContours(cleaned_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
             for contour in contours:
                 if cv2.contourArea(contour) > min_area_threshold:
+                    # Find leftmost and rightmost pixels
                     leftmost_bottom_pixel = tuple(contour[contour[:, :, 0].argmin()][0])
                     rightmost_bottom_pixel = tuple(contour[contour[:, :, 0].argmax()][0])
 
-                    # Increment the counter for the current label
-                    label_counters[object_name] += 1
-                    # Create a unique label for the current object
-                    unique_label = f"{object_name}{label_counters[object_name]}"
-                    # Store the pixel coordinates in the bottom_pixels dictionary
-                    midpoint_x = (leftmost_bottom_pixel[0] + rightmost_bottom_pixel[0]) // 2
-                    midpoint_y = (leftmost_bottom_pixel[1] + rightmost_bottom_pixel[1]) // 2
-                    midpoint = (midpoint_x, midpoint_y)
-                    bottom_pixels[unique_label] = (midpoint, midpoint)
+                    # Move the leftmost and rightmost pixels towards (120, 120, 120) RGB
+                    leftmost_bottom_pixel_adjusted = self.move_to_target_color(leftmost_bottom_pixel, image_rgb,
+                                                                                        direction='left')
+                    rightmost_bottom_pixel_adjusted = self.move_to_target_color(rightmost_bottom_pixel, image_rgb,
+                                                                                        direction='right')
+
+                    bottom_pixels[object_name + str(object_counter[object_name])] = (
+                    leftmost_bottom_pixel_adjusted, rightmost_bottom_pixel_adjusted)
+                    object_counter[object_name] += 1
 
         return bottom_pixels
 
