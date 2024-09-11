@@ -213,7 +213,7 @@ def set_deliberate():
 
 def set_realistic_vision():
     print("SET realisticVisionV60B1_v51VAE")
-    data = {"sd_model_checkpoint": "realisticVisionV60B1_v51HyperVAE.safetensors"}
+    data = {"sd_model_checkpoint": "realisticVisionV60B1_v51HyperVAE.safetensors [f47e942ad4]"}
     options_url = 'http://host.docker.internal:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
 
