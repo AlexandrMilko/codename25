@@ -2,7 +2,7 @@ from preprocessing.preProcessNormalMap import ImageNormalMap
 from preprocessing.preProcessSegment import ImageSegmentor
 from stage import Floor
 from tools import (move_file, copy_file, get_image_size, save_mask_of_size, convert_png_to_mask,
-                   overlay_masks, image_overlay, calculate_angle_from_top_view, resize_and_save_image)
+                   overlay_masks, image_overlay, calculate_angle_from_top_view, resize_and_save_image, run_preprocessor)
 from constants import Path
 from PIL import Image
 import open3d as o3d
@@ -26,9 +26,7 @@ class Room:
         width, height = get_image_size(self.empty_room_image_path)
         PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
 
-        normalMap = ImageNormalMap(self.empty_room_image_path, Path.PREPROCESSED_USERS.value, PREPROCESSOR_RESOLUTION_LIMIT)
-        normalMap.execute()
-
+        run_preprocessor("normal_bae", self.empty_room_image_path, Path.PREPROCESSED_USERS.value, PREPROCESSOR_RESOLUTION_LIMIT)
         copy_file(self.empty_room_image_path,
                   "UprightNet/imgs/rgb/users.png")  # We copy it because we will use it later in get_wall method and we want to have access to the image
         move_file(f"images/preprocessed/users.png",
@@ -311,8 +309,7 @@ class Room:
         width, height = get_image_size(self.empty_room_image_path)
         PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
 
-        segment = ImageSegmentor(self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
-        segment.execute()
+        run_preprocessor("seg_ofade20k", self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
         resize_and_save_image(Path.SEGMENTED_ES_IMAGE.value,
                               Path.SEGMENTED_ES_IMAGE.value, height)
 

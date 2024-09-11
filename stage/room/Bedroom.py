@@ -3,7 +3,7 @@ import random
 from postprocessing.postProcessing import PostProcessor
 from preprocessing.preProcessSegment import ImageSegmentor
 from constants import Path
-from tools import resize_and_save_image
+from tools import resize_and_save_image, run_preprocessor
 from .Room import Room
 import os
 from ..furniture.Furniture import Furniture
@@ -53,8 +53,7 @@ class Bedroom(Room):
 
         # # Create windows mask for staged room.
         PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
-        segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
-        segment.execute()
+        run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
         # WARNING! We use SEG_PREREQUISITE_IMAGE for calculating painting position. Do not delete or use it after the painting parameters calculation process.
         resize_and_save_image(Path.SEG_PREREQUISITE_IMAGE.value,
                               Path.SEG_PREREQUISITE_IMAGE.value, height)
