@@ -86,12 +86,12 @@ class GreenScreenImageQuery(Query):
             "steps": self.steps,
             "cfg_scale": self.cfg_scale,
             "denoising_strength": self.denoising_strength,
-            "width": self.width,
-            "height": self.height,
+            "width": self.width * 2,
+            "height": self.height * 2,
             "seed": -1,
-            "mask": self.windows_mask_image_b64,
-            "inpainting_mask_invert": 1,
-            "mask_blur": 1,
+            # "mask": self.windows_mask_image_b64,
+            # "inpainting_mask_invert": 1,
+            # "mask_blur": 1,
             "alwayson_scripts": {
                 "controlnet": {
                     "args": [
@@ -169,18 +169,18 @@ class GreenScreenImageQuery(Query):
                             "control_mode": "ControlNet is more important",
                             "processor_res": 512 # WARNING: TODO change to image height
                         },
-                        {
-                            "enabled": True,
-                            "image": self.prerequisite_image_b64,
-                            "module": "depth_anything",
-                            "model": "control_v11f1p_sd15_depth [cfd03158]",
-                            "weight": 0.4,
-                            "guidance_start": 0.1,
-                            "guidance_end": 0.5,
-                            "control_mode": "My prompt is more important",
-                            "processor_res": 512,  # WARNING: TODO change to image height
-                            # "low_vram": True,
-                        }
+                        # {
+                        #     "enabled": True,
+                        #     "image": self.prerequisite_image_b64,
+                        #     "module": "depth_anything",
+                        #     "model": "control_v11f1p_sd15_depth [cfd03158]",
+                        #     "weight": 0.4,
+                        #     "guidance_start": 0.1,
+                        #     "guidance_end": 0.5,
+                        #     "control_mode": "My prompt is more important",
+                        #     "processor_res": 512,  # WARNING: TODO change to image height
+                        #     # "low_vram": True,
+                        # }
                     ]
                 }
             }
