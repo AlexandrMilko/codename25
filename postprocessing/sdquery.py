@@ -66,7 +66,7 @@ class GreenScreenImageQuery(Query):
         # else:
         #     # set_realistic_vision()
         #     set_deliberate()
-        set_realistic_vision()
+        # set_realistic_vision()
 
         self.designed_image_b64 = self.design()
         self.add_shadows_and_light()
@@ -213,7 +213,7 @@ def set_deliberate():
 
 def set_realistic_vision():
     print("SET realisticVisionV60B1_v51VAE")
-    data = {"sd_model_checkpoint": "realisticVisionV60B1_v51HyperVAE.safetensors [f47e942ad4]"}
+    data = {"sd_model_checkpoint": "realisticVisionV60B1_v51HyperVAE.safetensors"}
     options_url = 'http://host.docker.internal:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
 
