@@ -72,9 +72,9 @@ class GreenScreenImageQuery(Query):
         self.add_shadows_and_light()
 
     def design(self):
-        self.denoising_strength = 0.2
+        self.denoising_strength = 0.5
         self.cfg_scale = 7
-        self.steps = 100
+        self.steps = 40
 
         data = {
             "prompt": self.prompt,
