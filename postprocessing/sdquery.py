@@ -113,8 +113,8 @@ class GreenScreenImageQuery(Query):
                             "module": "depth_anything",
                             "model": "control_v11f1p_sd15_depth [cfd03158]",
                             "weight": 0.4,
-                            "guidance_start": 0.1,
-                            "guidance_end": 0.5,
+                            "guidance_start": 0,
+                            "guidance_end": 1,
                             "control_mode": "My prompt is more important",
                             "processor_res": 512,  # WARNING: TODO change to image height
                             # "low_vram": True,
@@ -163,9 +163,9 @@ class GreenScreenImageQuery(Query):
                             "module": "seg_ofade20k",
                             "model": "control_v11p_sd15_seg [e1f51eb9]",
                             # "low_vram": True,
-                            "weight": 0.9,
-                            "guidance_start": 0.1,
-                            "guidance_end": 0.5,
+                            "weight": 1,
+                            "guidance_start": 0,
+                            "guidance_end": 1,
                             "control_mode": "ControlNet is more important",
                             "processor_res": 512 # WARNING: TODO change to image height
                         },
