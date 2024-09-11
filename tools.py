@@ -33,6 +33,29 @@ def order_points(pts):
     # plot_points(rect)
     return rect
 
+def get_encoded_image(image_path):
+    img = cv2.imread(image_path)
+    # Encode into PNG and send to ControlNet
+    try:
+        retval, bytes = cv2.imencode('.png', img)
+    except cv2.error:
+        retval, bytes = cv2.imencode('.jpg', img)
+    return base64.b64encode(bytes).decode('utf-8')
+
+def run_preprocessor(preprocessor_name, input_path, output_filepath, res=512):
+    input_image = get_encoded_image(input_path)
+    data = {
+        "controlnet_module": preprocessor_name,
+        "controlnet_input_images": [input_image],
+        "controlnet_processor_res": res,
+        "controlnet_threshold_a": 64,
+        "controlnet_threshold_b": 64
+    }
+    preprocessor_url = 'http://127.0.0.1:7861/controlnet/detect'
+    response = submit_post(preprocessor_url, data)
+
+    save_encoded_image(response.json()['images'][0], output_filepath)
+
 
 def get_filename_without_extension(file_path):
     # Get the base filename from the path
