@@ -66,7 +66,7 @@ class GreenScreenImageQuery(Query):
         # else:
         #     # set_realistic_vision()
         #     set_deliberate()
-        # set_realistic_vision()
+        set_realistic_vision()
 
         self.designed_image_b64 = self.design()
         self.add_shadows_and_light()
@@ -124,7 +124,7 @@ class GreenScreenImageQuery(Query):
             }
         }
 
-        img2img_url = 'http://host.docker.internal:7861/sdapi/v1/img2img'
+        img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
         output_dir = f"images/preprocessed"
         output_filepath = os.path.join(output_dir, 'designed.png')
@@ -186,7 +186,7 @@ class GreenScreenImageQuery(Query):
             }
         }
 
-        img2img_url = 'http://host.docker.internal:7861/sdapi/v1/img2img'
+        img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
         output_dir = f"images"
         output_filepath = os.path.join(output_dir, self.output_filename)
@@ -207,21 +207,21 @@ class GreenScreenImageQuery(Query):
 def set_deliberate():
     print("SET DELIBERATE")
     data = {"sd_model_checkpoint": "deliberate_v2.safetensors"}
-    options_url = 'http://host.docker.internal:7861/sdapi/v1/options'
+    options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
 
 
 def set_realistic_vision():
     print("SET realisticVisionV60B1_v51VAE")
     data = {"sd_model_checkpoint": "realisticVisionV60B1_v51HyperVAE.safetensors"}
-    options_url = 'http://host.docker.internal:7861/sdapi/v1/options'
+    options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
 
 
 def set_xsarchitectural():
     print("SET xsarchitectural")
     data = {"sd_model_checkpoint": "xsarchitectural_v11.ckpt"}
-    options_url = 'http://host.docker.internal:7861/sdapi/v1/options'
+    options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
 
 def change_image_size(input_path, output_path, target_size_kb=20):
@@ -302,6 +302,6 @@ def apply_style(empty_space, room_choice, style_budget_choice):
     # We restart it to deallocate memory. TODO fix it.
     try:
         time.sleep(3)
-        restart_stable_diffusion('http://host.docker.internal:7861')
+        restart_stable_diffusion('http://127.0.0.1:7861')
     except requests.exceptions.ConnectionError:
         print("Stable Diffusion restarting")
