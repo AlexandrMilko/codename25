@@ -8,7 +8,7 @@ import math
 from tools import create_directory_if_not_exists, min_max_scale, move_file, submit_post, save_encoded_image, get_encoded_image, run_preprocessor, restart_stable_diffusion, overlay_masks, get_image_size
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
-MAX_CONTROLNET_IMAGE_RESOLUTION = 800
+MAX_CONTROLNET_IMAGE_RESOLUTION = 600
 
 
 class Query:
