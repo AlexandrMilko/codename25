@@ -61,8 +61,8 @@ def calculate_plane_normal(ply_path):
     outlier_cloud = point_cloud.select_by_index(inliers, invert=True)
 
     inlier_cloud.paint_uniform_color([1, 0, 0])  # Paint plane points in red
-    coordinate_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=1.0, origin=[0, 0, 0])
-    o3d.visualization.draw_geometries([inlier_cloud, outlier_cloud, coordinate_frame])
+    # coordinate_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=1.0, origin=[0, 0, 0])
+    # o3d.visualization.draw_geometries([inlier_cloud, outlier_cloud, coordinate_frame])
     return plane_normal
 
 def order_points(pts):
