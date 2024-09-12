@@ -46,7 +46,14 @@ def apply_style(es_path, room_choice, style_budget_choice):
     style, budget = style_budget_choice.split(", ")
     text = f"Residential, {room_choice}, {budget}, {style}"
     query = GreenScreenImageQuery(text)
-    query.run()
+
+    import torch
+    try:
+        query.run()
+    except torch.cuda.OutOfMemoryError as e:
+        print(e, "RESTARTING THE STABLE DIFFUSION AND TRYING AGAIN!")
+        restart_stable_diffusion('http://127.0.0.1:7861')
+        query.run()
 
     # We restart it to deallocate memory. TODO fix it.
     try:
