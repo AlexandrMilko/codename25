@@ -8,6 +8,7 @@ import json
 import cv2
 import os
 import open3d as o3d
+from run import SD_DOMAIN
 
 
 def calculate_pitch_angle(plane_normal):
@@ -107,8 +108,6 @@ def run_preprocessor(preprocessor_name, input_path, output_filepath, res=512):
         "controlnet_threshold_a": 64,
         "controlnet_threshold_b": 64
     }
-    from postprocessing.sdquery import get_sd_domain
-    SD_DOMAIN = get_sd_domain()
     preprocessor_url = f'http://{SD_DOMAIN}:7861/controlnet/detect'
     response = submit_post(preprocessor_url, data)
 
