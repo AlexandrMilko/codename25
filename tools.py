@@ -8,7 +8,6 @@ import json
 import cv2
 import os
 import open3d as o3d
-from run import SD_DOMAIN
 
 
 def calculate_pitch_angle(plane_normal):
@@ -99,7 +98,7 @@ def get_encoded_image(image_path):
         retval, bytes = cv2.imencode('.jpg', img)
     return base64.b64encode(bytes).decode('utf-8')
 
-def run_preprocessor(preprocessor_name, input_path, output_filepath, res=512):
+def run_preprocessor(preprocessor_name, input_path, output_filepath, SD_DOMAIN, res=512):
     input_image = get_encoded_image(input_path)
     data = {
         "controlnet_module": preprocessor_name,

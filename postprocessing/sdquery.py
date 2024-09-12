@@ -69,7 +69,7 @@ class GreenScreenImageQuery(Query):
 
     def run(self):
         # We run segmentation for our prerequisite image to see if segmentation was done correctly
-        run_preprocessor("seg_ofade20k", self.prerequisite_path, "seg_prerequisite.png")
+        run_preprocessor("seg_ofade20k", self.prerequisite_path, "seg_prerequisite.png", SD_DOMAIN)
 
         # if self.style in ("Modern", "Art Deco"):
         #     set_xsarchitectural()
