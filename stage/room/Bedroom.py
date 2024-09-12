@@ -8,7 +8,7 @@ from .Room import Room
 import os
 from ..furniture.Furniture import Furniture
 from ..Floor import Floor
-
+from run import SD_DOMAIN
 
 class Bedroom(Room):
     def stage(self):
@@ -54,7 +54,7 @@ class Bedroom(Room):
 
         # # Create windows mask for staged room.
         PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
-        run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
         # WARNING! We use SEG_PREREQUISITE_IMAGE for calculating painting position. Do not delete or use it after the painting parameters calculation process.
         resize_and_save_image(Path.SEG_PREREQUISITE_IMAGE.value,
                               Path.SEG_PREREQUISITE_IMAGE.value, height)

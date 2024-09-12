@@ -12,7 +12,7 @@ import numpy as np
 import cv2
 import os
 from ..FloorLayout import FloorLayout
-
+from run import SD_DOMAIN
 
 class Room:
     # BGR, used in segmented images
@@ -299,7 +299,7 @@ class Room:
         width, height = get_image_size(self.empty_room_image_path)
         PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
 
-        run_preprocessor("seg_ofade20k", self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        run_preprocessor("seg_ofade20k", self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
         resize_and_save_image(Path.SEGMENTED_ES_IMAGE.value,
                               Path.SEGMENTED_ES_IMAGE.value, height)
 
