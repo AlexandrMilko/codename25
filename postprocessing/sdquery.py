@@ -10,6 +10,17 @@ from tools import create_directory_if_not_exists, min_max_scale, move_file, subm
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 MAX_CONTROLNET_IMAGE_RESOLUTION = 600
 
+def get_sd_domain(): # We use this function to check if Stable Diffusion is running in docker or on host system
+    try:
+        data = {"sd_model_checkpoint": "realisticVisionV60B1_v51HyperVAE.safetensors"}
+        options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
+        response = submit_post(options_url, data)
+        return "127.0.0.1"
+    except requests.exceptions.ConnectionError:
+        print("INFO: Using host.docker.internal for SD")
+        return "host.docker.internal"
+
+SD_DOMAIN = get_sd_domain()
 
 class Query:
     negative_prompt = "ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish, text"
@@ -124,7 +135,7 @@ class GreenScreenImageQuery(Query):
             }
         }
 
-        img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
+        img2img_url = f'http://{SD_DOMAIN}:7861/sdapi/v1/img2img'
         response = submit_post(img2img_url, data)
         output_dir = f"images/preprocessed"
         output_filepath = os.path.join(output_dir, 'designed.png')
@@ -208,21 +219,21 @@ class GreenScreenImageQuery(Query):
 def set_deliberate():
     print("SET DELIBERATE")
     data = {"sd_model_checkpoint": "deliberate_v2.safetensors"}
-    options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
+    options_url = f'http://{SD_DOMAIN}:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
 
 
 def set_realistic_vision():
     print("SET realisticVisionV60B1_v51VAE")
     data = {"sd_model_checkpoint": "realisticVisionV60B1_v51HyperVAE.safetensors"}
-    options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
+    options_url = f'http://{SD_DOMAIN}:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
 
 
 def set_xsarchitectural():
     print("SET xsarchitectural")
     data = {"sd_model_checkpoint": "xsarchitectural_v11.ckpt"}
-    options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
+    options_url = f'http://{SD_DOMAIN}:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
 
 def change_image_size(input_path, output_path, target_size_kb=20):
@@ -303,6 +314,6 @@ def apply_style(empty_space, room_choice, style_budget_choice):
     # We restart it to deallocate memory. TODO fix it.
     try:
         time.sleep(3)
-        restart_stable_diffusion('http://127.0.0.1:7861')
+        restart_stable_diffusion(f'http://{SD_DOMAIN}:7861')
     except requests.exceptions.ConnectionError:
         print("Stable Diffusion restarting")

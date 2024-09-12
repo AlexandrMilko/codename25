@@ -8,6 +8,8 @@ app = Flask(__name__)
 CORS(app)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", None)
 
+from postprocessing.sdquery import get_sd_domain
+SD_DOMAIN = get_sd_domain()
 
 @app.route("/ai/get_insane_image_1337", methods=['POST'])
 def get_insane_image_1337():
@@ -52,13 +54,13 @@ def apply_style(es_path, room_choice, style_budget_choice):
         query.run()
     except torch.cuda.OutOfMemoryError as e:
         print(e, "RESTARTING THE STABLE DIFFUSION AND TRYING AGAIN!")
-        restart_stable_diffusion('http://127.0.0.1:7861')
+        restart_stable_diffusion(f'http://{SD_DOMAIN}:7861')
         query.run()
 
     # We restart it to deallocate memory. TODO fix it.
     try:
         time.sleep(3)
-        restart_stable_diffusion('http://127.0.0.1:7861')
+        restart_stable_diffusion(f'http://{SD_DOMAIN}:7861')
     except requests.exceptions.ConnectionError:
         print("Stable Diffusion restarting")
 

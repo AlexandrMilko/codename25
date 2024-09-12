@@ -51,7 +51,9 @@ def run_preprocessor(preprocessor_name, input_path, output_filepath, res=512):
         "controlnet_threshold_a": 64,
         "controlnet_threshold_b": 64
     }
-    preprocessor_url = 'http://127.0.0.1:7861/controlnet/detect'
+    from postprocessing.sdquery import get_sd_domain
+    SD_DOMAIN = get_sd_domain()
+    preprocessor_url = f'http://{SD_DOMAIN}:7861/controlnet/detect'
     response = submit_post(preprocessor_url, data)
 
     save_encoded_image(response.json()['images'][0], output_filepath)
