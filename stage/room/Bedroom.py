@@ -25,10 +25,11 @@ class Bedroom(Room):
         commode_parameters = self.calculate_commode_parameters(all_sides, (pitch_rad, roll_rad))
         plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
 
-        curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
+        # curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
 
         scene_render_parameters['objects'] = [
-            *curtains_parameters, plant_parameters,
+            # *curtains_parameters,
+            plant_parameters,
             bed_parameters, wardrobe_parameters,
             commode_parameters,
         ]
