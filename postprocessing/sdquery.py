@@ -1,6 +1,7 @@
 import os
 import requests
 
+from run import SD_DOMAIN
 import cv2
 from PIL import Image
 import math
@@ -19,8 +20,6 @@ def get_sd_domain(): # We use this function to check if Stable Diffusion is runn
     except requests.exceptions.ConnectionError:
         print("INFO: Using host.docker.internal for SD")
         return "host.docker.internal"
-
-SD_DOMAIN = get_sd_domain()
 
 class Query:
     negative_prompt = "ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish, text"
