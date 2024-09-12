@@ -1,4 +1,5 @@
-from tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image_from_path
+from tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image_from_path, submit_post
+import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from constants import Path
@@ -8,7 +9,15 @@ app = Flask(__name__)
 CORS(app)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", None)
 
-from postprocessing.sdquery import get_sd_domain
+def get_sd_domain(): # We use this function to check if Stable Diffusion is running in docker or on host system
+    try:
+        data = {"sd_model_checkpoint": "realisticVisionV60B1_v51HyperVAE.safetensors"}
+        options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
+        response = submit_post(options_url, data)
+        return "127.0.0.1"
+    except requests.exceptions.ConnectionError:
+        print("INFO: Using host.docker.internal for SD")
+        return "host.docker.internal"
 SD_DOMAIN = get_sd_domain()
 
 @app.route("/ai/get_insane_image_1337", methods=['POST'])

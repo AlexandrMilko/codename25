@@ -11,16 +11,6 @@ from tools import create_directory_if_not_exists, min_max_scale, move_file, subm
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 MAX_CONTROLNET_IMAGE_RESOLUTION = 600
 
-def get_sd_domain(): # We use this function to check if Stable Diffusion is running in docker or on host system
-    try:
-        data = {"sd_model_checkpoint": "realisticVisionV60B1_v51HyperVAE.safetensors"}
-        options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
-        response = submit_post(options_url, data)
-        return "127.0.0.1"
-    except requests.exceptions.ConnectionError:
-        print("INFO: Using host.docker.internal for SD")
-        return "host.docker.internal"
-
 class Query:
     negative_prompt = "ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish, text"
     sampler_name = "DPM2"
