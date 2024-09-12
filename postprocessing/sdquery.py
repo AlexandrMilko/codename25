@@ -139,64 +139,65 @@ class GreenScreenImageQuery(Query):
         return response.json()['images'][0]
 
     def add_shadows_and_light(self):
-        self.denoising_strength = 0.6
-        self.steps = 20
-        data = {
-            "prompt": self.prompt,
-            # "prompt": "",
-            "sampler_name": self.sampler_name,
-            # "negative_prompt": self.negative_prompt,
-            "init_images": [self.designed_image_b64],
-            "batch_size": 1,
-            "steps": self.steps,
-            "cfg_scale": self.cfg_scale,
-            "denoising_strength": self.denoising_strength,
-            "width": self.width * 2,
-            "height": self.height * 2,
-            "seed": -1,
-            "alwayson_scripts": {
-                "controlnet": {
-                    "args": [
-                        {
-                            "enabled": True,
-                            "image": self.prerequisite_image_b64,
-                            "module": "seg_ofade20k",
-                            "model": "control_v11p_sd15_seg [e1f51eb9]",
-                            # "low_vram": True,
-                            "weight": 1,
-                            "guidance_start": 0,
-                            "guidance_end": 1,
-                            "control_mode": "ControlNet is more important",
-                            "processor_res": 512 # WARNING: TODO change to image height
-                        },
-                        # {
-                        #     "enabled": True,
-                        #     "image": self.prerequisite_image_b64,
-                        #     "module": "depth_anything",
-                        #     "model": "control_v11f1p_sd15_depth [cfd03158]",
-                        #     "weight": 0.4,
-                        #     "guidance_start": 0.1,
-                        #     "guidance_end": 0.5,
-                        #     "control_mode": "My prompt is more important",
-                        #     "processor_res": 512,  # WARNING: TODO change to image height
-                        #     # "low_vram": True,
-                        # }
-                    ]
-                }
-            }
-        }
-
-        img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
-        response = submit_post(img2img_url, data)
+        # self.denoising_strength = 0.6
+        # self.steps = 20
+        # data = {
+        #     "prompt": self.prompt,
+        #     # "prompt": "",
+        #     "sampler_name": self.sampler_name,
+        #     # "negative_prompt": self.negative_prompt,
+        #     "init_images": [self.designed_image_b64],
+        #     "batch_size": 1,
+        #     "steps": self.steps,
+        #     "cfg_scale": self.cfg_scale,
+        #     "denoising_strength": self.denoising_strength,
+        #     "width": self.width * 2,
+        #     "height": self.height * 2,
+        #     "seed": -1,
+        #     "alwayson_scripts": {
+        #         "controlnet": {
+        #             "args": [
+        #                 {
+        #                     "enabled": True,
+        #                     "image": self.prerequisite_image_b64,
+        #                     "module": "seg_ofade20k",
+        #                     "model": "control_v11p_sd15_seg [e1f51eb9]",
+        #                     # "low_vram": True,
+        #                     "weight": 1,
+        #                     "guidance_start": 0,
+        #                     "guidance_end": 1,
+        #                     "control_mode": "ControlNet is more important",
+        #                     "processor_res": 512 # WARNING: TODO change to image height
+        #                 },
+        #                 # {
+        #                 #     "enabled": True,
+        #                 #     "image": self.prerequisite_image_b64,
+        #                 #     "module": "depth_anything",
+        #                 #     "model": "control_v11f1p_sd15_depth [cfd03158]",
+        #                 #     "weight": 0.4,
+        #                 #     "guidance_start": 0.1,
+        #                 #     "guidance_end": 0.5,
+        #                 #     "control_mode": "My prompt is more important",
+        #                 #     "processor_res": 512,  # WARNING: TODO change to image height
+        #                 #     # "low_vram": True,
+        #                 # }
+        #             ]
+        #         }
+        #     }
+        # }
+        #
+        # img2img_url = 'http://127.0.0.1:7861/sdapi/v1/img2img'
+        # response = submit_post(img2img_url, data)
         output_dir = f"images"
         output_filepath = os.path.join(output_dir, self.output_filename)
-
-        # If there was no such dir, we create it and try again
-        try:
-            save_encoded_image(response.json()['images'][0], output_filepath)
-        except FileNotFoundError as e:
-            create_directory_if_not_exists(output_dir)
-            save_encoded_image(response.json()['images'][0], output_filepath)
+        #
+        # # If there was no such dir, we create it and try again
+        # try:
+        #     save_encoded_image(response.json()['images'][0], output_filepath)
+        # except FileNotFoundError as e:
+        #     create_directory_if_not_exists(output_dir)
+        #     save_encoded_image(response.json()['images'][0], output_filepath)
+        save_encoded_image(self.designed_image_b64, output_filepath)
 
     def set_image_size_from_user_image(self, image_path):
         image = cv2.imread(image_path)
