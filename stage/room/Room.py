@@ -305,7 +305,7 @@ class Room:
 
         Floor.save_mask(Path.SEGMENTED_ES_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
         create_floor_point_cloud(self.empty_room_image_path)
-        roll_rad, pitch_rad = self.find_roll_pitch()
+        roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
         rotate_ply_file_with_colors(floor_ply_path, floor_ply_path, -pitch_rad, -roll_rad)
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 
