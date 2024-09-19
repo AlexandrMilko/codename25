@@ -1,4 +1,6 @@
-from tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image_from_path
+import time
+from tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image_from_path, submit_post
+import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from constants import Path
@@ -8,6 +10,16 @@ app = Flask(__name__)
 CORS(app)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", None)
 
+def get_sd_domain(): # We use this function to check if Stable Diffusion is running in docker or on host system
+    try:
+        data = {"sd_model_checkpoint": "realisticVisionV60B1_v51HyperVAE.safetensors"}
+        options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
+        response = submit_post(options_url, data)
+        return "127.0.0.1"
+    except requests.exceptions.ConnectionError:
+        print("INFO: Using host.docker.internal for SD")
+        return "host.docker.internal"
+SD_DOMAIN = get_sd_domain()
 
 @app.route("/ai/get_insane_image_1337", methods=['POST'])
 def get_insane_image_1337():
@@ -38,6 +50,28 @@ def apply_style(es_path, room_choice, style_budget_choice):
         room.stage()
     else:
         raise Exception(f"Wrong Room Type was specified: {room_choice.lower()}")
+
+    from postprocessing.sdquery import GreenScreenImageQuery
+    from tools import restart_stable_diffusion
+    import requests
+    style, budget = style_budget_choice.split(", ")
+    text = f"Residential, {room_choice}, {budget}, {style}"
+    query = GreenScreenImageQuery(text)
+
+    import torch
+    try:
+        query.run()
+    except (torch.cuda.OutOfMemoryError, KeyError) as e:
+        print(e, "RESTARTING THE STABLE DIFFUSION AND TRYING AGAIN!")
+        restart_stable_diffusion(f'http://{SD_DOMAIN}:7861')
+        query.run()
+
+    # We restart it to deallocate memory. TODO fix it.
+    try:
+        time.sleep(3)
+        restart_stable_diffusion(f'http://{SD_DOMAIN}:7861')
+    except requests.exceptions.ConnectionError:
+        print("Stable Diffusion restarting")
 
 
 def is_port_in_use(port: int) -> bool:

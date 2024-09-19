@@ -255,7 +255,7 @@ class FloorLayout:
         _, binary_image = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
 
         # Step 3: Apply morphological closing to close gaps in the border
-        kernel = np.ones((20, 20), np.uint8)
+        kernel = np.ones((15, 15), np.uint8)
         closed_image = cv2.morphologyEx(binary_image, cv2.MORPH_CLOSE, kernel)
 
         # Step 4: Invert the image so the background is black (0) and the object is white (255)
