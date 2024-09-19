@@ -1,8 +1,10 @@
+import math
+
 from preprocessing.preProcessNormalMap import ImageNormalMap
 from preprocessing.preProcessSegment import ImageSegmentor
 from stage import Floor
 from tools import (move_file, copy_file, get_image_size, save_mask_of_size, convert_png_to_mask,
-                   overlay_masks, image_overlay, calculate_angle_from_top_view, resize_and_save_image)
+                   overlay_masks, image_overlay, calculate_angle_from_top_view, resize_and_save_image, run_preprocessor)
 from constants import Path
 from PIL import Image
 import open3d as o3d
@@ -10,7 +12,7 @@ import numpy as np
 import cv2
 import os
 from ..FloorLayout import FloorLayout
-
+from run import SD_DOMAIN
 
 class Room:
     # BGR, used in segmented images
@@ -23,24 +25,11 @@ class Room:
         self.empty_room_image_path = empty_room_image_path
 
     def find_roll_pitch(self) -> tuple[float, float]:
-        width, height = get_image_size(self.empty_room_image_path)
-        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
-
-        normalMap = ImageNormalMap(self.empty_room_image_path, Path.PREPROCESSED_USERS.value, PREPROCESSOR_RESOLUTION_LIMIT)
-        normalMap.execute()
-
-        copy_file(self.empty_room_image_path,
-                  "UprightNet/imgs/rgb/users.png")  # We copy it because we will use it later in get_wall method and we want to have access to the image
-        move_file(f"images/preprocessed/users.png",
-                  "UprightNet/imgs/normal_pair/users.png")
-        from UprightNet.infer import get_roll_pitch
-        try:
-            return get_roll_pitch()
-        except Exception as e:
-            os.chdir('..')
-            print(f"EXCEPTION: {e}")
-            print("Returning default angles")
-            return 0, 0
+        from tools import calculate_roll_angle, calculate_pitch_angle, calculate_plane_normal
+        plane_normal = calculate_plane_normal(Path.FLOOR_PLY.value)
+        roll_rad = math.radians(calculate_roll_angle(plane_normal))
+        pitch_rad = math.radians(calculate_pitch_angle(plane_normal))
+        return roll_rad, pitch_rad
 
     def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
         from DepthAnythingV2.depth_estimation import image_pixel_to_3d, rotate_3d_point
@@ -303,7 +292,6 @@ class Room:
         Image.open(self.empty_room_image_path).save(Path.PREREQUISITE_IMAGE.value)
         from DepthAnythingV2.depth_estimation import (image_pixels_to_point_cloud, depth_ply_path, floor_ply_path,
                                                       create_floor_point_cloud, rotate_ply_file_with_colors)
-        roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
 
         image_pixels_to_point_cloud(self.empty_room_image_path)
 
@@ -311,13 +299,13 @@ class Room:
         width, height = get_image_size(self.empty_room_image_path)
         PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
 
-        segment = ImageSegmentor(self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
-        segment.execute()
+        run_preprocessor("seg_ofade20k", self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
         resize_and_save_image(Path.SEGMENTED_ES_IMAGE.value,
                               Path.SEGMENTED_ES_IMAGE.value, height)
 
         Floor.save_mask(Path.SEGMENTED_ES_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
         create_floor_point_cloud(self.empty_room_image_path)
+        roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
         rotate_ply_file_with_colors(floor_ply_path, floor_ply_path, -pitch_rad, -roll_rad)
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 

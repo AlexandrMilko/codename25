@@ -7,7 +7,63 @@ import shutil
 import json
 import cv2
 import os
+import open3d as o3d
 
+
+def calculate_pitch_angle(plane_normal):
+    plane_normal = plane_normal / np.linalg.norm(plane_normal)
+    pitch_angle_rad = np.arctan2(plane_normal[1], plane_normal[2])
+    pitch_angle_deg = np.degrees(pitch_angle_rad)
+
+    return pitch_angle_deg
+
+def calculate_roll_angle(plane_normal, reference_vector=[1, 0, 0]):
+    # Step 1: Normalize the normal vector of the plane and the reference vector
+    plane_normal = plane_normal / np.linalg.norm(plane_normal)
+    reference_vector = reference_vector / np.linalg.norm(reference_vector)
+
+    # Step 2: Project the plane normal onto the XZ plane (remove Y component)
+    plane_normal_proj_xz = np.array([plane_normal[0], 0, plane_normal[2]])
+
+    # Step 3: Normalize the projected vector
+    plane_normal_proj_xz = plane_normal_proj_xz / np.linalg.norm(plane_normal_proj_xz)
+
+    # Step 4: Calculate the dot product between the reference vector and the projected normal
+    dot_product = np.dot(reference_vector, plane_normal_proj_xz)
+
+    # Step 5: Compute the roll angle using the arccosine of the dot product
+    roll_angle_rad = np.arccos(dot_product)
+
+    # Step 6: Convert radians to degrees (optional)
+    roll_angle_deg = np.degrees(roll_angle_rad) - 90
+
+    return roll_angle_deg
+
+def calculate_plane_normal(ply_path):
+    # Step 1: Load the point cloud from the .ply file
+    point_cloud = o3d.io.read_point_cloud(ply_path)
+
+    # Step 2: Segment the largest plane using RANSAC
+    plane_model, inliers = point_cloud.segment_plane(distance_threshold=0.01,
+                                                     ransac_n=3,
+                                                     num_iterations=1000)
+
+    # Step 3: Extract the normal and plane equation (a, b, c, d)
+    # Plane equation is: ax + by + cz + d = 0
+    [a, b, c, d] = plane_model
+    plane_normal = np.array([a, b, c])
+
+    # Print the normal of the plane
+    print(f"Plane normal: {plane_normal}")
+
+    # Optionally: visualize the point cloud with the segmented plane
+    inlier_cloud = point_cloud.select_by_index(inliers)
+    outlier_cloud = point_cloud.select_by_index(inliers, invert=True)
+
+    inlier_cloud.paint_uniform_color([1, 0, 0])  # Paint plane points in red
+    # coordinate_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=1.0, origin=[0, 0, 0])
+    # o3d.visualization.draw_geometries([inlier_cloud, outlier_cloud, coordinate_frame])
+    return plane_normal
 
 def order_points(pts):
     # initialize a list of coordinates that will be ordered
@@ -32,6 +88,29 @@ def order_points(pts):
     # return the ordered coordinates
     # plot_points(rect)
     return rect
+
+def get_encoded_image(image_path):
+    img = cv2.imread(image_path)
+    # Encode into PNG and send to ControlNet
+    try:
+        retval, bytes = cv2.imencode('.png', img)
+    except cv2.error:
+        retval, bytes = cv2.imencode('.jpg', img)
+    return base64.b64encode(bytes).decode('utf-8')
+
+def run_preprocessor(preprocessor_name, input_path, output_filepath, SD_DOMAIN, res=512):
+    input_image = get_encoded_image(input_path)
+    data = {
+        "controlnet_module": preprocessor_name,
+        "controlnet_input_images": [input_image],
+        "controlnet_processor_res": res,
+        "controlnet_threshold_a": 64,
+        "controlnet_threshold_b": 64
+    }
+    preprocessor_url = f'http://{SD_DOMAIN}:7861/controlnet/detect'
+    response = submit_post(preprocessor_url, data)
+
+    save_encoded_image(response.json()['images'][0], output_filepath)
 
 
 def get_filename_without_extension(file_path):
