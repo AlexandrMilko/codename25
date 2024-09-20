@@ -6,6 +6,11 @@ def join(directory, file):
     return os.path.join(directory, file)
 
 
+class Config(Enum):
+    IMAGE_HEIGHT_LIMIT = 512  # To avoid GPU OOM error
+    UI = 'comfyui' # Or 'webui'
+    CONTROLNET_HEIGHT_LIMIT = 1024
+
 class Path(Enum):
     # /image
     # pasiba Arsenu 😘😘😘
@@ -17,6 +22,8 @@ class Path(Enum):
     PREPROCESSED_IMAGES_DIR = join(IMAGES_DIR, 'preprocessed')
     DESIGNED_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'designed.png')
     FLOOR_LAYOUT_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_layout.png')
+    POINTS_DEBUG_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_layout_debug.png')
+    FLOOR_POINTS_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_points.png')
     FLOOR_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_mask.png')
     FURNITURE_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'furniture_mask.png')
     FURNITURE_PIECE_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'furniture_piece_mask.png')
@@ -28,8 +35,7 @@ class Path(Enum):
     WALL_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'wall_mask.png')
     WINDOWS_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask.png')
     WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask_inpainting.png')
-    PREPROCESSED_USERS = join(PREPROCESSED_IMAGES_DIR,  'users.png')
-
+    PREPROCESSED_USERS = join(PREPROCESSED_IMAGES_DIR, 'users.png')
 
     # /3Ds
     MODELS_DIR = '3Ds'
@@ -49,12 +55,15 @@ class Path(Enum):
 
     # /3Ds/bedroom
     BEDROOM_MODELS_DIR = join(MODELS_DIR, 'bedroom')
-    BED_MODEL = join(BEDROOM_MODELS_DIR, 'bed.usdc')
+    BED_MODEL = join(BEDROOM_MODELS_DIR, 'bed2.usdc')
+    BED_WITH_TABLES_MODEL = join(BEDROOM_MODELS_DIR, 'bedwithtables.usdc')
+    WARDROBE_MODEL = join(BEDROOM_MODELS_DIR, 'Madrid_Shafa-3-V2__whithe.usdc')
+    COMMODE_MODEL = join(BEDROOM_MODELS_DIR, 'commode2.usdc')
+    PAINTING_MODEL = join(BEDROOM_MODELS_DIR, 'painting.usdc')
 
     # DepthAnything
     DEPTH_IMAGE = 'DepthAnythingV2/output/depth.npy'
     PLY_SPACE = 'DepthAnythingV2/output/depth.ply'
     DEPTH_CHECKPOINT = 'DepthAnythingV2/metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth'
-    IMAGE_HEIGHT_LIMIT = 512 # To avoid GPU OOM error
-
-    # UprightNet
+    FLOOR_NPY = 'DepthAnythingV2/output/floor.npy'
+    FLOOR_PLY = 'DepthAnythingV2/output/floor.ply'

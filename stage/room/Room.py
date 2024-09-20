@@ -1,15 +1,18 @@
+import math
+
 from preprocessing.preProcessNormalMap import ImageNormalMap
 from preprocessing.preProcessSegment import ImageSegmentor
-from tools import (move_file, copy_file, get_image_size, save_mask_of_size,
-                   convert_png_to_mask, overlay_masks, image_overlay, calculate_angle_from_top_view,
-                   resize_and_save_image)
-from constants import Path
+from stage import Floor
+from tools import (move_file, copy_file, get_image_size, save_mask_of_size, convert_png_to_mask,
+                   overlay_masks, image_overlay, calculate_angle_from_top_view, resize_and_save_image, run_preprocessor)
+from constants import Path, Config
 from PIL import Image
 import open3d as o3d
 import numpy as np
 import cv2
 import os
-
+from ..FloorLayout import FloorLayout
+from run import SD_DOMAIN
 
 class Room:
     # BGR, used in segmented images
@@ -17,39 +20,16 @@ class Room:
     door_color = (51, 255, 8)
     floor_color = (50, 50, 80)
     blind_color = (255, 61, 0)  # blind that is set on windows, kinda curtains
-
+    floor_layout = None
     def __init__(self, empty_room_image_path):  # Original image path is an empty space image
         self.empty_room_image_path = empty_room_image_path
 
     def find_roll_pitch(self) -> tuple[float, float]:
-        width, height = get_image_size(self.empty_room_image_path)
-        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
-
-        normalMap = ImageNormalMap(self.empty_room_image_path, Path.PREPROCESSED_USERS.value, PREPROCESSOR_RESOLUTION_LIMIT)
-        normalMap.execute()
-
-        copy_file(self.empty_room_image_path,
-                  "UprightNet/imgs/rgb/users.png")  # We copy it because we will use it later in get_wall method and we want to have access to the image
-        move_file(f"images/preprocessed/users.png",
-                  "UprightNet/imgs/normal_pair/users.png")
-        from UprightNet.infer import get_roll_pitch
-        try:
-            return get_roll_pitch()
-        except Exception as e:
-            os.chdir('..')
-            print(f"EXCEPTION: {e}")
-            print("Returning default angles")
-            return 0, 0
-
-    @staticmethod
-    def get_walls():
-        import stage.Wall
-        return stage.Wall.find_walls(Path.SEGMENTED_ES_IMAGE.value)
-
-    @staticmethod
-    def get_biggest_wall():
-        import stage.Wall
-        return stage.Wall.find_biggest_wall(Path.SEGMENTED_ES_IMAGE.value)
+        from tools import calculate_roll_angle, calculate_pitch_angle, calculate_plane_normal
+        plane_normal = calculate_plane_normal(Path.FLOOR_PLY.value)
+        roll_rad = math.radians(calculate_roll_angle(plane_normal))
+        pitch_rad = math.radians(calculate_pitch_angle(plane_normal))
+        return roll_rad, pitch_rad
 
     def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
         from DepthAnythingV2.depth_estimation import image_pixel_to_3d, rotate_3d_point
@@ -59,26 +39,25 @@ class Room:
         offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
         return offset_relative_to_camera
 
-    def pixel_mapping_floor_layout(self, pitch_rad: float, roll_rad: float):
+    def create_floor_layout(self, pitch_rad: float, roll_rad: float):
         horizontal_borders = self.find_horizontal_borders()
         print(horizontal_borders)
 
         points_in_3d = {}
         for name, value in horizontal_borders.items():
-            points_in_3d[name] = []
-            left_point = self.infer_3d(value[0], pitch_rad, roll_rad)
-            right_point = self.infer_3d(value[1], pitch_rad, roll_rad)
-            points_in_3d[name].append(left_point)
-            points_in_3d[name].append(right_point)
-
-        # Add camera
-        points_in_3d['camera'] = [[0,0,0], [0,0,0]]
+            left_pixel, right_pixel = value
+            left_offset = self.infer_3d(left_pixel, pitch_rad, roll_rad)
+            right_offset = self.infer_3d(right_pixel, pitch_rad, roll_rad)
+            middle_offset = [(left_offset[0] + right_offset[0]) / 2,
+                            (left_offset[1] + right_offset[1]) / 2,
+                             (left_offset[2] + right_offset[2]) / 2]
+            points_in_3d[name] = middle_offset
 
         print(points_in_3d)
-        Room.offsets_to_floor_pixels(Path.PLY_SPACE.value, Path.DEPTH_IMAGE.value, points_in_3d)
+        self.floor_layout = FloorLayout(Path.FLOOR_PLY.value, points_in_3d)
         
     @staticmethod
-    def pixel_to_3d(x, y):
+    def pixel_to_3d(x, y): #TODO rewrite to use floor layout image
         """
         Args:
             x: x coordinate of the pixel
@@ -180,228 +159,79 @@ class Room:
         cv2.imwrite(output_windows_mask_path, bw_mask)
 
     @staticmethod
-    def save_floor_layout_image(ply_path: str, npy_path: str, output_path=Path.FLOOR_LAYOUT_IMAGE.value) -> None:
-        # Загрузка облака точек
-        pcd = o3d.io.read_point_cloud(ply_path)
-        points = np.asarray(pcd.points)
+    def move_to_target_color(pixel, img, direction):
+        target_color = (120, 120, 120)
+        x, y = pixel
 
-        # Фильтрация точек пола
-        quantile = 60
-        floor_height = np.percentile(points[:, 1], quantile)
-        threshold = 0.05  # Допустимое отклонение от высоты пола
-        floor_points = points[np.abs(points[:, 1] - floor_height) < threshold]
+        if direction == 'left':
+            while x > 0 and not np.array_equal(img[y, x], target_color):
+                x -= 1
+        elif direction == 'right':
+            while x < img.shape[1] - 1 and not np.array_equal(img[y, x], target_color):
+                x += 1
 
-        # Загрузка карты глубины
-        depth_map = np.load(npy_path)
-        height, width = depth_map.shape
-        layout_image = np.zeros((height, width), dtype=np.uint8)
+        return x, y
 
-        # Нахождение минимальных и максимальных значений координат пола
-        min_coords = floor_points.min(axis=0)
-        max_coords = floor_points.max(axis=0)
-
-        # Нормализация координат пола
-        norm_points = (floor_points - min_coords) / (max_coords - min_coords)
-        norm_points[:, 0] = norm_points[:, 0] * (width - 1)
-        norm_points[:, 2] = norm_points[:, 2] * (height - 1)
-
-        # Создание заполненного контура
-        hull = cv2.convexHull(norm_points[:, [0, 2]].astype(int))
-        cv2.fillPoly(layout_image, [hull], (255, 255, 255))
-
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        cv2.imwrite(output_path, layout_image)
-
-        # Визуализация результатов
-        # cv2.imshow('Layout Image', layout_image)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-
-    @staticmethod
-    def find_horizontal_borders():
+    def find_horizontal_borders(self):
         target_colors = {
             "door": np.array([8, 255, 51]),  # #08FF33
             "window": np.array([230, 230, 230]),  # #E6E6E6
             # Add more colors here as needed
         }
 
+        object_counter = {
+            "door": 0,
+            "window": 0
+        }
+
+        min_area_threshold = 800
+
         image = cv2.imread(Path.SEGMENTED_ES_IMAGE.value)
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         bottom_pixels = {}
-        label_counters = {label: 0 for label in target_colors.keys()}  # Initialize counters for each label
-
-        min_area_threshold = 800  # Adjust this value as needed
 
         for object_name, color_value in target_colors.items():
-            # Create mask for the current color
+            # Create mask for each target color
             mask = cv2.inRange(image_rgb, color_value, color_value)
             cleaned_mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
-
-            # Find contours in the cleaned mask
             contours, _ = cv2.findContours(cleaned_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
             for contour in contours:
                 if cv2.contourArea(contour) > min_area_threshold:
+                    # Find leftmost and rightmost pixels
                     leftmost_bottom_pixel = tuple(contour[contour[:, :, 0].argmin()][0])
                     rightmost_bottom_pixel = tuple(contour[contour[:, :, 0].argmax()][0])
 
-                    # Increment the counter for the current label
-                    label_counters[object_name] += 1
-                    # Create a unique label for the current object
-                    unique_label = f"{object_name}{label_counters[object_name]}"
-                    # Store the pixel coordinates in the bottom_pixels dictionary
-                    bottom_pixels[unique_label] = (leftmost_bottom_pixel, rightmost_bottom_pixel)
+                    # Move the leftmost and rightmost pixels towards (120, 120, 120) RGB
+                    leftmost_bottom_pixel_adjusted = self.move_to_target_color(leftmost_bottom_pixel, image_rgb,
+                                                                                        direction='left')
+                    rightmost_bottom_pixel_adjusted = self.move_to_target_color(rightmost_bottom_pixel, image_rgb,
+                                                                                        direction='right')
+
+                    bottom_pixels[object_name + str(object_counter[object_name])] = (
+                        leftmost_bottom_pixel_adjusted, rightmost_bottom_pixel_adjusted
+                    )
+
+                    object_counter[object_name] += 1
 
         return bottom_pixels
 
-    @staticmethod
-    def offsets_to_floor_pixels(ply_path, npy_path, points_dict: dict,
-                                output_path=Path.FLOOR_LAYOUT_IMAGE.value) -> dict:
+    def calculate_painting_parameters(self, camera_angles_rad: tuple):
+        from ..furniture.Painting import Painting
+        pitch_rad, roll_rad = camera_angles_rad
+        painting = Painting()
+        left, center, right = painting.find_placement_pixel(Path.SEG_PREREQUISITE_IMAGE.value)
+        if not all([left, center, right]): raise Exception("No place for painting found")
+        print(left, center, right, "PAINTING PIXELS")
+        left_offset, right_offset =  [self.infer_3d((x, center[1]), pitch_rad, roll_rad) for
+                                                            x in (left, right)]
+        yaw_angle = calculate_angle_from_top_view(left_offset, right_offset)
+        render_parameters = painting.calculate_rendering_parameters(self, center, yaw_angle,
+                                                                   (roll_rad, pitch_rad))
+        return render_parameters
 
-        """
-        :param ply_path: path to the .ply file that represents 3d space
-        :param npy_path: path to the .npy file that is the result of depth estimation
-        :param output_path: path to save the debug layout image
-        :param points_dict: 3d points to be converted into 2d layout pixel coords in the following format
-        (the dictionary with same keys will be returned along with converted values)
-        Example:
-        note: 3d point passed has to be in such: format y coordinate is height
-        {"window1": [[x, y, z], [x1, y1, z1]]} -> {"window1": [[x, y], [x1, y1]]} (x - horizontal margin, y - vertical margin from top left corner)
-        :return:
-        {"window1": [[228, 0], [228, 50]]}
-        NOTE: We have left 2 points for each object(left and right ones): {"window1": [[x, y, z], [x1, y1, z1]]}
-        """
-
-        # Загрузка облака точек
-        pcd = o3d.io.read_point_cloud(ply_path)
-        points = np.asarray(pcd.points)
-
-        # Фильтрация точек пола
-        quantile = 60
-        floor_height = np.percentile(points[:, 1], quantile)
-        threshold = 0.05  # Допустимое отклонение от высоты пола
-        floor_points = points[np.abs(points[:, 1] - floor_height) < threshold]
-
-        # Загрузка карты глубины
-        depth_map = np.load(npy_path)
-        height, width = depth_map.shape
-        layout_image = np.zeros((height, width, 3), dtype=np.uint8)  # Изменение на цветное изображение
-
-        # We add the user's specified points to floor points before normalization, so it does not neglect them
-        for point_name in points_dict.keys():
-            print(points_dict[point_name], " points_dict[point_name]")
-            left = points_dict[point_name][0]
-            right = points_dict[point_name][1]
-
-            # We reverse the x-axis because in a pixel coordinate system it is opposite to blender
-            left[0] = -left[0]
-            right[0] = -right[0]
-            # We swap y, z because in Blender - z is the height
-            left[1], left[2] = left[2], left[1]
-            right[1], right[2] = right[2], right[1]
-
-            floor_points = np.vstack([floor_points, np.array(left)])
-            floor_points = np.vstack([floor_points, np.array(right)])
-
-        # Нахождение минимальных и максимальных значений координат пола
-        min_coords = floor_points.min(axis=0)
-        max_coords = floor_points.max(axis=0)
-
-        # Нормализация координат пола
-        norm_points = (floor_points - min_coords) / (max_coords - min_coords)
-        norm_points[:, 0] = norm_points[:, 0] * (width - 1)
-        norm_points[:, 2] = norm_points[:, 2] * (height - 1)
-
-        # Создание заполненного контура
-        hull = cv2.convexHull(norm_points[:, [0, 2]].astype(int))
-        cv2.fillPoly(layout_image, [hull], (255, 255, 255))
-
-        # Converting 3d points to 2d floor pixels
-        result = dict()
-        for point_name in points_dict.keys():
-            print(points_dict)
-            left = points_dict[point_name][0]
-            right = points_dict[point_name][1]
-            for point in left, right:
-                x_3d, _, y_3d = point
-                print(point)
-                pixel_x = int((x_3d - min_coords[0]) / (max_coords[0] - min_coords[0]) * (width - 1))
-                pixel_y = int((y_3d - min_coords[2]) / (max_coords[2] - min_coords[2]) * (height - 1))
-
-                pixel_x = np.clip(pixel_x, 0, width - 1)  # May not be needed
-                pixel_y = np.clip(pixel_y, 0, height - 1)  # May not be needed
-                print(f"Points coords: x={pixel_x}, y={pixel_y}")  # Отладочное сообщение
-                result[point_name] = [pixel_x, pixel_y]
-                cv2.circle(layout_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Красный цвет
-
-        if output_path is not None:
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            cv2.imwrite(output_path, layout_image)
-
-        return result
-
-    @staticmethod
-    def update_floor_layout(points_dict: dict, output_path=None):
-        """
-            Draws the points from points_dict on an existing image and saves the result.
-
-            :param image_path: Path to the existing image file
-            :param points_dict: Dictionary with point names and their (x, y) coordinates to draw
-            :param output_path: Path to save the modified image
-            """
-        # Load the existing image
-        image = cv2.imread(Path.FLOOR_LAYOUT_IMAGE.value)
-        if image is None:
-            raise FileNotFoundError(f"Image file {Path.FLOOR_LAYOUT_IMAGE.value} not found.")
-
-        # Draw each point on the image
-        for point_name, (x, y) in points_dict.items():
-            # Draw a circle at the point location
-            cv2.circle(image, (x, y), 5, (0, 0, 255), -1)  # Red color, -1 for filled circle
-            # Optionally, you can add text to label the point
-            cv2.putText(image, point_name, (x + 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-
-        # Save the result
-        cv2.imwrite(output_path, image)
-        print(f"Image saved to {output_path}")
-
-    @staticmethod
-    def calculate_pixels_per_meter_ratio(ply_path, npy_path, render_offsets):
-        """
-        ply_path - .ply space of room
-        npy_path - .npy image from depth estimation
-        # WARNING, when you use new offsets, you should recalculate floor layout and its pixels_per_meter_ratio.
-        Because if some of the offsets get out of boundaries, it will affect normalization
-        """
-        offsets = {
-            'camera': [0, 0, 0],
-            'point_for_calculating_ratio': [0.2, 0, 0.2]  # We can use any offsets to calculate ratio. But they should
-            # be small enough, so they do not get out of floor layout boundaries and do not affect points normalization
-        }
-        pixels = Room.offsets_to_floor_pixels(ply_path, npy_path, offsets | render_offsets)
-        pixels_x_diff = pixels['camera'][0] - pixels['point_for_calculating_ratio'][0]
-        pixels_y_diff = pixels['camera'][1] - pixels['point_for_calculating_ratio'][1]
-        offsets_x_diff = offsets['camera'][0] - offsets['point_for_calculating_ratio'][0]
-        offsets_z_diff = offsets['camera'][2] - offsets['point_for_calculating_ratio'][2]
-        ratio_x = pixels_x_diff / offsets_x_diff
-        ratio_y = pixels_y_diff / offsets_z_diff
-        return ratio_x, ratio_y
-
-    @staticmethod
-    def calculate_offset_from_pixel_diff(pixels_diff, ratio):
-        """
-        pixels_diff: has the following format [pixels_x_diff, pixels_y_diff].
-        Represents difference in pixel coordinates between 2 points
-
-        ratio: has the following format [ratio_x, ratio_y]
-        Represents pixels_per_meter_ratio for a floor layout. For both axes.
-        """
-        pixel_x_diff, pixel_y_diff = pixels_diff
-        ratio_x, ratio_y = ratio
-        offset_x, offset_z = pixel_x_diff / ratio_x, pixel_y_diff / ratio_y
-        return offset_x, offset_z
-
+    #TODO move calculate_curtains_parameters to Curtain?
     def calculate_curtains_parameters(self, camera_height, camera_angles_rad: tuple):
         from stage.furniture.Curtain import Curtain
         pitch_rad, roll_rad = camera_angles_rad
@@ -413,12 +243,21 @@ class Room:
         for window in pixels_for_placing:
             try:
                 left_top_point, right_top_point = window
-                yaw_angle = calculate_angle_from_top_view(*[self.infer_3d(pixel, pitch_rad, roll_rad) for
-                                                            pixel in (left_top_point, right_top_point)])
+                left_curtain_offset, right_curtain_offset = [self.infer_3d(pixel, pitch_rad, roll_rad) for
+                                                            pixel in (left_top_point, right_top_point)]
+                yaw_angle = calculate_angle_from_top_view(left_curtain_offset, right_curtain_offset)
                 for pixel in (left_top_point, right_top_point):
                     render_parameters = curtain.calculate_rendering_parameters(self, pixel, yaw_angle,
                                                                                (roll_rad, pitch_rad))
-                    curtains_height = camera_height + render_parameters['obj_offsets'][2]
+                    # WARNING! We set both left and right curtains height equal to the height of left curtain.
+                    # So we avoid differences in their height level attachment
+                    # If you want to avoid it and calculate attachment for each separately:
+                    # curtains_height = camera_height + render_parameters['obj_offsets'][2]
+                    render_parameters['obj_offsets'] = (render_parameters['obj_offsets'][0],
+                                                           render_parameters['obj_offsets'][1],
+                                                           left_curtain_offset[2])
+                    curtains_height = camera_height + left_curtain_offset[2]
+
                     height_scale = curtain.calculate_height_scale(curtains_height)
                     render_parameters['obj_scale'] = (render_parameters['obj_scale'][0],
                                                       render_parameters['obj_scale'][1],
@@ -428,6 +267,8 @@ class Room:
             except IndexError as e:
                 print(f"{e}, we skip adding curtains for a window.")
         return curtains_parameters
+
+    # TODO move calculate_plant_parameters to Plant?
 
     def calculate_plant_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.Plant import Plant
@@ -449,23 +290,28 @@ class Room:
 
     def prepare_empty_room_data(self):
         Image.open(self.empty_room_image_path).save(Path.PREREQUISITE_IMAGE.value)
-        from DepthAnythingV2.depth_estimation import (image_pixels_to_point_cloud, depth_ply_path, depth_npy_path,
-                                                      image_pixels_to_3d, rotate_3d_points)
-        roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
+        from DepthAnythingV2.depth_estimation import (image_pixels_to_point_cloud, depth_ply_path, floor_ply_path,
+                                                      create_floor_point_cloud, rotate_ply_file_with_colors)
 
         image_pixels_to_point_cloud(self.empty_room_image_path)
-        self.save_floor_layout_image(depth_ply_path, depth_npy_path)
-        # image_pixels_to_3d(self.empty_room_image_path, "my_3d_space.txt")
-        # rotate_3d_points("my_3d_space.txt", "my_3d_space_rotated.txt", -pitch_rad, -roll_rad)
 
         # Segment our empty space room. It is used in Room.save_windows_mask
         width, height = get_image_size(self.empty_room_image_path)
-        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
+        PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
 
-        segment = ImageSegmentor(self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
-        segment.execute()
+        if Config.UI.value == "comfyui":
+            segment = ImageSegmentor(self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value,
+                                     PREPROCESSOR_RESOLUTION_LIMIT)
+            segment.execute()
+        else:
+            run_preprocessor("seg_ofade20k", self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
         resize_and_save_image(Path.SEGMENTED_ES_IMAGE.value,
                               Path.SEGMENTED_ES_IMAGE.value, height)
+
+        Floor.save_mask(Path.SEGMENTED_ES_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
+        create_floor_point_cloud(self.empty_room_image_path)
+        roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
+        rotate_ply_file_with_colors(floor_ply_path, floor_ply_path, -pitch_rad, -roll_rad)
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 
         # Create an empty mask of same size as image
@@ -484,10 +330,13 @@ class Room:
         scene_render_parameters['resolution_y'] = height
         scene_render_parameters['objects'] = dict()
 
+        self.create_floor_layout(pitch_rad, roll_rad)
+
         return camera_height, pitch_rad, roll_rad, height, scene_render_parameters
 
     @staticmethod
     def process_rendered_image(furniture_image):
+        # TODO remove working with FURNITURE PIECES: we render one scene at the same time
         furniture_image.save(Path.FURNITURE_PIECE_MASK_IMAGE.value)
         convert_png_to_mask(Path.FURNITURE_PIECE_MASK_IMAGE.value)
         overlay_masks(Path.FURNITURE_PIECE_MASK_IMAGE.value, Path.FURNITURE_MASK_IMAGE.value,

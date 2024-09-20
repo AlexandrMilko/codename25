@@ -56,7 +56,7 @@ class Curtain(HangingFurniture):
             left_top_point = (
                 int(top_right[0] + 20 * math.cos(angle_radians)),
                 -10 + int(top_right[1] + 20 * math.sin(angle_radians)))
-            point = [left_top_point, right_top_point]
+            point = [right_top_point, left_top_point]
             final_points.append(point)
 
             # cv2.circle(img_vis, right_top_point, 5, (0, 0, 255), -1)  # красная точка - верхняя левая

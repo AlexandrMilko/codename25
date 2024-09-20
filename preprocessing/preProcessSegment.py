@@ -139,9 +139,9 @@ class ImageSegmentor:
         print(f"Setting image paths for LoadImage nodes...")
         prompt["24"]["inputs"]["image"] = comfyui_path_image
 
-        prompt["26"]["inputs"]["resolution"] = self.resolution
+        prompt["38"]["inputs"]["resolution"] = self.resolution
 
-        prompt["27"]["inputs"]["path"] = self.output_path
+        prompt["45"]["inputs"]["path"] = self.output_path
 
         # Connect to the WebSocket server
         ws = websocket.WebSocket()

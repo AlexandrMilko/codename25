@@ -1,10 +1,4 @@
 .idea/
-src/__pycache__
 images/
-UprightNet/checkpoints
-UprightNet/.idea
-UprightNet/imgs/normal_pair/users.png
-UprightNet/imgs/precomputed_crop_hw/users.txt
-UprightNet/imgs/rgb/users.png
 DepthAnythingV2/output/*
 DepthAnythingV2/metric_depth/checkpoints/
