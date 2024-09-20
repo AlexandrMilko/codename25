@@ -2,7 +2,7 @@ import random
 
 from postprocessing.postProcessing import PostProcessor
 from preprocessing.preProcessSegment import ImageSegmentor
-from constants import Path
+from constants import Path, Config
 from tools import resize_and_save_image, run_preprocessor
 from .Room import Room
 import os
@@ -53,8 +53,14 @@ class Bedroom(Room):
 
 
         # # Create windows mask for staged room.
-        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
-        run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
+        PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
+        if Config.UI.value == "comfyui":
+            segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value,
+                                     PREPROCESSOR_RESOLUTION_LIMIT)
+            segment.execute()
+        else:
+            run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value,
+                             SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
         # WARNING! We use SEG_PREREQUISITE_IMAGE for calculating painting position. Do not delete or use it after the painting parameters calculation process.
         resize_and_save_image(Path.SEG_PREREQUISITE_IMAGE.value,
                               Path.SEG_PREREQUISITE_IMAGE.value, height)
@@ -68,8 +74,9 @@ class Bedroom(Room):
         except TypeError as e:
             print(e, "FAILED TO ADD PAINTING")
 
-        # processor = PostProcessor()
-        # processor.execute()
+        if Config.UI.value == "comfyui":
+            processor = PostProcessor()
+            processor.execute()
 
     def calculate_bed_parameters(self, all_sides, camera_angles_rad: tuple):
         if len(all_sides) > 0:

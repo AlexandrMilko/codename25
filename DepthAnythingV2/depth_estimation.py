@@ -4,7 +4,7 @@ import numpy as np
 from tools import get_image_size
 import open3d as o3d
 import cv2
-from constants import Path
+from constants import Path, Config
 
 depth_npy_path = Path.DEPTH_IMAGE.value
 depth_ply_path = Path.PLY_SPACE.value
@@ -54,7 +54,7 @@ def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth
     encoder = 'vitl'
     max_depth = 20
     load_from = Path.DEPTH_CHECKPOINT.value
-    height_limit = Path.IMAGE_HEIGHT_LIMIT.value
+    height_limit = Config.IMAGE_HEIGHT_LIMIT.value
 
     # Initialize the DepthAnythingV2 model with the specified configuration
     depth_anything = DepthAnythingV2(**{**model_configs[encoder], 'max_depth': max_depth})
@@ -119,7 +119,7 @@ def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.v
     encoder = 'vitl'
     max_depth = 20
     load_from = Path.DEPTH_CHECKPOINT.value
-    height_limit = Path.IMAGE_HEIGHT_LIMIT.value
+    height_limit = Config.IMAGE_HEIGHT_LIMIT.value
 
     # Initialize the DepthAnythingV2 model with the specified configuration
     depth_anything = DepthAnythingV2(**{**model_configs[encoder], 'max_depth': max_depth})

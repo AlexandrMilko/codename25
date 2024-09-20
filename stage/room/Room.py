@@ -5,7 +5,7 @@ from preprocessing.preProcessSegment import ImageSegmentor
 from stage import Floor
 from tools import (move_file, copy_file, get_image_size, save_mask_of_size, convert_png_to_mask,
                    overlay_masks, image_overlay, calculate_angle_from_top_view, resize_and_save_image, run_preprocessor)
-from constants import Path
+from constants import Path, Config
 from PIL import Image
 import open3d as o3d
 import numpy as np
@@ -297,9 +297,14 @@ class Room:
 
         # Segment our empty space room. It is used in Room.save_windows_mask
         width, height = get_image_size(self.empty_room_image_path)
-        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
+        PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
 
-        run_preprocessor("seg_ofade20k", self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
+        if Config.UI.value == "comfyui":
+            segment = ImageSegmentor(self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value,
+                                     PREPROCESSOR_RESOLUTION_LIMIT)
+            segment.execute()
+        else:
+            run_preprocessor("seg_ofade20k", self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
         resize_and_save_image(Path.SEGMENTED_ES_IMAGE.value,
                               Path.SEGMENTED_ES_IMAGE.value, height)
 
