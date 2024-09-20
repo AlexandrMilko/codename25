@@ -40,8 +40,8 @@ class Kitchen(Room):
                               Path.SEG_PREREQUISITE_IMAGE.value, height)
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
-        room = Room(Path.INPUT_IMAGE.value)
-        room.pixel_mapping_floor_layout(pitch_rad, roll_rad)
+        # room = Room(Path.INPUT_IMAGE.value)
+        # room.create_floor_layout(pitch_rad, roll_rad)
 
     def calculate_kitchen_table_with_chairs_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
@@ -58,7 +58,7 @@ class Kitchen(Room):
         print(f"KitchenTableWithChairs placement pixel: {pixels_for_placing}")
         wall = self.get_biggest_wall()
         wall.save_mask(Path.WALL_MASK_IMAGE.value)
-        yaw_angle = wall.find_angle_from_3d(self, pitch_rad, roll_rad)
+        yaw_angle = Floor.find_angle_from_floor_layout(pitch_rad, roll_rad)
         random_index = random.randint(0, len(pixels_for_placing) - 1)
         render_parameters = (
             kitchen_table_with_chairs.calculate_rendering_parameters(self, pixels_for_placing[random_index], yaw_angle,

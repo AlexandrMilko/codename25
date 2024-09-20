@@ -55,3 +55,54 @@ class Plant(FloorFurniture):
         # cv2.destroyAllWindows()
 
         return points
+
+    @staticmethod
+    def find_floor_layout_placement_pixels(floor_layout_image_path, min_distance_between_points=100, offset=25):
+        image = cv2.imread(floor_layout_image_path)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        _, thresh = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY)
+
+        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        approx_contours = []
+        for cnt in contours:
+            epsilon = 0.01 * cv2.arcLength(cnt, True)
+            approx = cv2.approxPolyDP(cnt, epsilon, True)
+            approx_contours.append(approx)
+
+        selected_points = []
+        image_height, image_width = image.shape[:2]
+        lower_limit = int(image_height * 0.6)
+
+        center_x = image_width // 2
+        center_y = image_height // 2
+
+        for cnt in approx_contours:
+            for point in cnt:
+                point_position = point[0]
+
+                if point_position[1] < lower_limit:
+                    continue
+
+                point_position[0] = min(max(point_position[0], offset), image_width - offset)
+                point_position[1] = min(max(point_position[1], offset), image_height - offset)
+
+                direction_x = center_x - point_position[0]
+                direction_y = center_y - point_position[1]
+
+                magnitude = np.sqrt(direction_x ** 2 + direction_y ** 2)
+                if magnitude > 0:
+                    direction_x /= magnitude
+                    direction_y /= magnitude
+                    point_position[0] += direction_x * offset
+                    point_position[1] += direction_y * offset
+
+                if selected_points:
+                    distances = np.linalg.norm(np.array(selected_points) - point_position, axis=1)
+                    if np.all(distances >= min_distance_between_points):
+                        selected_points.append(point_position)
+                else:
+                    selected_points.append(point_position)
+
+        return selected_points
