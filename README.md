@@ -33,6 +33,7 @@ This application consists of several components that work together to create a s
 2. Install **Conda**: Download and install Miniconda from [here](https://docs.anaconda.com/miniconda/).
 3. Create a new Conda environment: `conda create -n app python=3.11.9 anaconda`
 4. Install PyTorch for AI(Dont forget to activate conda env with `conda activate app` beforehand): `conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia`
+5. `pip install -r requirements.txt`
 
 ### Blender
 
