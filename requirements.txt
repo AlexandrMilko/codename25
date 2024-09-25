@@ -1,0 +1,5 @@
+opencv-python
+open3d
+Flask-Cors
+bpy
+torch
