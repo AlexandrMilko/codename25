@@ -20,7 +20,7 @@ This application consists of several components that work together to create a s
 
 4. **Stable Diffusion**  
    Handles preprocessing (segmentation) and postprocessing (image enhancement). You can use either **WebUI** or **ComfyUI** for this task.  
-   - **WebUI**: Superior for postprocessing.  
+   - **WebUI**: Superior for postprocessing. Arguably easier to install.
    - **ComfyUI**: Manages GPU memory more efficiently but is less effective at postprocessing.
 
 5. **Conda Environment**  
@@ -49,3 +49,43 @@ This application consists of several components that work together to create a s
 ### Stable Diffusion
 1. Install [WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
 2. Install Controlnet through extensions
+![controlnet](https://github.com/user-attachments/assets/c4a426b2-7f0d-4079-b00e-f755b3004e99)
+3. Download and put the [controlnet models](https://huggingface.co/lllyasviel/ControlNet-v1-1/tree/main)(depth, segment) in the directory: `extensions/sd-webui-controlnet/models`
+4. Download and put [stable diffusion model](https://civitai.com/models/4201/realistic-vision-v60-b1) in `models/Stable-diffusion`
+5. Replace webui.py with the [webui.py from codename25other](https://github.com/AlexandrMilko/codename25other/blob/master/webui.py)
+
+# Running the App
+
+## Web UI (First run the WEBUI! The app will check connection to it on the start)
+**IMPORTANT:** change the `ui` parameter in [constants.py](https://github.com/AlexandrMilko/codename25/blob/main/constants.py) to 'webui'
+
+Run the following command:
+```bash
+webui.bat --nowebui --server-name=0.0.0.0
+```
+Or if you run UNIX:
+```bash
+./webui.sh --nowebui --server-name=0.0.0.0
+```
+## App
+Next, activate the conda environment and run the application:
+```bash
+conda activate app
+cd codename25
+python run.py
+```
+
+## Blender
+Activate the conda environment and run the server:
+```bash
+conda activate app
+python server.py
+```
+
+## Test
+To test the API, activate the conda environment and run the test script:
+```bash
+conda activate app
+python test_api.py  # (WARNING: Put the right image path in test_api.py)
+```
+
