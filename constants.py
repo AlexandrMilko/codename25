@@ -8,8 +8,10 @@ def join(directory, file):
 
 class Config(Enum):
     IMAGE_HEIGHT_LIMIT = 512  # To avoid GPU OOM error
-    UI = 'comfyui' # Or 'webui'
+    UI = 'comfyui'  # Or 'webui'
+    DO_POSTPROCESSING = True
     CONTROLNET_HEIGHT_LIMIT = 1024
+
 
 class Path(Enum):
     # /image
