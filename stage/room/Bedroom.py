@@ -1,5 +1,4 @@
 import random
-
 from postprocessing.postProcessing import PostProcessor
 from preprocessing.preProcessSegment import ImageSegmentor
 from constants import Path, Config
@@ -7,8 +6,8 @@ from tools import resize_and_save_image, run_preprocessor
 from .Room import Room
 import os
 from ..furniture.Furniture import Furniture
-from ..Floor import Floor
 from run import SD_DOMAIN
+
 
 class Bedroom(Room):
     def stage(self):
@@ -51,8 +50,6 @@ class Bedroom(Room):
         furniture_image = Furniture.request_blender_render(scene_render_parameters)
         Room.process_rendered_image(furniture_image)
 
-
-        # # Create windows mask for staged room.
         PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
         if Config.UI.value == "comfyui":
             segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value,
@@ -74,7 +71,7 @@ class Bedroom(Room):
         except TypeError as e:
             print(e, "FAILED TO ADD PAINTING")
 
-        if Config.UI.value == "comfyui":
+        if Config.DO_POSTPROCESSING and Config.UI.value == "comfyui":
             processor = PostProcessor()
             processor.execute()
 
