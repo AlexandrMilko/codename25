@@ -11,7 +11,8 @@ app = Flask(__name__)
 CORS(app)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", None)
 
-def get_sd_domain(): # We use this function to check if Stable Diffusion is running in docker or on host system
+
+def get_sd_domain():  # We use this function to check if Stable Diffusion is running in docker or on host system
     try:
         data = {"sd_model_checkpoint": "realisticVisionV60B1_v51HyperVAE.safetensors"}
         options_url = 'http://127.0.0.1:7861/sdapi/v1/options'
@@ -20,7 +21,10 @@ def get_sd_domain(): # We use this function to check if Stable Diffusion is runn
     except requests.exceptions.ConnectionError:
         print("INFO: Using host.docker.internal for SD")
         return "host.docker.internal"
+
+
 SD_DOMAIN = get_sd_domain()
+
 
 @app.route("/ai/get_insane_image_1337", methods=['POST'])
 def get_insane_image_1337():
