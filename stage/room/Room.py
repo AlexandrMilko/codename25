@@ -3,8 +3,8 @@ import math
 from preprocessing.preProcessNormalMap import ImageNormalMap
 from preprocessing.preProcessSegment import ImageSegmentor
 from stage import Floor
-from tools import (move_file, copy_file, get_image_size, save_mask_of_size, convert_png_to_mask,
-                   overlay_masks, image_overlay, calculate_angle_from_top_view, resize_and_save_image, run_preprocessor)
+from tools import (get_image_size, save_mask_of_size, convert_png_to_mask,
+                   overlay_masks, overlay_image, calculate_angle_from_top_view, resize_and_save_image, run_preprocessor)
 from constants import Path, Config
 from PIL import Image
 import open3d as o3d
@@ -14,6 +14,7 @@ import os
 from ..FloorLayout import FloorLayout
 from run import SD_DOMAIN
 
+
 class Room:
     # BGR, used in segmented images
     window_color = (230, 230, 230)
@@ -21,6 +22,7 @@ class Room:
     floor_color = (50, 50, 80)
     blind_color = (255, 61, 0)  # blind that is set on windows, kinda curtains
     floor_layout = None
+
     def __init__(self, empty_room_image_path):  # Original image path is an empty space image
         self.empty_room_image_path = empty_room_image_path
 
@@ -49,15 +51,15 @@ class Room:
             left_offset = self.infer_3d(left_pixel, pitch_rad, roll_rad)
             right_offset = self.infer_3d(right_pixel, pitch_rad, roll_rad)
             middle_offset = [(left_offset[0] + right_offset[0]) / 2,
-                            (left_offset[1] + right_offset[1]) / 2,
+                             (left_offset[1] + right_offset[1]) / 2,
                              (left_offset[2] + right_offset[2]) / 2]
             points_in_3d[name] = middle_offset
 
         print(points_in_3d)
         self.floor_layout = FloorLayout(Path.FLOOR_PLY.value, points_in_3d)
-        
+
     @staticmethod
-    def pixel_to_3d(x, y): #TODO rewrite to use floor layout image
+    def pixel_to_3d(x, y):  # TODO rewrite to use floor layout image
         """
         Args:
             x: x coordinate of the pixel
@@ -205,9 +207,9 @@ class Room:
 
                     # Move the leftmost and rightmost pixels towards (120, 120, 120) RGB
                     leftmost_bottom_pixel_adjusted = self.move_to_target_color(leftmost_bottom_pixel, image_rgb,
-                                                                                        direction='left')
+                                                                               direction='left')
                     rightmost_bottom_pixel_adjusted = self.move_to_target_color(rightmost_bottom_pixel, image_rgb,
-                                                                                        direction='right')
+                                                                                direction='right')
 
                     bottom_pixels[object_name + str(object_counter[object_name])] = (
                         leftmost_bottom_pixel_adjusted, rightmost_bottom_pixel_adjusted
@@ -224,14 +226,14 @@ class Room:
         left, center, right = painting.find_placement_pixel(Path.SEG_PREREQUISITE_IMAGE.value)
         if not all([left, center, right]): raise Exception("No place for painting found")
         print(left, center, right, "PAINTING PIXELS")
-        left_offset, right_offset =  [self.infer_3d((x, center[1]), pitch_rad, roll_rad) for
-                                                            x in (left, right)]
+        left_offset, right_offset = [self.infer_3d((x, center[1]), pitch_rad, roll_rad) for
+                                     x in (left, right)]
         yaw_angle = calculate_angle_from_top_view(left_offset, right_offset)
         render_parameters = painting.calculate_rendering_parameters(self, center, yaw_angle,
-                                                                   (roll_rad, pitch_rad))
+                                                                    (roll_rad, pitch_rad))
         return render_parameters
 
-    #TODO move calculate_curtains_parameters to Curtain?
+    # TODO move calculate_curtains_parameters to Curtain?
     def calculate_curtains_parameters(self, camera_height, camera_angles_rad: tuple):
         from stage.furniture.Curtain import Curtain
         pitch_rad, roll_rad = camera_angles_rad
@@ -244,7 +246,7 @@ class Room:
             try:
                 left_top_point, right_top_point = window
                 left_curtain_offset, right_curtain_offset = [self.infer_3d(pixel, pitch_rad, roll_rad) for
-                                                            pixel in (left_top_point, right_top_point)]
+                                                             pixel in (left_top_point, right_top_point)]
                 yaw_angle = calculate_angle_from_top_view(left_curtain_offset, right_curtain_offset)
                 for pixel in (left_top_point, right_top_point):
                     render_parameters = curtain.calculate_rendering_parameters(self, pixel, yaw_angle,
@@ -254,8 +256,8 @@ class Room:
                     # If you want to avoid it and calculate attachment for each separately:
                     # curtains_height = camera_height + render_parameters['obj_offsets'][2]
                     render_parameters['obj_offsets'] = (render_parameters['obj_offsets'][0],
-                                                           render_parameters['obj_offsets'][1],
-                                                           left_curtain_offset[2])
+                                                        render_parameters['obj_offsets'][1],
+                                                        left_curtain_offset[2])
                     curtains_height = camera_height + left_curtain_offset[2]
 
                     height_scale = curtain.calculate_height_scale(curtains_height)
@@ -304,7 +306,8 @@ class Room:
                                      PREPROCESSOR_RESOLUTION_LIMIT)
             segment.execute()
         else:
-            run_preprocessor("seg_ofade20k", self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
+            run_preprocessor("seg_ofade20k", self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, SD_DOMAIN,
+                             PREPROCESSOR_RESOLUTION_LIMIT)
         resize_and_save_image(Path.SEGMENTED_ES_IMAGE.value,
                               Path.SEGMENTED_ES_IMAGE.value, height)
 
@@ -342,5 +345,5 @@ class Room:
         overlay_masks(Path.FURNITURE_PIECE_MASK_IMAGE.value, Path.FURNITURE_MASK_IMAGE.value,
                       Path.FURNITURE_MASK_IMAGE.value)
         background_image = Image.open(Path.PREREQUISITE_IMAGE.value)
-        combined_image = image_overlay(furniture_image, background_image)
+        combined_image = overlay_image(furniture_image, background_image)
         combined_image.save(Path.PREREQUISITE_IMAGE.value)
