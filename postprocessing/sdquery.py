@@ -6,14 +6,17 @@ import cv2
 from PIL import Image
 import math
 
-from tools import create_directory_if_not_exists, min_max_scale, move_file, submit_post, save_encoded_image, get_encoded_image, run_preprocessor, restart_stable_diffusion, overlay_masks, get_image_size
+from tools import (create_directory_if_not_exists, submit_post, save_encoded_image,
+                   get_encoded_image, run_preprocessor, restart_stable_diffusion, overlay_masks)
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 MAX_CONTROLNET_IMAGE_RESOLUTION = 512
 
+
 class Query:
     negative_prompt = "ugly, poorly designed, amateur, bad proportions, bad lighting, direct sunlight, people, person, cartoonish, text"
     sampler_name = "DPM2"
+
 
 class GreenScreenImageQuery(Query):
     """
@@ -52,7 +55,7 @@ class GreenScreenImageQuery(Query):
         # We have to stretch the mask for upscaled image
         stretched_windows_mask_path = f'images/preprocessed/stretched_windows_mask_inpainting.png'
         tmp_image = Image.open(windows_mask_path)
-        tmp_image = tmp_image.resize((self.width*2, self.height*2), Image.Resampling.LANCZOS)
+        tmp_image = tmp_image.resize((self.width * 2, self.height * 2), Image.Resampling.LANCZOS)
         tmp_image.save(stretched_windows_mask_path)
         tmp_image.close()
         self.stretched_windows_mask_image_b64 = get_encoded_image(stretched_windows_mask_path)
@@ -205,6 +208,7 @@ class GreenScreenImageQuery(Query):
         self.height = height
         self.width = width
 
+
 def set_deliberate():
     print("SET DELIBERATE")
     data = {"sd_model_checkpoint": "deliberate_v2.safetensors"}
@@ -224,6 +228,7 @@ def set_xsarchitectural():
     data = {"sd_model_checkpoint": "xsarchitectural_v11.ckpt"}
     options_url = f'http://{SD_DOMAIN}:7861/sdapi/v1/options'
     response = submit_post(options_url, data)
+
 
 def change_image_size(input_path, output_path, target_size_kb=20):
     # Load the image using Pillow
@@ -273,6 +278,7 @@ def get_max_possible_size(input_path, target_resolution=MAX_CONTROLNET_IMAGE_RES
 
     # If no resizing was done, return the original dimensions
     return width, height
+
 
 def apply_style(empty_space, room_choice, style_budget_choice):
     es_path = f"images/{empty_space}"
