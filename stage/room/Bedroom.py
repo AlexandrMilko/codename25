@@ -71,7 +71,7 @@ class Bedroom(Room):
         except TypeError as e:
             print(e, "FAILED TO ADD PAINTING")
 
-        if Config.DO_POSTPROCESSING and Config.UI.value == "comfyui":
+        if Config.DO_POSTPROCESSING.value and Config.UI.value == "comfyui":
             processor = PostProcessor()
             processor.execute()
 
