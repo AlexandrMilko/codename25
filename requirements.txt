@@ -1,5 +1,13 @@
 opencv-python
 open3d
 Flask-Cors
-bpy
 torch
+numpy
+pillow
+requests
+flask
+flask_cors
+websocket
+websocket-client
+matplotlib
+torchvision
