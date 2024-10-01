@@ -85,13 +85,17 @@ class FloorLayout:
             pixel_x = np.clip(pixel_x, 0, width - 1)
             pixel_y = np.clip(pixel_y, 0, height - 1)
             print(f"Mapped to 2D: x={pixel_x}, y={pixel_y}")  # Debug message
-            result[point_name]= [pixel_x, pixel_y]
+            result[point_name] = [pixel_x, pixel_y]
             # cv2.circle(points_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Red color for specific points
 
         if self.output_image_path is not None:
             os.makedirs(os.path.dirname(self.output_image_path), exist_ok=True)
             cv2.imwrite(self.output_image_path, points_image)
             cv2.imwrite(Path.FLOOR_POINTS_IMAGE.value, points_image)
+
+            refined_image = FloorLayout.refine_contours(self.output_image_path)
+            cv2.imwrite(self.output_image_path, refined_image)
+
             FloorLayout.clear_floor_layout(self.output_image_path, self.output_image_path)
 
         self.pixels_dict = result
@@ -332,3 +336,25 @@ class FloorLayout:
         cv2.imwrite(output_path, color_image)
         # To remove the gap between triangle and floor points
         FloorLayout.clear_floor_layout(output_path, output_path)
+
+    @staticmethod
+    def refine_contours(image_path):
+        img = cv2.imread(image_path)
+
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+
+        kernel = np.ones((5, 5), np.uint8)
+        morph = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+
+        contours, _ = cv2.findContours(morph, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        image_without_noise = np.zeros_like(img)
+
+        for contour in contours:
+            epsilon = 0.02 * cv2.arcLength(contour, True)
+            approx = cv2.approxPolyDP(contour, epsilon, True)
+            cv2.drawContours(image_without_noise, [approx], 0, (255, 255, 255), -1)
+
+        return image_without_noise
