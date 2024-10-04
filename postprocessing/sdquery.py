@@ -7,7 +7,8 @@ from PIL import Image
 import math
 
 from tools import (create_directory_if_not_exists, submit_post, save_encoded_image,
-                   get_encoded_image, run_preprocessor, restart_stable_diffusion, overlay_masks)
+                   get_encoded_image, run_preprocessor, restart_stable_diffusion)
+from constants import Path
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
 MAX_CONTROLNET_IMAGE_RESOLUTION = 512
@@ -33,9 +34,7 @@ class GreenScreenImageQuery(Query):
                  furniture_mask="furniture_mask.png"):
         # We will use result image to transform it into new space of user image
         self.prerequisite_path = f'images/preprocessed/{prerequisite}'
-        self.furniture_mask_path = f'images/preprocessed/{furniture_mask}'
         self.prerequisite_image_b64 = get_encoded_image(self.prerequisite_path)
-        self.furniture_mask_image_b64 = get_encoded_image(self.furniture_mask_path)
         self.width, self.height = get_max_possible_size(self.prerequisite_path)
         # self.width, self.height = get_image_size(self.prerequisite_path)
 
@@ -48,12 +47,11 @@ class GreenScreenImageQuery(Query):
         # Prepare mask for SD
         windows_mask_path = f'images/preprocessed/windows_mask_inpainting.png'
         inpainting_mask_path = f'images/preprocessed/inpainting_mask.png'
-        overlay_masks(windows_mask_path, self.furniture_mask_path, inpainting_mask_path)
         self.inpainting_mask_image_b64 = get_encoded_image(inpainting_mask_path)
         self.windows_mask_image_b64 = get_encoded_image(windows_mask_path)
 
         # We have to stretch the mask for upscaled image
-        stretched_windows_mask_path = f'images/preprocessed/stretched_windows_mask_inpainting.png'
+        stretched_windows_mask_path = Path.STRETCHED_WINDOWS_MASK_INPAINTING.value
         tmp_image = Image.open(windows_mask_path)
         tmp_image = tmp_image.resize((self.width * 2, self.height * 2), Image.Resampling.LANCZOS)
         tmp_image.save(stretched_windows_mask_path)

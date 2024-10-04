@@ -1,11 +1,12 @@
-from PIL import Image
-import open3d as o3d
-import numpy as np
-import requests
 import base64
 import json
-import cv2
 import os
+
+import cv2
+import numpy as np
+import open3d as o3d
+import requests
+from PIL import Image
 
 
 def calculate_pitch_angle(plane_normal):
@@ -16,12 +17,12 @@ def calculate_pitch_angle(plane_normal):
     return pitch_angle_deg
 
 
-def calculate_roll_angle(plane_normal, reference_vector=[1, 0, 0]):
+def calculate_roll_angle(plane_normal, reference_vector=(1, 0, 0)):
     # Step 1: Normalize the normal vector of the plane and the reference vector
     plane_normal = plane_normal / np.linalg.norm(plane_normal)
     reference_vector = reference_vector / np.linalg.norm(reference_vector)
 
-    # Step 2: Project the plane normal onto the XZ plane (remove Y component)
+    # Step 2: Project the plane normal onto the XZ plane (remove a Y component)
     plane_normal_proj_xz = np.array([plane_normal[0], 0, plane_normal[2]])
 
     # Step 3: Normalize the projected vector
@@ -30,7 +31,7 @@ def calculate_roll_angle(plane_normal, reference_vector=[1, 0, 0]):
     # Step 4: Calculate the dot product between the reference vector and the projected normal
     dot_product = np.dot(reference_vector, plane_normal_proj_xz)
 
-    # Step 5: Compute the roll angle using the arccosine of the dot product
+    # Step 5: Compute the roll angle using the arc cosine of the dot product
     roll_angle_rad = np.arccos(dot_product)
 
     # Step 6: Convert radians to degrees (optional)
@@ -129,74 +130,6 @@ def get_encoded_image_from_path(image_path):
     return base64.b64encode(bytes).decode('utf-8')
 
 
-def convert_png_to_mask(image_path, output_path=None):
-    # Open the image
-    image = Image.open(image_path).convert("RGBA")
-
-    # Convert the image to a numpy array
-    image_array = np.array(image)
-
-    # Extract the alpha channel
-    alpha_channel = image_array[:, :, 3]
-
-    # Create a mask based on the alpha channel
-    mask_array = np.where(alpha_channel > 0, 255, 0).astype(np.uint8)
-
-    # Convert the mask array back to an image
-    mask = Image.fromarray(mask_array, mode='L')
-
-    # Save the mask to the specified path or overwrite the original image
-    if output_path is None:
-        output_path = image_path
-    mask.save(output_path)
-
-
-def save_mask_of_size(width, height, output_path):
-    # Create a new black image with the same size
-    black_mask = Image.new("RGB", (width, height), color=(0, 0, 0))
-    print("Saving empty mask to:", output_path)
-    black_mask.save(output_path)
-    print("Empty mask saved successfully!")
-    return black_mask
-
-
-def overlay_masks(fg_mask_path, bg_mask_path, output_path):
-    # Open both images
-    fg_img = Image.open(fg_mask_path).convert("RGBA")
-    bg_img = Image.open(bg_mask_path).convert("RGBA")
-
-    # Convert images to numpy arrays
-    fg_img_array = np.array(fg_img)
-    bg_img_array = np.array(bg_img)
-
-    # Create a mask for black pixels in the foreground image
-    black_mask = (fg_img_array[:, :, :3] == 0).all(axis=2)
-
-    # Set black pixels to transparent
-    fg_img_array[black_mask] = [255, 255, 255, 0]
-
-    # Determine the dimensions of the overlay area
-    fg_h, fg_w = fg_img_array.shape[:2]
-    bg_h, bg_w = bg_img_array.shape[:2]
-
-    # Ensure the overlay does not exceed background dimensions
-    overlay_h = min(fg_h, bg_h)
-    overlay_w = min(fg_w, bg_w)
-
-    # Overlay the images
-    bg_img_array[:overlay_h, :overlay_w] = np.where(
-        fg_img_array[:overlay_h, :overlay_w, 3:] > 0,
-        fg_img_array[:overlay_h, :overlay_w],
-        bg_img_array[:overlay_h, :overlay_w]
-    )
-
-    # Convert the result back to an image
-    result_img = Image.fromarray(bg_img_array, 'RGBA')
-
-    # Save the resulting image
-    result_img.save(output_path)
-
-
 def get_image_size(image_path):
     image = Image.open(image_path)
     width, height = image.size
@@ -230,17 +163,6 @@ def calculate_angle_from_top_view(point1, point2):
     if angle_pos_degrees < angle_neg_degrees:
         return -angle_pos_degrees * rotation_direction_pos
     return -angle_neg_degrees * rotation_direction_neg
-
-
-def overlay_image(furniture_image, background_image):
-    # Assume that both images are in PNG format
-    # Resize the fist_image to match the size of the second_image
-    furniture_image = furniture_image.resize(background_image.size)
-
-    # Overlay the decoded image on top of the background image
-    combined_image = Image.alpha_composite(background_image.convert('RGBA'), furniture_image.convert('RGBA'))
-
-    return combined_image
 
 
 def restart_stable_diffusion(api_url: str):

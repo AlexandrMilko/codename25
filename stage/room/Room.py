@@ -8,8 +8,7 @@ from constants import Path, Config
 from preprocessing.preProcessSegment import ImageSegmentor
 from run import SD_DOMAIN
 from stage import Floor
-from tools import (get_image_size, save_mask_of_size, convert_png_to_mask, overlay_masks, overlay_image,
-                   calculate_angle_from_top_view, resize_and_save_image, run_preprocessor)
+from tools import get_image_size, calculate_angle_from_top_view, resize_and_save_image, run_preprocessor
 from ..FloorLayout import FloorLayout
 
 
@@ -317,11 +316,6 @@ class Room:
         rotate_ply_file_with_colors(depth_ply_path, depth_ply_path, -pitch_rad, -roll_rad)
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 
-        # Create an empty mask of the same size as image
-        mask_path = Path.FURNITURE_MASK_IMAGE.value
-        width, height = get_image_size(self.empty_room_image_path)
-        save_mask_of_size(width, height, mask_path)
-
         scene_render_parameters = dict()
         from math import radians
         scene_render_parameters["camera_location"] = [0, 0, 0]
@@ -337,14 +331,3 @@ class Room:
         self.create_floor_layout(pitch_rad, roll_rad)
 
         return camera_height, pitch_rad, roll_rad, height, scene_render_parameters
-
-    @staticmethod
-    def process_rendered_image(furniture_image):
-        # TODO remove working with FURNITURE PIECES: we render one scene at the same time
-        furniture_image.save(Path.FURNITURE_PIECE_MASK_IMAGE.value)
-        convert_png_to_mask(Path.FURNITURE_PIECE_MASK_IMAGE.value)
-        overlay_masks(Path.FURNITURE_PIECE_MASK_IMAGE.value, Path.FURNITURE_MASK_IMAGE.value,
-                      Path.FURNITURE_MASK_IMAGE.value)
-        background_image = Image.open(Path.PREREQUISITE_IMAGE.value)
-        combined_image = overlay_image(furniture_image, background_image)
-        combined_image.save(Path.PREREQUISITE_IMAGE.value)
