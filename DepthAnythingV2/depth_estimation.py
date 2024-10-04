@@ -1,19 +1,22 @@
-from PIL import Image
-import torch
-import numpy as np
-from tools import get_image_size
-import open3d as o3d
 import cv2
+import numpy as np
+import open3d as o3d
+import torch
+from PIL import Image
+
 from constants import Path, Config
+from tools import get_image_size
 
 depth_npy_path = Path.DEPTH_IMAGE.value
 depth_ply_path = Path.PLY_SPACE.value
 floor_npy_path = Path.FLOOR_NPY.value
 floor_ply_path = Path.FLOOR_PLY.value
 
+
 def image_pixel_to_3d(x, y, image_path, depth_npy_path=depth_npy_path):
     w, h = get_image_size(image_path)
     return pixel_to_3d(x, y, w, h, depth_npy_path)
+
 
 def pixel_to_3d(x, y, w, h, depth_npy_path):
     """
@@ -37,6 +40,7 @@ def pixel_to_3d(x, y, w, h, depth_npy_path):
     Z_3D = -1 * (y - h / 2) * Y_depth / FY
     Y_3D = Y_depth
     return X_3D, Y_3D, Z_3D
+
 
 def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth_ply_path=depth_ply_path):
     from DepthAnythingV2.metric_depth.depth_anything_v2.dpt import DepthAnythingV2
@@ -100,7 +104,9 @@ def image_pixels_to_point_cloud(image_path, depth_npy_path=depth_npy_path, depth
         o3d.io.write_point_cloud(depth_ply_path,
                                  pcd)
 
-def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.value, depth_npy_path=floor_npy_path, depth_ply_path=floor_ply_path):
+
+def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.value, depth_npy_path=floor_npy_path,
+                             depth_ply_path=floor_ply_path):
     mask = Image.open(floor_mask_path).convert('L')
     mask_array = np.array(mask)
 
@@ -181,7 +187,8 @@ def create_floor_point_cloud(image_path, floor_mask_path=Path.FLOOR_MASK_IMAGE.v
                                  pcd)
 
 
-def rotate_3d_points(input_fname, output_fname, pitch_rad, roll_rad): # We rotate them to restore the original global coordinates which were moved due to camera rotation
+def rotate_3d_points(input_fname, output_fname, pitch_rad,
+                     roll_rad):  # We rotate them to restore the original global coordinates which were moved due to camera rotation
     # Read points from the .txt file
     points = np.genfromtxt(input_fname, delimiter=',')
 
@@ -225,6 +232,7 @@ def rotate_3d_point(point: tuple[float, float, float], pitch_rad, roll_rad):
     point = np.array(point)
     rotated_point = point.dot(rotation_matrix_x(pitch_rad).T).dot(rotation_matrix_y(roll_rad).T)
     return rotated_point
+
 
 def rotate_ply_file_with_colors(input_path: str, output_path: str, pitch_rad: float, roll_rad: float):
     def rotation_matrix_x(theta):
