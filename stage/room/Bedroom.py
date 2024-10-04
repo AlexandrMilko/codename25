@@ -28,9 +28,8 @@ class Bedroom(Room):
 
         scene_render_parameters['objects'] = [
             # *curtains_parameters,
-            plant_parameters,
-            bed_parameters, wardrobe_parameters,
-            commode_parameters,
+            plant_parameters, bed_parameters,
+            wardrobe_parameters, commode_parameters,
         ]
         # After our parameters calculation som of them will be equal to None, we have to remove them
         scene_render_parameters['objects'] = [item for item in scene_render_parameters['objects'] if item is not None]
@@ -58,18 +57,20 @@ class Bedroom(Room):
         else:
             run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value,
                              SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
-        # WARNING! We use SEG_PREREQUISITE_IMAGE for calculating painting position. Do not delete or use it after the painting parameters calculation process.
+        # WARNING!
+        # We use SEG_PREREQUISITE_IMAGE for calculating painting position.
+        # Do not delete or use it after the painting parameters calculation process.
         resize_and_save_image(Path.SEG_PREREQUISITE_IMAGE.value,
                               Path.SEG_PREREQUISITE_IMAGE.value, height)
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
-        try:
-            painting_parameters = self.calculate_painting_parameters((pitch_rad, roll_rad))
-            scene_render_parameters['objects'] = [painting_parameters]
-            furniture_image = Furniture.request_blender_render(scene_render_parameters)
-            Room.process_rendered_image(furniture_image)
-        except TypeError as e:
-            print(e, "FAILED TO ADD PAINTING")
+        # try:
+        #     painting_parameters = self.calculate_painting_parameters((pitch_rad, roll_rad))
+        #     scene_render_parameters['objects'] = [painting_parameters]
+        #     furniture_image = Furniture.request_blender_render(scene_render_parameters)
+        #     Room.process_rendered_image(furniture_image)
+        # except TypeError as e:
+        #     print(e, "FAILED TO ADD PAINTING")
 
         if Config.DO_POSTPROCESSING.value and Config.UI.value == "comfyui":
             processor = PostProcessor()

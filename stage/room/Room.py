@@ -1,18 +1,16 @@
 import math
 
-from preprocessing.preProcessNormalMap import ImageNormalMap
-from preprocessing.preProcessSegment import ImageSegmentor
-from stage import Floor
-from tools import (get_image_size, save_mask_of_size, convert_png_to_mask,
-                   overlay_masks, overlay_image, calculate_angle_from_top_view, resize_and_save_image, run_preprocessor)
-from constants import Path, Config
-from PIL import Image
-import open3d as o3d
-import numpy as np
 import cv2
-import os
-from ..FloorLayout import FloorLayout
+import numpy as np
+from PIL import Image
+
+from constants import Path, Config
+from preprocessing.preProcessSegment import ImageSegmentor
 from run import SD_DOMAIN
+from stage import Floor
+from tools import (get_image_size, save_mask_of_size, convert_png_to_mask, overlay_masks, overlay_image,
+                   calculate_angle_from_top_view, resize_and_save_image, run_preprocessor)
+from ..FloorLayout import FloorLayout
 
 
 class Room:
@@ -26,7 +24,8 @@ class Room:
     def __init__(self, empty_room_image_path):  # Original image path is an empty space image
         self.empty_room_image_path = empty_room_image_path
 
-    def find_roll_pitch(self) -> tuple[float, float]:
+    @staticmethod
+    def find_roll_pitch() -> tuple[float, float]:
         from tools import calculate_roll_angle, calculate_pitch_angle, calculate_plane_normal
         plane_normal = calculate_plane_normal(Path.FLOOR_PLY.value)
         roll_rad = math.radians(calculate_roll_angle(plane_normal))
@@ -251,7 +250,8 @@ class Room:
                 for pixel in (left_top_point, right_top_point):
                     render_parameters = curtain.calculate_rendering_parameters(self, pixel, yaw_angle,
                                                                                (roll_rad, pitch_rad))
-                    # WARNING! We set both left and right curtains height equal to the height of left curtain.
+                    # WARNING!
+                    # We set both left and right curtains height equal to the height of the left curtain.
                     # So we avoid differences in their height level attachment
                     # If you want to avoid it and calculate attachment for each separately:
                     # curtains_height = camera_height + render_parameters['obj_offsets'][2]
@@ -292,7 +292,7 @@ class Room:
 
     def prepare_empty_room_data(self):
         Image.open(self.empty_room_image_path).save(Path.PREREQUISITE_IMAGE.value)
-        from DepthAnythingV2.depth_estimation import (image_pixels_to_point_cloud, depth_ply_path, floor_ply_path,
+        from DepthAnythingV2.depth_estimation import (image_pixels_to_point_cloud, floor_ply_path, depth_ply_path,
                                                       create_floor_point_cloud, rotate_ply_file_with_colors)
 
         image_pixels_to_point_cloud(self.empty_room_image_path)
@@ -302,22 +302,22 @@ class Room:
         PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
 
         if Config.UI.value == "comfyui":
-            segment = ImageSegmentor(self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value,
-                                     PREPROCESSOR_RESOLUTION_LIMIT)
+            segment = ImageSegmentor(self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
             segment.execute()
         else:
-            run_preprocessor("seg_ofade20k", self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, SD_DOMAIN,
-                             PREPROCESSOR_RESOLUTION_LIMIT)
-        resize_and_save_image(Path.SEGMENTED_ES_IMAGE.value,
-                              Path.SEGMENTED_ES_IMAGE.value, height)
+            run_preprocessor("seg_ofade20k", self.empty_room_image_path,
+                             Path.SEGMENTED_ES_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
+
+        resize_and_save_image(Path.SEGMENTED_ES_IMAGE.value, Path.SEGMENTED_ES_IMAGE.value, height)
 
         Floor.save_mask(Path.SEGMENTED_ES_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
         create_floor_point_cloud(self.empty_room_image_path)
         roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
         rotate_ply_file_with_colors(floor_ply_path, floor_ply_path, -pitch_rad, -roll_rad)
+        rotate_ply_file_with_colors(depth_ply_path, depth_ply_path, -pitch_rad, -roll_rad)
         camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
 
-        # Create an empty mask of same size as image
+        # Create an empty mask of the same size as image
         mask_path = Path.FURNITURE_MASK_IMAGE.value
         width, height = get_image_size(self.empty_room_image_path)
         save_mask_of_size(width, height, mask_path)
@@ -326,11 +326,12 @@ class Room:
         from math import radians
         scene_render_parameters["camera_location"] = [0, 0, 0]
         # We set opposite
-        # We add 90 to the pitch, because originally camera is rotated pointing downwards in Blender
+        # We add 90 to the pitch, because originally a camera is rotated pointing downwards in Blender
         scene_render_parameters["camera_angles"] = float(radians(90) - pitch_rad), float(
             +roll_rad), 0  # We convert to float to avoid JSON conversion errors from numpy
         scene_render_parameters['resolution_x'] = width
         scene_render_parameters['resolution_y'] = height
+        scene_render_parameters['room_point_cloud_path'] = Path.PLY_SPACE.value
         scene_render_parameters['objects'] = dict()
 
         self.create_floor_layout(pitch_rad, roll_rad)

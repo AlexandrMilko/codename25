@@ -9,7 +9,7 @@ def join(directory, file):
 class Config(Enum):
     IMAGE_HEIGHT_LIMIT = 512  # To avoid GPU OOM error
     UI = 'comfyui'  # Or 'webui'
-    DO_POSTPROCESSING = True
+    DO_POSTPROCESSING = False
     CONTROLNET_HEIGHT_LIMIT = 1024
 
 
@@ -64,8 +64,9 @@ class Path(Enum):
     PAINTING_MODEL = join(BEDROOM_MODELS_DIR, 'painting.usdc')
 
     # DepthAnything
-    DEPTH_IMAGE = 'DepthAnythingV2/output/depth.npy'
-    PLY_SPACE = 'DepthAnythingV2/output/depth.ply'
-    DEPTH_CHECKPOINT = 'DepthAnythingV2/metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth'
-    FLOOR_NPY = 'DepthAnythingV2/output/floor.npy'
-    FLOOR_PLY = 'DepthAnythingV2/output/floor.ply'
+    DEPTH_ANYTHING_DIR = os.path.abspath('DepthAnythingV2')
+    DEPTH_IMAGE = join(DEPTH_ANYTHING_DIR, 'output/depth.npy')
+    PLY_SPACE = join(DEPTH_ANYTHING_DIR, 'output/depth.ply')
+    DEPTH_CHECKPOINT = join(DEPTH_ANYTHING_DIR, 'metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth')
+    FLOOR_NPY = join(DEPTH_ANYTHING_DIR, 'output/floor.npy')
+    FLOOR_PLY = join(DEPTH_ANYTHING_DIR, 'output/floor.ply')

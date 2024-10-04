@@ -1,9 +1,10 @@
-from constants import Path
-import open3d as o3d
-import numpy as np
 import os
+
 import cv2
-import math
+import numpy as np
+import open3d as o3d
+
+from constants import Path
 from .LayoutSide import LayoutSide
 
 
