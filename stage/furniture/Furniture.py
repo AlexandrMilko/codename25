@@ -9,8 +9,8 @@ class Furniture:
     scale = 1, 1, 1
     default_angles = 0, 0, 0
 
-    def __init__(self, model_path):
-        self.model_path = model_path
+    def __init__(self, obj_path):
+        self.obj_path = obj_path
 
     def get_scale(self):
         return self.scale
@@ -39,8 +39,7 @@ class Furniture:
         else:
             print("Error:", response.status_code, response.text)
 
-    def calculate_rendering_parameters_without_offsets(self,
-                                       yaw_angle: float):
+    def calculate_rendering_parameters_without_offsets(self, yaw_angle: float):
         default_angles = self.get_default_angles()
 
         obj_angles = radians(default_angles[0]), radians(default_angles[1]), radians(default_angles[2] + yaw_angle)
@@ -50,7 +49,7 @@ class Furniture:
             # Converting to tuple in case we use ndarrays somewhere which are not JSON serializable
             'obj_angles': tuple(obj_angles),
             'obj_scale': tuple(obj_scale),
-            'model_path': self.model_path
+            'obj_path': self.obj_path
         }
 
         return params
@@ -81,8 +80,7 @@ class HangingFurniture(Furniture):
                                        yaw_angle: float,
                                        camera_angles_rad: tuple[float, float]):
         roll, pitch = camera_angles_rad
-        obj_offsets = room.infer_3d(placement_pixel, pitch,
-                                    roll)  # We set negative rotation to compensate
+        obj_offsets = room.infer_3d(placement_pixel, pitch,roll)  # We set negative rotation to compensate
 
         params = self.calculate_rendering_parameters_without_offsets(yaw_angle)
         params['obj_offsets'] = tuple(obj_offsets)
