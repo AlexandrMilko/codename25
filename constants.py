@@ -9,7 +9,7 @@ def join(directory, file):
 class Config(Enum):
     IMAGE_HEIGHT_LIMIT = 512  # To avoid GPU OOM error
     UI = 'comfyui'  # Or 'webui'
-    DO_POSTPROCESSING = True
+    DO_POSTPROCESSING = False
     CONTROLNET_HEIGHT_LIMIT = 1024
 
 
@@ -27,14 +27,11 @@ class Path(Enum):
     POINTS_DEBUG_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_layout_debug.png')
     FLOOR_POINTS_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_points.png')
     FLOOR_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_mask.png')
-    FURNITURE_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'furniture_mask.png')
-    FURNITURE_PIECE_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'furniture_piece_mask.png')
     INPAINTING_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'inpainting_mask.png')
     PREREQUISITE_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'prerequisite.png')
     SEG_PREREQUISITE_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'seg_prerequisite.png')
     SEGMENTED_ES_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'segmented_es.png')
     STRETCHED_WINDOWS_MASK_INPAINTING = join(PREPROCESSED_IMAGES_DIR, 'stretched_windows_mask_inpainting.png')
-    WALL_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'wall_mask.png')
     WINDOWS_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask.png')
     WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask_inpainting.png')
     PREPROCESSED_USERS = join(PREPROCESSED_IMAGES_DIR, 'users.png')
@@ -64,8 +61,9 @@ class Path(Enum):
     PAINTING_MODEL = join(BEDROOM_MODELS_DIR, 'painting.usdc')
 
     # DepthAnything
-    DEPTH_IMAGE = 'DepthAnythingV2/output/depth.npy'
-    PLY_SPACE = 'DepthAnythingV2/output/depth.ply'
-    DEPTH_CHECKPOINT = 'DepthAnythingV2/metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth'
-    FLOOR_NPY = 'DepthAnythingV2/output/floor.npy'
-    FLOOR_PLY = 'DepthAnythingV2/output/floor.ply'
+    DEPTH_ANYTHING_DIR = os.path.abspath('DepthAnythingV2')
+    DEPTH_IMAGE = join(DEPTH_ANYTHING_DIR, 'output/depth.npy')
+    PLY_SPACE = join(DEPTH_ANYTHING_DIR, 'output/depth.ply')
+    DEPTH_CHECKPOINT = join(DEPTH_ANYTHING_DIR, 'metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth')
+    FLOOR_NPY = join(DEPTH_ANYTHING_DIR, 'output/floor.npy')
+    FLOOR_PLY = join(DEPTH_ANYTHING_DIR, 'output/floor.ply')
