@@ -46,12 +46,13 @@ This application consists of several components that work together to create a s
 1. `git clone https://github.com/AlexandrMilko/codename25.git`
 2. Create folder `codename25\images\preprocessed`
 3. Put [Depth Anything v2](https://huggingface.co/depth-anything/Depth-Anything-V2-Metric-Hypersim-Large/resolve/main/depth_anything_v2_metric_hypersim_vitl.pth?download=true) model into the folder `codename25\DepthAnythingV2\metric_depth\checkpoints`
+4. Create folder `codename25\DepthAnythingV2\output`
 
 ### Stable Diffusion
 1. Install [WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
 2. Install Controlnet through extensions
 ![controlnet](https://github.com/user-attachments/assets/c4a426b2-7f0d-4079-b00e-f755b3004e99)
-3. Download and put the [controlnet models](https://huggingface.co/lllyasviel/ControlNet-v1-1/tree/main)(depth, segment) in the directory: `extensions/sd-webui-controlnet/models`
+3. Download and put the [controlnet models](https://huggingface.co/lllyasviel/ControlNet-v1-1/tree/main)(control_v11f1p_sd15_depth.pth, control_v11p_sd15_seg.pth) in the directory: `extensions/sd-webui-controlnet/models`
 4. Download and put [stable diffusion model](https://civitai.com/models/4201/realistic-vision-v60-b1) in `models/Stable-diffusion`
 5. Replace webui.py with the [webui.py from codename25other](https://github.com/AlexandrMilko/codename25other/blob/master/webui.py)
 
