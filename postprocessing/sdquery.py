@@ -46,8 +46,6 @@ class GreenScreenImageQuery(Query):
 
         # Prepare mask for SD
         windows_mask_path = f'images/preprocessed/windows_mask_inpainting.png'
-        inpainting_mask_path = f'images/preprocessed/inpainting_mask.png'
-        self.inpainting_mask_image_b64 = get_encoded_image(inpainting_mask_path)
         self.windows_mask_image_b64 = get_encoded_image(windows_mask_path)
 
         # We have to stretch the mask for upscaled image
