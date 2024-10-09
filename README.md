@@ -1,6 +1,7 @@
 # Documentation
 
 This application consists of several components that work together to create a staged room image based on an empty room input and style preferences. Below is an overview of the key parts and installation steps.
+[link to flowchart](https://miro.com/app/board/uXjVLV9t9UI=/)
 
 ## Application Components
 
