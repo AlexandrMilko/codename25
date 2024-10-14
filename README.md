@@ -92,3 +92,18 @@ conda activate app
 python test_api.py  # (WARNING: Put the right image path in test_api.py)
 ```
 
+
+## How to work with Docker on the Server
+1. Create your container
+```bash
+sudo docker run -it --name vistagerVova --network host --gpus all oleksandrmilko/vistager:demo1309
+```
+2. (Just in case):
+```bash
+sudo docker restart vistagerVova
+```
+3. [Activate github token](https://stackoverflow.com/questions/18935539/authenticate-with-github-using-a-token ) for the git in the container if it is expired
+4. Enter a session in container
+```bash
+sudo docker exec -it vistagerVova bash
+```
