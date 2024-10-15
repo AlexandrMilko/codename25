@@ -3,6 +3,9 @@ from io import BytesIO
 from PIL import Image
 import requests
 import base64
+import json
+from constants import Path
+import subprocess
 
 
 class Furniture:
@@ -19,25 +22,20 @@ class Furniture:
         return self.default_angles
 
     @staticmethod
-    def request_blender_render(render_parameters):
-        # URL for blender_server
-        # blender_server has to be on the host system, because it has access to the screen which is likely needed for rendering
-        try:
-            server_url = 'http://host.docker.internal:5002/render_image'
-            # Send the HTTP request to the server
-            response = requests.post(server_url, json=render_parameters)
-        except requests.exceptions.ConnectionError:
-            server_url = 'http://localhost:5002/render_image'
-            # Send the HTTP request to the server
-            response = requests.post(server_url, json=render_parameters)
+    def start_blender_render(render_parameters):
+        data = json.dumps({
+            'render_path': Path.RENDER_PATH.value,
+            'blend_file_path': Path.BLEND_FILE_PATH.value,
+            'room_point_cloud_path': render_parameters['room_point_cloud_path'],
+            'camera_location': render_parameters['camera_location'],
+            'camera_angles': render_parameters['camera_angles'],
+            'resolution_x': render_parameters['resolution_x'],
+            'resolution_y': render_parameters['resolution_y'],
+            'objects': render_parameters['objects']
+        })
 
-        if response.status_code == 200:
-            # Decode the base64 encoded image
-            encoded_furniture_image = response.json()['image_base64']
-            furniture_image = Image.open(BytesIO(base64.b64decode(encoded_furniture_image)))
-            return furniture_image
-        else:
-            print("Error:", response.status_code, response.text)
+        # We run it with subprocess to reset all the context for Blender after each scene render
+        subprocess.run(['python', Path.BLENDER_SCRIPT_PATH.value, data], check=True)
 
     def calculate_rendering_parameters_without_offsets(self, yaw_angle: float):
         default_angles = self.get_default_angles()

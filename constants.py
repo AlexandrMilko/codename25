@@ -8,7 +8,7 @@ def join(directory, file):
 
 class Config(Enum):
     IMAGE_HEIGHT_LIMIT = 512  # To avoid GPU OOM error
-    UI = 'comfyui'  # Or 'webui'
+    UI = 'webui'  # Or 'comfyui'
     DO_POSTPROCESSING = False
     CONTROLNET_HEIGHT_LIMIT = 1024
 
@@ -37,7 +37,7 @@ class Path(Enum):
     PREPROCESSED_USERS = join(PREPROCESSED_IMAGES_DIR, 'users.png')
 
     # /3Ds
-    MODELS_DIR = '3Ds'
+    MODELS_DIR = 'blender/3Ds'
 
     # /3Ds/other
     OTHER_MODELS_DIR = join(MODELS_DIR, 'other')
@@ -67,3 +67,8 @@ class Path(Enum):
     DEPTH_CHECKPOINT = join(DEPTH_ANYTHING_DIR, 'metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth')
     FLOOR_NPY = join(DEPTH_ANYTHING_DIR, 'output/floor.npy')
     FLOOR_PLY = join(DEPTH_ANYTHING_DIR, 'output/floor.ply')
+
+    # Blender
+    BLENDER_SCRIPT_PATH = os.path.abspath('blender/blender_script.py') # We run it with subprocess to reset all the context for Blender after each scene render
+    BLEND_FILE_PATH = os.path.abspath('blender/visuals/scene.blend')
+    RENDER_PATH = PREREQUISITE_IMAGE

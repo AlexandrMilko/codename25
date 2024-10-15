@@ -26,7 +26,7 @@ class LivingRoom(Room):
         import json
         print(json.dumps(scene_render_parameters, indent=4))
 
-        furniture_image = Furniture.request_blender_render(scene_render_parameters)
+        furniture_image = Furniture.start_blender_render(scene_render_parameters)
         Room.process_rendered_image(furniture_image)
 
         processor = PostProcessor()
