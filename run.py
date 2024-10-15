@@ -56,8 +56,8 @@ def apply_style(es_path, room_choice, style_budget_choice):
     else:
         raise Exception(f"Wrong Room Type was specified: {room_choice.lower()}")
 
-    if Config.UI.value == "webui":
-        from postprocessing.sdquery import GreenScreenImageQuery
+    if Config.DO_POSTPROCESSING.value and Config.UI.value == "webui":
+        from postprocessing.postProcessingWebui import GreenScreenImageQuery
         from tools import restart_stable_diffusion
         import requests
         style, budget = style_budget_choice.split(", ")

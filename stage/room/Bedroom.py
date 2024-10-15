@@ -46,8 +46,7 @@ class Bedroom(Room):
         #
         # scene_render_parameters['objects'] = [*curtains_parameters, bed_parameters]
         #
-        prerequisite_image = Furniture.request_blender_render(scene_render_parameters)
-        prerequisite_image.save(Path.PREREQUISITE_IMAGE.value)
+        Furniture.start_blender_render(scene_render_parameters)
 
         PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
         if Config.UI.value == "comfyui":
@@ -66,7 +65,7 @@ class Bedroom(Room):
         # try:
         #     painting_parameters = self.calculate_painting_parameters((pitch_rad, roll_rad))
         #     scene_render_parameters['objects'] = [painting_parameters]
-        #     furniture_image = Furniture.request_blender_render(scene_render_parameters)
+        #     furniture_image = Furniture.start_blender_render(scene_render_parameters)
         #     Room.process_rendered_image(furniture_image)
         # except TypeError as e:
         #     print(e, "FAILED TO ADD PAINTING")
