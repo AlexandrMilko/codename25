@@ -1,66 +1,129 @@
+import numpy as np
+from constants import Path, Config
 from postprocessing.postProcessing import PostProcessor
 from preprocessing.preProcessSegment import ImageSegmentor
-from constants import Path
-from tools import resize_and_save_image
+from run import SD_DOMAIN
+from tools import resize_and_save_image, run_preprocessor
 from .Room import Room
 from ..furniture.Furniture import Furniture
-import os
+import random
+import json
 
 
 class Kitchen(Room):
     def stage(self):
         camera_height, pitch_rad, roll_rad, height, scene_render_parameters = self.prepare_empty_room_data()
 
-        # Add curtains
-        curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
+        all_sides = self.floor_layout.find_all_sides_sorted_by_length()
 
-        # Add plant
-        # TODO change algo for plant with new Kyrylo algorithm
-        # self.calculate_plant_parameters((pitch_rad, roll_rad))
+        kitchen_parameters = self.calculate_kitchen_parameters(all_sides, (pitch_rad, roll_rad))
+        table_parameters = self.calculate_table_parameters((pitch_rad, roll_rad))
+        plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
 
-        # Add kitchen_table_with_chairs
-        table_with_chairs_parameters = self.calculate_kitchen_table_with_chairs_parameters((pitch_rad, roll_rad))
+        scene_render_parameters['objects'] = [
+            kitchen_parameters,
+            table_parameters,
+            plant_parameters,
+        ]
+        scene_render_parameters['objects'] = [item for item in scene_render_parameters['objects'] if item is not None]
 
-        scene_render_parameters['objects'] = [*curtains_parameters, table_with_chairs_parameters]
-
-        import json
         print(json.dumps(scene_render_parameters, indent=4))
 
-        furniture_image = Furniture.request_blender_render(scene_render_parameters)
-        Room.process_rendered_image(furniture_image)
+        prerequisite_image = Furniture.request_blender_render(scene_render_parameters)
+        prerequisite_image.save(Path.PREREQUISITE_IMAGE.value)
 
-        processor = PostProcessor()
-        processor.execute()
+        PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
 
-        PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
+        if Config.UI.value == "comfyui":
+            segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+            segment.execute()
+        else:
+            run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value,
+                             SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
 
-        segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
-        segment.execute()
-        resize_and_save_image( Path.SEG_PREREQUISITE_IMAGE.value,
-                              Path.SEG_PREREQUISITE_IMAGE.value, height)
+        resize_and_save_image(Path.SEG_PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value, height)
         Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
-        # room = Room(Path.INPUT_IMAGE.value)
-        # room.create_floor_layout(pitch_rad, roll_rad)
+        if Config.DO_POSTPROCESSING.value and Config.UI.value == "comfyui":
+            processor = PostProcessor()
+            processor.execute()
 
-    def calculate_kitchen_table_with_chairs_parameters(self, camera_angles_rad: tuple):
-        from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
-        from stage.Floor import Floor
-        import random
+    def calculate_kitchen_parameters(self, all_sides, camera_angles_rad: tuple):
+        if len(all_sides) > 0:
+            side = all_sides.pop(0)
+        else:
+            return None
+
+        from stage.furniture.KitchenSet import KitchenSet
+
+        # Получаем коэффициенты пикселей на метр
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        pixels_dict = self.floor_layout.get_pixels_dict()
+
+        # Рассчитываем разницу в пикселях и смещение для модели кухни
+        middle_point = side.get_middle_point()
+        pixel_diff = -1 * (middle_point[0] - pixels_dict['camera'][0]), middle_point[1] - pixels_dict['camera'][1]
+        kitchen_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
+
         pitch_rad, roll_rad = camera_angles_rad
+        kitchen_set = KitchenSet()
 
-        kitchen_table_with_chairs = KitchenTableWithChairs()
-        seg_image_path = Path.SEGMENTED_ES_IMAGE.value
-        save_path = Path.FLOOR_MASK_IMAGE.value
-        Floor.save_mask(seg_image_path, save_path)
+        # Рассчитываем угол стены (yaw angle)
+        yaw_angle = side.calculate_wall_angle()
 
-        pixels_for_placing = kitchen_table_with_chairs.find_placement_pixel(Path.FLOOR_LAYOUT_IMAGE.value)
-        print(f"KitchenTableWithChairs placement pixel: {pixels_for_placing}")
-        wall = self.get_biggest_wall()
-        wall.save_mask(Path.WALL_MASK_IMAGE.value)
-        yaw_angle = Floor.find_angle_from_floor_layout(pitch_rad, roll_rad)
-        random_index = random.randint(0, len(pixels_for_placing) - 1)
-        render_parameters = (
-            kitchen_table_with_chairs.calculate_rendering_parameters(self, pixels_for_placing[random_index], yaw_angle,
-                                                                     (roll_rad, pitch_rad)))
+        # Получаем параметры рендеринга из базового метода calculate_rendering_parameters
+        render_parameters = kitchen_set.calculate_rendering_parameters(
+            self, kitchen_offset_x_y, yaw_angle, (roll_rad, pitch_rad)
+        )
+
         return render_parameters
+
+    def calculate_table_parameters(self, camera_angles_rad: tuple):
+        from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
+
+        # Получаем подходящие пиксели для размещения стола и угол
+        placement_info = KitchenTableWithChairs.find_placement_pixel(self.floor_layout.output_image_path)
+
+        if not placement_info:
+            return None  # Если нет доступных пикселей, возвращаем None
+
+        # Выбор случайного пикселя для размещения стола
+        (chosen_pixel, yaw_angle) = placement_info[np.random.randint(len(placement_info))]
+
+        # Получаем коэффициенты пикселей на метр
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        pixels_dict = self.floor_layout.get_pixels_dict()
+
+        # Рассчитываем разницу в пикселях и смещение для модели стола
+        pixel_diff = -1 * (chosen_pixel[0] - pixels_dict['camera'][0]), chosen_pixel[1] - pixels_dict['camera'][1]
+        table_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
+
+        # Убедитесь, что передаете правильные значения
+        pitch_rad, roll_rad = camera_angles_rad  # Убедитесь, что это действительно углы в радианах
+        table = KitchenTableWithChairs()
+
+        # Получаем параметры рендеринга для стола
+        render_parameters = table.calculate_rendering_parameters(self, table_offset_x_y, yaw_angle,
+                                                                 (roll_rad, pitch_rad))  # Обратите внимание на порядок
+
+        return render_parameters
+
+    def calculate_plant_parameters(self, camera_angles_rad: tuple):
+
+         from stage.furniture.Plant import Plant
+
+         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+         pixels_dict = self.floor_layout.get_pixels_dict()
+
+         plant_pixels = Plant.find_floor_layout_placement_pixels(self.floor_layout.output_image_path)
+         random_index = random.randint(0, len(plant_pixels) - 1)
+         plant_point = plant_pixels[random_index]
+
+         pixel_diff = -1 * (plant_point[0] - pixels_dict['camera'][0]), plant_point[1] - pixels_dict['camera'][1]
+         plant_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
+
+         pitch_rad, roll_rad = camera_angles_rad
+         plant = Plant()
+         yaw_angle = 0
+         render_parameters = plant.calculate_rendering_parameters(self, plant_offset_x_y, yaw_angle, (roll_rad, pitch_rad))
+         return render_parameters
