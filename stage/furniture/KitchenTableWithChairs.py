@@ -9,7 +9,7 @@ class KitchenTableWithChairs(FloorFurniture):
         super().__init__(model_path)
 
     @staticmethod
-    def find_placement_pixel(floor_layout_path: str) -> list[tuple[int, int]]:
+    def find_placement_pixel(floor_layout_path: str) -> list[tuple[tuple[int, int], float]]:
         image = cv2.imread(floor_layout_path, cv2.IMREAD_GRAYSCALE)
 
         origin = (image.shape[1] // 2, image.shape[0] // 2)
@@ -20,19 +20,8 @@ class KitchenTableWithChairs(FloorFurniture):
         squares = KitchenTableWithChairs.find_squares(rotated_coords, square_size, image)
         centers = KitchenTableWithChairs.find_square_center(squares)
 
-        # Draw & Display
-        # color_image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-
-        # for square in squares:
-        #     x, y, size = square
-        #     cv2.rectangle(color_image, (x, y), (x + size, y + size), (0, 255, 0), 1)
-        #
-        # for center in centers:
-        #     cv2.circle(color_image, center, 3, (0, 0, 255), -1)
-        #
-        # cv2.imwrite('images/preprocessed/floor_layout_debug.png', color_image)
-
-        return centers
+        # Теперь возвращаем список кортежей с центрами и углом
+        return [(center, angle) for center in centers]
 
     @staticmethod
     def find_angle(image):
