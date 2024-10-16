@@ -106,6 +106,9 @@ class FloorLayout:
         pixels_per_meter_ratio = self.calculate_pixels_per_meter_ratio()
         print(pixels_per_meter_ratio)
 
+        refined_image = FloorLayout.refine_contours(self.output_image_path)
+        cv2.imwrite(self.output_image_path, refined_image)
+
         self.ratio_x, self.ratio_y = pixels_per_meter_ratio
 
     def calculate_pixels_per_meter_ratio(self):
