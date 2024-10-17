@@ -14,13 +14,16 @@ class Config(Enum):
 
 
 class Path(Enum):
-    # /image
+    # visuals
+    VISUALS_DIR = os.path.abspath('visuals')
+
     # pasiba Arsenu 😘😘😘
-    IMAGES_DIR = os.path.abspath('images')
+    # visuals/image
+    IMAGES_DIR = join(VISUALS_DIR, 'images')
     INPUT_IMAGE = join(IMAGES_DIR, 'user_image.png')
     OUTPUT_IMAGE = join(IMAGES_DIR, 'applied.jpg')
 
-    # /image/preprocessed
+    # visuals/image/preprocessed
     PREPROCESSED_IMAGES_DIR = join(IMAGES_DIR, 'preprocessed')
     SEG_INPUT_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'segmented_es.png')
     SEG_RENDER_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'seg_prerequisite.png')
@@ -34,35 +37,35 @@ class Path(Enum):
     STRETCHED_WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'stretched_windows_mask_inpainting.png')
     DESIGNED_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'designed.png')
 
-    # Blender
-    BLENDER_DIR = os.path.abspath('blender')
-    # We run it with subprocess to reset all the context for Blender after each scene render
-    BLENDER_SCRIPT = join(BLENDER_DIR, 'blender_script.py')
-    BLEND_FILE = join(BLENDER_DIR, 'visuals/scene.blend')
+    # visuals/3Ds
+    MODELS_DIR = join(VISUALS_DIR, '3Ds')
+    SCENE_FILE = join(MODELS_DIR, 'scene.blend')
 
-    # /3Ds
-    MODELS_DIR = join(BLENDER_DIR, '3Ds')
-
-    # /3Ds/other
+    # visuals/3Ds/other
     OTHER_MODELS_DIR = join(MODELS_DIR, 'other')
     CURTAIN_MODEL = join(OTHER_MODELS_DIR, 'curtain.usdc')
     PLANT_MODEL = join(OTHER_MODELS_DIR, 'plant.usdc')
 
-    # /3Ds/living_room
+    # visuals/3Ds/living_room
     LIVING_ROOM_MODELS_DIR = join(MODELS_DIR, 'living_room')
     SOFA_WITH_TABLE_MODEL = join(LIVING_ROOM_MODELS_DIR, 'sofa_with_table.usdc')
 
-    # /3Ds/kitchen
+    # visuals/3Ds/kitchen
     KITCHEN_MODELS_DIR = join(MODELS_DIR, 'kitchen')
     KITCHEN_TABLE_WITH_CHAIRS_MODEL = join(KITCHEN_MODELS_DIR, 'kitchen_table_with_chairs.usdc')
 
-    # /3Ds/bedroom
+    # visuals/3Ds/bedroom
     BEDROOM_MODELS_DIR = join(MODELS_DIR, 'bedroom')
     BED_MODEL = join(BEDROOM_MODELS_DIR, 'bed2.usdc')
     BED_WITH_TABLES_MODEL = join(BEDROOM_MODELS_DIR, 'bedwithtables.usdc')
     WARDROBE_MODEL = join(BEDROOM_MODELS_DIR, 'Madrid_Shafa-3-V2__whithe.usdc')
     COMMODE_MODEL = join(BEDROOM_MODELS_DIR, 'commode2.usdc')
     PAINTING_MODEL = join(BEDROOM_MODELS_DIR, 'painting.usdc')
+
+    # Blender
+    BLENDER_DIR = os.path.abspath('blender')
+    # We run it with subprocess to reset all the context for Blender after each scene render
+    BLENDER_SCRIPT = join(BLENDER_DIR, 'blender_script.py')
 
     # DepthAnything
     DEPTH_ANYTHING_DIR = os.path.abspath('DepthAnythingV2')
