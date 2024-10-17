@@ -9,10 +9,6 @@ class Floor:
         self.seg_image_path = seg_image_path
 
     @staticmethod
-    def find_angle_from_floor_layout(pitch_rad, roll_rad):
-        return 0
-
-    @staticmethod
     def save_mask(seg_image_path, save_path):
         # Load the image
         image = cv2.imread(seg_image_path)

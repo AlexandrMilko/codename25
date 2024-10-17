@@ -23,6 +23,49 @@ class Room:
     def __init__(self, empty_room_image_path):  # Original image path is an empty space image
         self.empty_room_image_path = empty_room_image_path
 
+    def prepare_empty_room_data(self):
+        from DepthAnythingV2.depth_estimation import (image_pixels_to_point_cloud, floor_ply_path, depth_ply_path,
+                                                      create_floor_point_cloud, rotate_ply_file_with_colors)
+        Image.open(self.empty_room_image_path).save(Path.RENDER_IMAGE.value)
+
+        image_pixels_to_point_cloud(self.empty_room_image_path)
+
+        # Segment our empty space room. It is used in Room.save_windows_mask
+        width, height = get_image_size(self.empty_room_image_path)
+        PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
+
+        if Config.UI.value == "comfyui":
+            segment = ImageSegmentor(self.empty_room_image_path, Path.SEG_INPUT_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+            segment.execute()
+        else:
+            run_preprocessor("seg_ofade20k", self.empty_room_image_path,
+                             Path.SEG_INPUT_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
+
+        resize_and_save_image(Path.SEG_INPUT_IMAGE.value, Path.SEG_INPUT_IMAGE.value, height)
+
+        Floor.save_mask(Path.SEG_INPUT_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
+        create_floor_point_cloud(self.empty_room_image_path)
+        roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
+        rotate_ply_file_with_colors(floor_ply_path, floor_ply_path, -pitch_rad, -roll_rad)
+        rotate_ply_file_with_colors(depth_ply_path, depth_ply_path, -pitch_rad, -roll_rad)
+        camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
+
+        scene_render_parameters = dict()
+        from math import radians
+        scene_render_parameters["camera_location"] = [0, 0, 0]
+        # We set opposite
+        # We add 90 to the pitch, because originally a camera is rotated pointing downwards in Blender
+        scene_render_parameters["camera_angles"] = float(radians(90) - pitch_rad), float(
+            +roll_rad), 0  # We convert to float to avoid JSON conversion errors from numpy
+        scene_render_parameters['resolution_x'] = width
+        scene_render_parameters['resolution_y'] = height
+        scene_render_parameters['room_point_cloud_path'] = Path.PLY_SPACE.value
+        scene_render_parameters['objects'] = dict()
+
+        self.create_floor_layout(pitch_rad, roll_rad)
+
+        return camera_height, pitch_rad, roll_rad, height, scene_render_parameters
+
     @staticmethod
     def find_roll_pitch() -> tuple[float, float]:
         from tools import calculate_roll_angle, calculate_pitch_angle, calculate_plane_normal
@@ -91,7 +134,7 @@ class Room:
         pitch, roll = camera_angles
         from DepthAnythingV2.depth_estimation import rotate_3d_point, image_pixel_to_3d
         import stage.Floor
-        floor_pixel = stage.Floor.find_centroid(Path.SEGMENTED_ES_IMAGE.value)
+        floor_pixel = stage.Floor.find_centroid(Path.SEG_INPUT_IMAGE.value)
         point_3d = image_pixel_to_3d(*floor_pixel, self.empty_room_image_path)
         print(f"Floor Centroid: {floor_pixel} -> {point_3d}")
         rotated_point = rotate_3d_point(point_3d, -pitch, -roll)
@@ -186,7 +229,7 @@ class Room:
 
         min_area_threshold = 800
 
-        image = cv2.imread(Path.SEGMENTED_ES_IMAGE.value)
+        image = cv2.imread(Path.SEG_INPUT_IMAGE.value)
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         bottom_pixels = {}
@@ -221,7 +264,7 @@ class Room:
         from ..furniture.Painting import Painting
         pitch_rad, roll_rad = camera_angles_rad
         painting = Painting()
-        left, center, right = painting.find_placement_pixel(Path.SEG_PREREQUISITE_IMAGE.value)
+        left, center, right = painting.find_placement_pixel(Path.SEG_RENDER_IMAGE.value)
         if not all([left, center, right]): raise Exception("No place for painting found")
         print(left, center, right, "PAINTING PIXELS")
         left_offset, right_offset = [self.infer_3d((x, center[1]), pitch_rad, roll_rad) for
@@ -236,7 +279,7 @@ class Room:
         from stage.furniture.Curtain import Curtain
         pitch_rad, roll_rad = camera_angles_rad
         curtain = Curtain(2.2, Path.CURTAIN_MODEL.value)
-        Room.save_windows_mask(Path.SEGMENTED_ES_IMAGE.value, Path.WINDOWS_MASK_IMAGE.value)
+        Room.save_windows_mask(Path.SEG_INPUT_IMAGE.value, Path.WINDOWS_MASK_IMAGE.value)
         pixels_for_placing = curtain.find_placement_pixel(Path.WINDOWS_MASK_IMAGE.value)
         print(f"CURTAINS placement pixels: {pixels_for_placing}")
         curtains_parameters = []
@@ -276,7 +319,7 @@ class Room:
         from stage.Floor import Floor
         pitch_rad, roll_rad = camera_angles_rad
         plant = Plant()
-        seg_image_path = Path.SEGMENTED_ES_IMAGE.value
+        seg_image_path = Path.SEG_INPUT_IMAGE.value
         save_path = Path.FLOOR_MASK_IMAGE.value
         Floor.save_mask(seg_image_path, save_path)
         pixels_for_placing = plant.find_placement_pixel(save_path)
@@ -288,46 +331,3 @@ class Room:
             plant.calculate_rendering_parameters(self, pixels_for_placing[random_index], plant_yaw_angle,
                                                  (roll_rad, pitch_rad)))
         return render_parameters
-
-    def prepare_empty_room_data(self):
-        Image.open(self.empty_room_image_path).save(Path.PREREQUISITE_IMAGE.value)
-        from DepthAnythingV2.depth_estimation import (image_pixels_to_point_cloud, floor_ply_path, depth_ply_path,
-                                                      create_floor_point_cloud, rotate_ply_file_with_colors)
-
-        image_pixels_to_point_cloud(self.empty_room_image_path)
-
-        # Segment our empty space room. It is used in Room.save_windows_mask
-        width, height = get_image_size(self.empty_room_image_path)
-        PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
-
-        if Config.UI.value == "comfyui":
-            segment = ImageSegmentor(self.empty_room_image_path, Path.SEGMENTED_ES_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
-            segment.execute()
-        else:
-            run_preprocessor("seg_ofade20k", self.empty_room_image_path,
-                             Path.SEGMENTED_ES_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
-
-        resize_and_save_image(Path.SEGMENTED_ES_IMAGE.value, Path.SEGMENTED_ES_IMAGE.value, height)
-
-        Floor.save_mask(Path.SEGMENTED_ES_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
-        create_floor_point_cloud(self.empty_room_image_path)
-        roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
-        rotate_ply_file_with_colors(floor_ply_path, floor_ply_path, -pitch_rad, -roll_rad)
-        rotate_ply_file_with_colors(depth_ply_path, depth_ply_path, -pitch_rad, -roll_rad)
-        camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
-
-        scene_render_parameters = dict()
-        from math import radians
-        scene_render_parameters["camera_location"] = [0, 0, 0]
-        # We set opposite
-        # We add 90 to the pitch, because originally a camera is rotated pointing downwards in Blender
-        scene_render_parameters["camera_angles"] = float(radians(90) - pitch_rad), float(
-            +roll_rad), 0  # We convert to float to avoid JSON conversion errors from numpy
-        scene_render_parameters['resolution_x'] = width
-        scene_render_parameters['resolution_y'] = height
-        scene_render_parameters['room_point_cloud_path'] = Path.PLY_SPACE.value
-        scene_render_parameters['objects'] = dict()
-
-        self.create_floor_layout(pitch_rad, roll_rad)
-
-        return camera_height, pitch_rad, roll_rad, height, scene_render_parameters
