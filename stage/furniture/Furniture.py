@@ -35,9 +35,7 @@ class Furniture:
         })
 
         # We run it with subprocess to reset all the context for Blender after each scene render
-        result = subprocess.run(['python', Path.BLENDER_SCRIPT.value, data], check=True, capture_output=True)
-        print(result.stdout)
-        print(result.stderr)
+        subprocess.run(['python3', Path.BLENDER_SCRIPT.value, data], check=True, capture_output=True)
 
     def calculate_rendering_parameters_without_offsets(self, yaw_angle: float):
         default_angles = self.get_default_angles()
