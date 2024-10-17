@@ -1,11 +1,12 @@
+import os
 import time
-from tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image_from_path, submit_post
+
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from constants import Path
-import os
-from constants import Config
+
+from constants import Config, Path
+from tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image_from_path, submit_post
 
 app = Flask(__name__)
 CORS(app)

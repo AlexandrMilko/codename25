@@ -123,7 +123,7 @@ class PostProcessor:
         prompt = json.loads(workflow_data)
 
         print("Uploading first image...")
-        with open(Path.PREREQUISITE_IMAGE.value, "rb") as f:
+        with open(Path.RENDER_IMAGE.value, "rb") as f:
             comfyui_path_image = self.upload_file(f, "", True)
             print(f"comfyui_path_image: {comfyui_path_image}")
 

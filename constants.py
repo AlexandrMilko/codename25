@@ -22,19 +22,17 @@ class Path(Enum):
 
     # /image/preprocessed
     PREPROCESSED_IMAGES_DIR = join(IMAGES_DIR, 'preprocessed')
-    DESIGNED_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'designed.png')
-    FLOOR_LAYOUT_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_layout.png')
-    POINTS_DEBUG_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_layout_debug.png')
+    SEG_INPUT_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'segmented_es.png')
+    SEG_RENDER_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'seg_prerequisite.png')
+    RENDER_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'prerequisite.png')
     FLOOR_POINTS_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_points.png')
+    FLOOR_LAYOUT_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_layout.png')
+    FLOOR_LAYOUT_DEBUG_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_layout_debug.png')
     FLOOR_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_mask.png')
-    INPAINTING_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'inpainting_mask.png')
-    PREREQUISITE_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'prerequisite.png')
-    SEG_PREREQUISITE_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'seg_prerequisite.png')
-    SEGMENTED_ES_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'segmented_es.png')
-    STRETCHED_WINDOWS_MASK_INPAINTING = join(PREPROCESSED_IMAGES_DIR, 'stretched_windows_mask_inpainting.png')
     WINDOWS_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask.png')
     WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask_inpainting.png')
-    PREPROCESSED_USERS = join(PREPROCESSED_IMAGES_DIR, 'users.png')
+    STRETCHED_WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'stretched_windows_mask_inpainting.png')
+    DESIGNED_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'designed.png')
 
     # /3Ds
     MODELS_DIR = 'blender/3Ds'
@@ -69,6 +67,6 @@ class Path(Enum):
     FLOOR_PLY = join(DEPTH_ANYTHING_DIR, 'output/floor.ply')
 
     # Blender
-    BLENDER_SCRIPT_PATH = os.path.abspath('blender/blender_script.py') # We run it with subprocess to reset all the context for Blender after each scene render
-    BLEND_FILE_PATH = os.path.abspath('blender/visuals/scene.blend')
-    RENDER_PATH = PREREQUISITE_IMAGE
+    # We run it with subprocess to reset all the context for Blender after each scene render
+    BLENDER_SCRIPT = os.path.abspath('blender/blender_script.py')
+    BLEND_FILE = os.path.abspath('blender/visuals/scene.blend')

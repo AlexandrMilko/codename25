@@ -34,11 +34,11 @@ class Kitchen(Room):
 
         PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
 
-        segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
         segment.execute()
-        resize_and_save_image( Path.SEG_PREREQUISITE_IMAGE.value,
-                              Path.SEG_PREREQUISITE_IMAGE.value, height)
-        Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
+        resize_and_save_image(Path.SEG_RENDER_IMAGE.value,
+                              Path.SEG_RENDER_IMAGE.value, height)
+        Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
         # room = Room(Path.INPUT_IMAGE.value)
         # room.create_floor_layout(pitch_rad, roll_rad)
@@ -50,7 +50,7 @@ class Kitchen(Room):
         pitch_rad, roll_rad = camera_angles_rad
 
         kitchen_table_with_chairs = KitchenTableWithChairs()
-        seg_image_path = Path.SEGMENTED_ES_IMAGE.value
+        seg_image_path = Path.SEG_INPUT_IMAGE.value
         save_path = Path.FLOOR_MASK_IMAGE.value
         Floor.save_mask(seg_image_path, save_path)
 
