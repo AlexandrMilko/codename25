@@ -107,3 +107,7 @@ sudo docker restart vistagerVova
 ```bash
 sudo docker exec -it vistagerVova bash
 ```
+5. Copy files(and images for example) from docker:
+```bash
+sudo docker cp <docker_container>:<path_in_docker> <path_in_host_system>
+```
