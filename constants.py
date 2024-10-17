@@ -14,10 +14,10 @@ class Config(Enum):
 
 
 class Path(Enum):
+    # pasiba Arsenu 😘😘😘
     # visuals
     VISUALS_DIR = os.path.abspath('visuals')
 
-    # pasiba Arsenu 😘😘😘
     # visuals/image
     IMAGES_DIR = join(VISUALS_DIR, 'images')
     INPUT_IMAGE = join(IMAGES_DIR, 'user_image.png')
@@ -62,10 +62,8 @@ class Path(Enum):
     COMMODE_MODEL = join(BEDROOM_MODELS_DIR, 'commode2.usdc')
     PAINTING_MODEL = join(BEDROOM_MODELS_DIR, 'painting.usdc')
 
-    # Blender
-    BLENDER_DIR = os.path.abspath('blender')
     # We run it with subprocess to reset all the context for Blender after each scene render
-    BLENDER_SCRIPT = join(BLENDER_DIR, 'blender_script.py')
+    BLENDER_SCRIPT = os.path.abspath('blender_script.py')
 
     # DepthAnything
     DEPTH_ANYTHING_DIR = os.path.abspath('DepthAnythingV2')
