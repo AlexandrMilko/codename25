@@ -8,7 +8,7 @@ def join(directory, file):
 
 class Config(Enum):
     IMAGE_HEIGHT_LIMIT = 512  # To avoid GPU OOM error
-    UI = 'webui'  # Or 'comfyui'
+    UI = 'comfyui'  # Or 'comfyui'
     DO_POSTPROCESSING = False
     CONTROLNET_HEIGHT_LIMIT = 1024
 
@@ -34,8 +34,14 @@ class Path(Enum):
     STRETCHED_WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'stretched_windows_mask_inpainting.png')
     DESIGNED_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'designed.png')
 
+    # Blender
+    BLENDER_DIR = os.path.abspath('blender')
+    # We run it with subprocess to reset all the context for Blender after each scene render
+    BLENDER_SCRIPT = join(BLENDER_DIR, 'blender_script.py')
+    BLEND_FILE = join(BLENDER_DIR, 'visuals/scene.blend')
+
     # /3Ds
-    MODELS_DIR = 'blender/3Ds'
+    MODELS_DIR = join(BLENDER_DIR, '3Ds')
 
     # /3Ds/other
     OTHER_MODELS_DIR = join(MODELS_DIR, 'other')
@@ -65,8 +71,3 @@ class Path(Enum):
     DEPTH_CHECKPOINT = join(DEPTH_ANYTHING_DIR, 'metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth')
     FLOOR_NPY = join(DEPTH_ANYTHING_DIR, 'output/floor.npy')
     FLOOR_PLY = join(DEPTH_ANYTHING_DIR, 'output/floor.ply')
-
-    # Blender
-    # We run it with subprocess to reset all the context for Blender after each scene render
-    BLENDER_SCRIPT = os.path.abspath('blender/blender_script.py')
-    BLEND_FILE = os.path.abspath('blender/visuals/scene.blend')
