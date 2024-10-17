@@ -68,12 +68,14 @@ def update_geo_node_tree(node_tree):
     node_location_step_x = 175
 
     # Mesh to Points node
-    mesh_to_points_node, node_x_location = create_node(node_tree, "GeometryNodeMeshToPoints", node_x_location, node_location_step_x)
+    mesh_to_points_node, node_x_location = create_node(node_tree, "GeometryNodeMeshToPoints", node_x_location,
+                                                       node_location_step_x)
     mesh_to_points_node.inputs[3].default_value = 0.008
     node_tree.links.new(in_node.outputs["Geometry"], mesh_to_points_node.inputs['Mesh'])
 
     # Set Material node
-    set_material_node, node_x_location = create_node(node_tree, "GeometryNodeSetMaterial", node_x_location, node_location_step_x)
+    set_material_node, node_x_location = create_node(node_tree, "GeometryNodeSetMaterial", node_x_location,
+                                                     node_location_step_x)
     set_material_node.inputs[2].default_value = bpy.data.materials["Material"]
     node_tree.links.new(mesh_to_points_node.outputs["Points"], set_material_node.inputs['Geometry'])
     node_tree.links.new(set_material_node.outputs["Geometry"], out_node.inputs['Geometry'])
@@ -139,11 +141,12 @@ def add_furniture(path, location, angles, scale):
     furniture.rotation_euler = angles
     furniture.scale = scale
 
+
 def use_gpu():
     bpy.context.scene.render.engine = 'CYCLES'
-    bpy.context.preferences.addons[
-        "cycles"
-    ].preferences.compute_device_type = "CUDA"  # or "OPENCL"
+    # bpy.context.preferences.addons[
+    #     "cycles"
+    # ].preferences.compute_device_type = "CUDA"  # or "OPENCL"
 
     # Set the device and feature set
     bpy.context.scene.cycles.device = "GPU"
@@ -154,6 +157,7 @@ def use_gpu():
     for d in bpy.context.preferences.addons["cycles"].preferences.devices:
         d["use"] = 1  # Using all devices, include GPU and CPU
         print(d["name"], d["use"])
+
 
 def save_render(path, res_x, res_y):
     # Set render settings
@@ -198,7 +202,7 @@ if __name__ == "__main__":
     setup_light()
 
     for obj in objects:
-        add_furniture(os.path.abspath(obj["obj_path"]), obj["obj_offsets"], obj["obj_angles"], obj["obj_scale"])
+        add_furniture(obj["obj_path"], obj["obj_offsets"], obj["obj_angles"], obj["obj_scale"])
 
     save_render(render_path, resolution_x, resolution_y)
     save_blend_file(blend_file_path)
