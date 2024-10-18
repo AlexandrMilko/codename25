@@ -50,17 +50,17 @@ class Bedroom(Room):
 
         PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
         if Config.UI.value == "comfyui":
-            segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value,
+            segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value,
                                      PREPROCESSOR_RESOLUTION_LIMIT)
             segment.execute()
         else:
-            run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value,
+            run_preprocessor("seg_ofade20k", Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value,
                              SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
         # WARNING!
         # We use SEG_PREREQUISITE_IMAGE for calculating painting position.
         # Do not delete or use it after the painting parameters calculation process.
-        resize_and_save_image(Path.SEG_PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value, height)
-        Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
+        resize_and_save_image(Path.SEG_RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, height)
+        Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
         # try:
         #     painting_parameters = self.calculate_painting_parameters((pitch_rad, roll_rad))
