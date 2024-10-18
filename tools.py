@@ -92,9 +92,15 @@ def run_preprocessor(preprocessor_name, input_path, output_filepath, SD_DOMAIN, 
     save_encoded_image(response.json()['images'][0], output_filepath)
 
 
-def create_directory_if_not_exists(directory_path):
-    if not os.path.exists(directory_path):
-        os.makedirs(directory_path)
+def create_visuals_dir():
+    directories = [
+        "visuals/3Ds",
+        "visuals/images/preprocessed"
+    ]
+
+    for directory in directories:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
 
 def submit_post(url: str, data: dict):
