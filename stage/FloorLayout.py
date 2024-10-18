@@ -185,7 +185,7 @@ class FloorLayout:
             # Draw the point itself
             cv2.circle(image, point, 5, (0, 0, 255), -1)  # Red points
 
-        cv2.imwrite(Path.POINTS_DEBUG_IMAGE.value, image)
+        cv2.imwrite(Path.FLOOR_LAYOUT_DEBUG_IMAGE.value, image)
 
     def find_all_sides_sorted_by_length(self, exclude_distance=50, exclude_length=1.5):
         exclusion_zones = self.pixels_dict

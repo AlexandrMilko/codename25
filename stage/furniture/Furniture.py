@@ -1,11 +1,8 @@
-from math import radians
-from io import BytesIO
-from PIL import Image
-import requests
-import base64
 import json
-from constants import Path
 import subprocess
+from math import radians
+
+from constants import Path
 
 
 class Furniture:
@@ -24,8 +21,8 @@ class Furniture:
     @staticmethod
     def start_blender_render(render_parameters):
         data = json.dumps({
-            'render_path': Path.RENDER_PATH.value,
-            'blend_file_path': Path.BLEND_FILE_PATH.value,
+            'render_path': Path.RENDER_IMAGE.value,
+            'blend_file_path': Path.SCENE_FILE.value,
             'room_point_cloud_path': render_parameters['room_point_cloud_path'],
             'camera_location': render_parameters['camera_location'],
             'camera_angles': render_parameters['camera_angles'],
@@ -35,7 +32,7 @@ class Furniture:
         })
 
         # We run it with subprocess to reset all the context for Blender after each scene render
-        subprocess.run(['python', Path.BLENDER_SCRIPT_PATH.value, data], check=True)
+        subprocess.run(['python3', Path.BLENDER_SCRIPT.value, data], check=True, capture_output=True)
 
     def calculate_rendering_parameters_without_offsets(self, yaw_angle: float):
         default_angles = self.get_default_angles()

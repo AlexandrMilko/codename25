@@ -8,57 +8,62 @@ def join(directory, file):
 
 class Config(Enum):
     IMAGE_HEIGHT_LIMIT = 512  # To avoid GPU OOM error
-    UI = 'webui'  # Or 'comfyui'
+    UI = 'comfyui'  # Or 'comfyui'
     DO_POSTPROCESSING = False
     CONTROLNET_HEIGHT_LIMIT = 1024
 
 
 class Path(Enum):
-    # /image
     # pasiba Arsenu 😘😘😘
-    IMAGES_DIR = os.path.abspath('images')
+    # visuals
+    VISUALS_DIR = os.path.abspath('visuals')
+
+    # visuals/image
+    IMAGES_DIR = join(VISUALS_DIR, 'images')
     INPUT_IMAGE = join(IMAGES_DIR, 'user_image.png')
     OUTPUT_IMAGE = join(IMAGES_DIR, 'applied.jpg')
 
-    # /image/preprocessed
-    PREPROCESSED_IMAGES_DIR = join(IMAGES_DIR, 'preprocessed')
-    DESIGNED_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'designed.png')
-    FLOOR_LAYOUT_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_layout.png')
-    POINTS_DEBUG_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_layout_debug.png')
-    FLOOR_POINTS_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_points.png')
-    FLOOR_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'floor_mask.png')
-    INPAINTING_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'inpainting_mask.png')
-    PREREQUISITE_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'prerequisite.png')
-    SEG_PREREQUISITE_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'seg_prerequisite.png')
-    SEGMENTED_ES_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'segmented_es.png')
-    STRETCHED_WINDOWS_MASK_INPAINTING = join(PREPROCESSED_IMAGES_DIR, 'stretched_windows_mask_inpainting.png')
-    WINDOWS_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask.png')
-    WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask_inpainting.png')
-    PREPROCESSED_USERS = join(PREPROCESSED_IMAGES_DIR, 'users.png')
+    # visuals/image/preprocessed
+    PREPROCESSED_DIR = join(IMAGES_DIR, 'preprocessed')
+    SEG_INPUT_IMAGE = join(PREPROCESSED_DIR, 'segmented_es.png')
+    SEG_RENDER_IMAGE = join(PREPROCESSED_DIR, 'seg_prerequisite.png')
+    RENDER_IMAGE = join(PREPROCESSED_DIR, 'prerequisite.png')
+    FLOOR_POINTS_IMAGE = join(PREPROCESSED_DIR, 'floor_points.png')
+    FLOOR_LAYOUT_IMAGE = join(PREPROCESSED_DIR, 'floor_layout.png')
+    FLOOR_LAYOUT_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'floor_layout_debug.png')
+    FLOOR_MASK_IMAGE = join(PREPROCESSED_DIR, 'floor_mask.png')
+    WINDOWS_MASK_IMAGE = join(PREPROCESSED_DIR, 'windows_mask.png')
+    WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_DIR, 'windows_mask_inpainting.png')
+    STRETCHED_WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_DIR, 'stretched_windows_mask_inpainting.png')
+    DESIGNED_IMAGE = join(PREPROCESSED_DIR, 'designed.png')
 
-    # /3Ds
-    MODELS_DIR = 'blender/3Ds'
+    # visuals/3Ds
+    MODELS_DIR = join(VISUALS_DIR, '3Ds')
+    SCENE_FILE = join(MODELS_DIR, 'scene.blend')
 
-    # /3Ds/other
+    # visuals/3Ds/other
     OTHER_MODELS_DIR = join(MODELS_DIR, 'other')
     CURTAIN_MODEL = join(OTHER_MODELS_DIR, 'curtain.usdc')
     PLANT_MODEL = join(OTHER_MODELS_DIR, 'plant.usdc')
 
-    # /3Ds/living_room
+    # visuals/3Ds/living_room
     LIVING_ROOM_MODELS_DIR = join(MODELS_DIR, 'living_room')
     SOFA_WITH_TABLE_MODEL = join(LIVING_ROOM_MODELS_DIR, 'sofa_with_table.usdc')
 
-    # /3Ds/kitchen
+    # visuals/3Ds/kitchen
     KITCHEN_MODELS_DIR = join(MODELS_DIR, 'kitchen')
     KITCHEN_TABLE_WITH_CHAIRS_MODEL = join(KITCHEN_MODELS_DIR, 'kitchen_table_with_chairs.usdc')
 
-    # /3Ds/bedroom
+    # visuals/3Ds/bedroom
     BEDROOM_MODELS_DIR = join(MODELS_DIR, 'bedroom')
     BED_MODEL = join(BEDROOM_MODELS_DIR, 'bed2.usdc')
     BED_WITH_TABLES_MODEL = join(BEDROOM_MODELS_DIR, 'bedwithtables.usdc')
     WARDROBE_MODEL = join(BEDROOM_MODELS_DIR, 'Madrid_Shafa-3-V2__whithe.usdc')
     COMMODE_MODEL = join(BEDROOM_MODELS_DIR, 'commode2.usdc')
     PAINTING_MODEL = join(BEDROOM_MODELS_DIR, 'painting.usdc')
+
+    # We run it with subprocess to reset all the context for Blender after each scene render
+    BLENDER_SCRIPT = os.path.abspath('blender_script.py')
 
     # DepthAnything
     DEPTH_ANYTHING_DIR = os.path.abspath('DepthAnythingV2')
@@ -67,8 +72,3 @@ class Path(Enum):
     DEPTH_CHECKPOINT = join(DEPTH_ANYTHING_DIR, 'metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth')
     FLOOR_NPY = join(DEPTH_ANYTHING_DIR, 'output/floor.npy')
     FLOOR_PLY = join(DEPTH_ANYTHING_DIR, 'output/floor.ply')
-
-    # Blender
-    BLENDER_SCRIPT_PATH = os.path.abspath('blender/blender_script.py') # We run it with subprocess to reset all the context for Blender after each scene render
-    BLEND_FILE_PATH = os.path.abspath('blender/visuals/scene.blend')
-    RENDER_PATH = PREREQUISITE_IMAGE
