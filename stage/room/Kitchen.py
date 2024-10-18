@@ -29,13 +29,13 @@ class Kitchen(Room):
 
         print(json.dumps(scene_render_parameters, indent=4))
 
-        prerequisite_image = Furniture.request_blender_render(scene_render_parameters)
-        prerequisite_image.save(Path.PREREQUISITE_IMAGE.value)
+        Furniture.start_blender_render(scene_render_parameters)
 
         PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
 
         if Config.UI.value == "comfyui":
-            segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+            segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value,
+                                     PREPROCESSOR_RESOLUTION_LIMIT)
             segment.execute()
         else:
             run_preprocessor("seg_ofade20k", Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value,
