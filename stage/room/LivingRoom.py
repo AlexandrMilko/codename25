@@ -26,7 +26,7 @@ class LivingRoom(Room):
         import json
         print(json.dumps(scene_render_parameters, indent=4))
 
-        furniture_image = Furniture.request_blender_render(scene_render_parameters)
+        furniture_image = Furniture.start_blender_render(scene_render_parameters)
         Room.process_rendered_image(furniture_image)
 
         processor = PostProcessor()
@@ -35,11 +35,11 @@ class LivingRoom(Room):
         # Create windows mask for staged room
         PREPROCESSOR_RESOLUTION_LIMIT = 1024 if height > 1024 else height
 
-        segment = ImageSegmentor(Path.PREREQUISITE_IMAGE.value, Path.SEG_PREREQUISITE_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
         segment.execute()
-        resize_and_save_image(Path.SEG_PREREQUISITE_IMAGE.value,
-                              Path.SEG_PREREQUISITE_IMAGE.value, height)
-        Room.save_windows_mask(Path.SEG_PREREQUISITE_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
+        resize_and_save_image(Path.SEG_RENDER_IMAGE.value,
+                              Path.SEG_RENDER_IMAGE.value, height)
+        Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
     def calculate_sofa_with_table_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.SofaWithTable import SofaWithTable

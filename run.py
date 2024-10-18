@@ -1,11 +1,12 @@
+import os
 import time
-from tools import create_directory_if_not_exists, save_encoded_image, get_encoded_image_from_path, submit_post
+
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from constants import Path
-import os
-from constants import Config
+
+from constants import Config, Path
+from tools import create_visuals_dir, save_encoded_image, get_encoded_image_from_path, submit_post
 
 app = Flask(__name__)
 CORS(app)
@@ -33,7 +34,7 @@ def get_insane_image_1337():
     style_budget_choice = data.get('style_budget_choice')
     input_image = data.get('input_image')
 
-    create_directory_if_not_exists(Path.IMAGES_DIR.value)
+    create_visuals_dir()
     save_encoded_image(input_image, Path.INPUT_IMAGE.value)
     apply_style(Path.INPUT_IMAGE.value, room_choice, style_budget_choice)
 
@@ -56,8 +57,8 @@ def apply_style(es_path, room_choice, style_budget_choice):
     else:
         raise Exception(f"Wrong Room Type was specified: {room_choice.lower()}")
 
-    if Config.UI.value == "webui":
-        from postprocessing.sdquery import GreenScreenImageQuery
+    if Config.DO_POSTPROCESSING.value and Config.UI.value == "webui":
+        from postprocessing.postProcessingWebui import GreenScreenImageQuery
         from tools import restart_stable_diffusion
         import requests
         style, budget = style_budget_choice.split(", ")

@@ -1,4 +1,4 @@
 .idea/
-images/
+visuals/
 DepthAnythingV2/output/*
 DepthAnythingV2/metric_depth/checkpoints/

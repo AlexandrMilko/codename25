@@ -6,8 +6,7 @@ import cv2
 from PIL import Image
 import math
 
-from tools import (create_directory_if_not_exists, submit_post, save_encoded_image,
-                   get_encoded_image, run_preprocessor, restart_stable_diffusion)
+from tools import submit_post, save_encoded_image, get_encoded_image, run_preprocessor, restart_stable_diffusion
 from constants import Path
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
@@ -49,7 +48,7 @@ class GreenScreenImageQuery(Query):
         self.windows_mask_image_b64 = get_encoded_image(windows_mask_path)
 
         # We have to stretch the mask for upscaled image
-        stretched_windows_mask_path = Path.STRETCHED_WINDOWS_MASK_INPAINTING.value
+        stretched_windows_mask_path = Path.STRETCHED_WINDOWS_MASK_INPAINTING_IMAGE.value
         tmp_image = Image.open(windows_mask_path)
         tmp_image = tmp_image.resize((self.width * 2, self.height * 2), Image.Resampling.LANCZOS)
         tmp_image.save(stretched_windows_mask_path)
@@ -132,8 +131,7 @@ class GreenScreenImageQuery(Query):
         try:
             save_encoded_image(response.json()['images'][0], output_filepath)
         except FileNotFoundError as e:
-            create_directory_if_not_exists(output_dir)
-            save_encoded_image(response.json()['images'][0], output_filepath)
+            print(e)
 
         return response.json()['images'][0]
 
