@@ -6,8 +6,7 @@ import cv2
 from PIL import Image
 import math
 
-from tools import (create_directory_if_not_exists, submit_post, save_encoded_image,
-                   get_encoded_image, run_preprocessor, restart_stable_diffusion)
+from tools import submit_post, save_encoded_image, get_encoded_image, run_preprocessor, restart_stable_diffusion
 from constants import Path
 
 MAX_CONTROLNET_IMAGE_SIZE_KB = 10
@@ -132,8 +131,7 @@ class GreenScreenImageQuery(Query):
         try:
             save_encoded_image(response.json()['images'][0], output_filepath)
         except FileNotFoundError as e:
-            create_directory_if_not_exists(output_dir)
-            save_encoded_image(response.json()['images'][0], output_filepath)
+            print(e)
 
         return response.json()['images'][0]
 
