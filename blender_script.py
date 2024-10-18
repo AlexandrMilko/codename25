@@ -1,5 +1,4 @@
 import json
-import os
 import sys
 import bpy
 
@@ -59,7 +58,21 @@ def create_material(name="Material"):
     return material
 
 
-def update_geo_node_tree(node_tree):
+def calculate_sphere_radius(res_x, res_y):
+    base_radius = 0.008  # Base radius
+
+    # Calculate an inverse scaling factor based on resolution
+    base_resolution = 1280 * 720  # Base resolution (720p)
+    current_resolution = res_x * res_y
+
+    # Higher resolution -> smaller spheres, lower resolution -> larger spheres
+    resolution_scale = base_resolution / current_resolution
+    resolution_scale = max(0.1, resolution_scale)  # Ensure the scale doesn't get too large
+
+    return base_radius * resolution_scale
+
+
+def update_geo_node_tree(node_tree, sphere_radius):
     # Add and link geometry nodes for mesh and material processing
     in_node = node_tree.nodes["Group Input"]
     out_node = node_tree.nodes["Group Output"]
@@ -68,27 +81,29 @@ def update_geo_node_tree(node_tree):
     node_location_step_x = 175
 
     # Mesh to Points node
-    mesh_to_points_node, node_x_location = create_node(node_tree, "GeometryNodeMeshToPoints", node_x_location,
-                                                       node_location_step_x)
-    mesh_to_points_node.inputs[3].default_value = 0.008
+    mesh_to_points_node, node_x_location = create_node(node_tree, "GeometryNodeMeshToPoints",
+                                                       node_x_location, node_location_step_x)
+
+    mesh_to_points_node.inputs[3].default_value = sphere_radius
     node_tree.links.new(in_node.outputs["Geometry"], mesh_to_points_node.inputs['Mesh'])
 
     # Set Material node
-    set_material_node, node_x_location = create_node(node_tree, "GeometryNodeSetMaterial", node_x_location,
-                                                     node_location_step_x)
+    set_material_node, node_x_location = create_node(node_tree, "GeometryNodeSetMaterial",
+                                                     node_x_location, node_location_step_x)
     set_material_node.inputs[2].default_value = bpy.data.materials["Material"]
     node_tree.links.new(mesh_to_points_node.outputs["Points"], set_material_node.inputs['Geometry'])
     node_tree.links.new(set_material_node.outputs["Geometry"], out_node.inputs['Geometry'])
 
 
-def import_room(path):
+def import_room(path, res_x, res_y):
     # Import a room model and apply geometry node setup
     bpy.ops.wm.ply_import(filepath=path)
     bpy.ops.node.new_geometry_nodes_modifier()
 
     node_tree = bpy.data.node_groups["Geometry Nodes"]
     create_material()
-    update_geo_node_tree(node_tree)
+    sphere_radius = calculate_sphere_radius(res_x, res_y)
+    update_geo_node_tree(node_tree, sphere_radius)
 
 
 def setup_camera(angles, location):
@@ -196,7 +211,7 @@ if __name__ == "__main__":
 
     # Get a current scene, add camera/light, import models, and render
     scene = bpy.context.scene
-    import_room(room_point_cloud_path)
+    import_room(room_point_cloud_path, resolution_x, resolution_y)
 
     setup_camera(camera_angles, camera_location)
     setup_light()
