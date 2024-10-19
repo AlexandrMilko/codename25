@@ -159,9 +159,11 @@ def add_furniture(path, location, angles, scale):
 
 def use_gpu():
     bpy.context.scene.render.engine = 'CYCLES'
-    # bpy.context.preferences.addons[
-    #     "cycles"
-    # ].preferences.compute_device_type = "CUDA"  # or "OPENCL"
+    import torch
+    if torch.cuda.is_available():
+        bpy.context.preferences.addons[
+            "cycles"
+        ].preferences.compute_device_type = "CUDA"  # or "OPENCL"
 
     # Set the device and feature set
     bpy.context.scene.cycles.device = "GPU"
