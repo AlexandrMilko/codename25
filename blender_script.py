@@ -161,9 +161,12 @@ def use_gpu():
     bpy.context.scene.render.engine = 'CYCLES'
     import torch
     if torch.cuda.is_available():
+        print("INFO: CUDA is available. Using it for render")
         bpy.context.preferences.addons[
             "cycles"
         ].preferences.compute_device_type = "CUDA"  # or "OPENCL"
+    else:
+        print("WARNING: CUDA is not available for render.")
 
     # Set the device and feature set
     bpy.context.scene.cycles.device = "GPU"
