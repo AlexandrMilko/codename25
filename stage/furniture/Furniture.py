@@ -3,6 +3,7 @@ import subprocess
 from math import radians
 
 from constants import Path
+import os
 
 
 class Furniture:
@@ -32,7 +33,12 @@ class Furniture:
         })
 
         # We run it with subprocess to reset all the context for Blender after each scene render
-        subprocess.run(['python3', Path.BLENDER_SCRIPT.value, data], check=True, capture_output=True)
+        if os.name == 'nt':
+            print("This is a Windows system. Running python")
+            subprocess.run(['python', Path.BLENDER_SCRIPT.value, data], check=True)
+        elif os.name == 'posix':
+            print("This is a Unix or Linux system. Running python3")
+            subprocess.run(['python3', Path.BLENDER_SCRIPT.value, data], check=True)
 
     def calculate_rendering_parameters_without_offsets(self, yaw_angle: float):
         default_angles = self.get_default_angles()
