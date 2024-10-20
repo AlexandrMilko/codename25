@@ -1,8 +1,8 @@
 import math
-
 import cv2
 import numpy as np
 from PIL import Image
+import torch
 
 from constants import Path, Config
 from preprocessing.preProcessSegment import ImageSegmentor
@@ -11,6 +11,9 @@ from stage import Floor
 from tools import get_image_size, calculate_angle_from_top_view, resize_and_save_image, run_preprocessor
 from ..FloorLayout import FloorLayout
 
+
+
+from ml_depth_pro.src.depth_pro.depth_pro import create_model_and_transforms, DEFAULT_MONODEPTH_CONFIG_DICT
 
 class Room:
     # BGR, used in segmented images
@@ -75,9 +78,10 @@ class Room:
         return roll_rad, pitch_rad
 
     def infer_3d(self, pixel: tuple[int, int], pitch_rad: float, roll_rad: float):
-        from DepthAnythingV2.depth_estimation import image_pixel_to_3d, rotate_3d_point
+        # Using depth-pro methods
+        from ml_depth_pro.pro_depth_estimation import image_pixel_to_3d, rotate_3d_point
         print(self.empty_room_image_path, pixel, "IMAGE PATH and PIXEL")
-        target_point = image_pixel_to_3d(*pixel, self.empty_room_image_path)
+        target_point = image_pixel_to_3d(*pixel, self.empty_room_image_path, self.focallength_px)
         # We rotate it back to compensate our camera rotation
         offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
         return offset_relative_to_camera
@@ -99,43 +103,13 @@ class Room:
         print(points_in_3d)
         self.floor_layout = FloorLayout(Path.FLOOR_PLY.value, points_in_3d)
 
-    @staticmethod
-    def pixel_to_3d(x, y):  # TODO rewrite to use floor layout image
-        """
-        Args:
-            x: x coordinate of the pixel
-            y: y coordinate of the pixel
-            # filename: name of file
-
-        Returns:
-            X_3D, Y_3D: coordinates of pixel
-        """
-        # Load the layout image to get dimensions
-        layout_image = Image.open(Path.FLOOR_LAYOUT_IMAGE.value).convert('RGB')
-        original_width, original_height = layout_image.size
-
-        # Load the depth map
-        depth_image = np.load(Path.DEPTH_IMAGE.value)
-
-        # Ensure we are getting the correct depth value
-        resized_depth = Image.fromarray(depth_image).resize((original_width, original_height), Image.NEAREST)
-        Z_depth = np.array(resized_depth)[y, x]
-
-        # Compute focal lengths based on original image dimensions
-        FX = original_width * 0.6
-
-        # Compute 3D coordinates
-        X_3D = (x - original_width / 2.1) * Z_depth / FX
-        Z_3D = Z_depth / 1.3
-
-        return [X_3D, Z_3D, 0]
 
     def estimate_camera_height(self, camera_angles: tuple[float, float]):
         pitch, roll = camera_angles
-        from DepthAnythingV2.depth_estimation import rotate_3d_point, image_pixel_to_3d
+        from ml_depth_pro.pro_depth_estimation import rotate_3d_point, image_pixel_to_3d
         import stage.Floor
         floor_pixel = stage.Floor.find_centroid(Path.SEG_INPUT_IMAGE.value)
-        point_3d = image_pixel_to_3d(*floor_pixel, self.empty_room_image_path)
+        point_3d = image_pixel_to_3d(*floor_pixel, self.empty_room_image_path, self.focallength_px)
         print(f"Floor Centroid: {floor_pixel} -> {point_3d}")
         rotated_point = rotate_3d_point(point_3d, -pitch, -roll)
         z_coordinate = rotated_point[2]
@@ -143,16 +117,12 @@ class Room:
 
     @staticmethod
     def find_number_of_windows(windows_mask_path: str) -> int:
-        # Загрузка изображения
-        img = cv2.imread(windows_mask_path, cv2.IMREAD_GRAYSCALE)  # Укажите правильный путь к файлу
+        img = cv2.imread(windows_mask_path, cv2.IMREAD_GRAYSCALE)
         blurred = cv2.GaussianBlur(img, (5, 5), 0)
-
         _, thresh = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
         kernel = np.ones((3, 3), np.uint8)
         erosion = cv2.erode(thresh, kernel, iterations=1)
         img = cv2.dilate(erosion, kernel, iterations=1)
-
-        # Поиск контуров
         contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # Визуализация результатов
@@ -170,35 +140,24 @@ class Room:
         window_rgb_values = Room.window_color
         blind_rgb_values = Room.blind_color
 
-        # Define the lower and upper bounds for the color
         tolerance = 3
         window_lower_color = np.array([x - tolerance for x in window_rgb_values])
         window_upper_color = np.array([x + tolerance for x in window_rgb_values])
         blind_lower_color = np.array([x - tolerance for x in blind_rgb_values])
         blind_upper_color = np.array([x + tolerance for x in blind_rgb_values])
 
-        # Create a mask for the color
         window_color_mask = cv2.inRange(image, window_lower_color, window_upper_color)
         blind_color_mask = cv2.inRange(image, blind_lower_color, blind_upper_color)
-
         combined_mask = cv2.bitwise_or(window_color_mask, blind_color_mask)
 
         _, thresh = cv2.threshold(combined_mask, 127, 255, cv2.THRESH_BINARY)
         width, height = get_image_size(segmented_image_path)
-        kernel = np.ones((height // 25, height // 25), np.uint8)  # We adjust kernel based on img size
-        print(width, height, "WINDOWS IMG WIDTH, HEIGHT")
-        print(height // 25, "KERNEL SIZE for window mask denoising")
+        kernel = np.ones((height // 25, height // 25), np.uint8)
         erosion = cv2.erode(thresh, kernel, iterations=1)
         color_mask = cv2.dilate(erosion, kernel, iterations=1)
-        # cv2.imshow('gray', img)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
 
-        # Create a black and white mask
         bw_mask = np.zeros_like(color_mask)
         bw_mask[color_mask != 0] = 255
-
-        # Check if the mask contains white pixels
         cv2.imwrite(output_windows_mask_path, bw_mask)
 
     @staticmethod
@@ -219,7 +178,6 @@ class Room:
         target_colors = {
             "door": np.array([8, 255, 51]),  # #08FF33
             "window": np.array([230, 230, 230]),  # #E6E6E6
-            # Add more colors here as needed
         }
 
         object_counter = {
@@ -235,18 +193,15 @@ class Room:
         bottom_pixels = {}
 
         for object_name, color_value in target_colors.items():
-            # Create mask for each target color
             mask = cv2.inRange(image_rgb, color_value, color_value)
             cleaned_mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
             contours, _ = cv2.findContours(cleaned_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
             for contour in contours:
                 if cv2.contourArea(contour) > min_area_threshold:
-                    # Find leftmost and rightmost pixels
                     leftmost_bottom_pixel = tuple(contour[contour[:, :, 0].argmin()][0])
                     rightmost_bottom_pixel = tuple(contour[contour[:, :, 0].argmax()][0])
 
-                    # Move the leftmost and rightmost pixels towards (120, 120, 120) RGB
                     leftmost_bottom_pixel_adjusted = self.move_to_target_color(leftmost_bottom_pixel, image_rgb,
                                                                                direction='left')
                     rightmost_bottom_pixel_adjusted = self.move_to_target_color(rightmost_bottom_pixel, image_rgb,
@@ -266,15 +221,57 @@ class Room:
         painting = Painting()
         left, center, right = painting.find_placement_pixel(Path.SEG_RENDER_IMAGE.value)
         if not all([left, center, right]): raise Exception("No place for painting found")
-        print(left, center, right, "PAINTING PIXELS")
-        left_offset, right_offset = [self.infer_3d((x, center[1]), pitch_rad, roll_rad) for
-                                     x in (left, right)]
+        left_offset, right_offset = [self.infer_3d((x, center[1]), pitch_rad, roll_rad) for x in (left, right)]
         yaw_angle = calculate_angle_from_top_view(left_offset, right_offset)
         render_parameters = painting.calculate_rendering_parameters(self, center, yaw_angle,
                                                                     (roll_rad, pitch_rad))
         return render_parameters
 
-    # TODO move calculate_curtains_parameters to Curtain?
+    def prepare_empty_room_data(self):
+        resize_and_save_image(self.empty_room_image_path, self.empty_room_image_path, 720)
+        # TODO check if we need to save it at all since we do not even use overlay anymore
+        Image.open(self.empty_room_image_path).save(Path.RENDER_IMAGE.value)
+        from ml_depth_pro.pro_depth_estimation import (image_pixels_to_space_and_floor_point_clouds, rotate_ply_file_with_colors)
+
+        # Segment our empty space room. It is used in Room.save_windows_mask
+        width, height = get_image_size(self.empty_room_image_path)
+        PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
+
+        if Config.UI.value == "comfyui":
+            segment = ImageSegmentor(self.empty_room_image_path, Path.SEG_INPUT_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+            segment.execute()
+        else:
+            run_preprocessor("seg_ofade20k", self.empty_room_image_path,
+                             Path.SEG_INPUT_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
+
+        resize_and_save_image(Path.SEG_INPUT_IMAGE.value, Path.SEG_INPUT_IMAGE.value, height)
+
+        Floor.save_mask(Path.SEG_INPUT_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
+        self.focallength_px = image_pixels_to_space_and_floor_point_clouds(self.empty_room_image_path)
+
+        roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
+
+        rotate_ply_file_with_colors(Path.FLOOR_PLY.value, Path.FLOOR_PLY.value, -pitch_rad, -roll_rad)
+        rotate_ply_file_with_colors(Path.DEPTH_PLY.value, Path.DEPTH_PLY.value, -pitch_rad, -roll_rad)
+
+        camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
+
+        scene_render_parameters = dict()
+        from math import radians
+        scene_render_parameters["camera_location"] = [0, 0, 0]
+        # We set opposite
+        # We add 90 to the pitch, because originally a camera is rotated pointing downwards in Blender
+        scene_render_parameters["camera_angles"] = float(radians(90) - pitch_rad), float(
+            +roll_rad), 0  # We convert to float to avoid JSON conversion errors from numpy
+        scene_render_parameters['resolution_x'] = width
+        scene_render_parameters['resolution_y'] = height
+        scene_render_parameters['room_point_cloud_path'] = Path.DEPTH_PLY.value
+        scene_render_parameters['objects'] = dict()
+
+        self.create_floor_layout(pitch_rad, roll_rad)
+
+        return camera_height, pitch_rad, roll_rad, height, scene_render_parameters
+      
     def calculate_curtains_parameters(self, camera_height, camera_angles_rad: tuple):
         from stage.furniture.Curtain import Curtain
         pitch_rad, roll_rad = camera_angles_rad
@@ -311,9 +308,7 @@ class Room:
             except IndexError as e:
                 print(f"{e}, we skip adding curtains for a window.")
         return curtains_parameters
-
-    # TODO move calculate_plant_parameters to Plant?
-
+      
     def calculate_plant_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.Plant import Plant
         from stage.Floor import Floor

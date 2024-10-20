@@ -36,6 +36,7 @@ class Path(Enum):
     WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_DIR, 'windows_mask_inpainting.png')
     STRETCHED_WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_DIR, 'stretched_windows_mask_inpainting.png')
     DESIGNED_IMAGE = join(PREPROCESSED_DIR, 'designed.png')
+    DEPTH_DEBUG_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'depth_image.png')
 
     # visuals/3Ds
     MODELS_DIR = join(VISUALS_DIR, '3Ds')
@@ -63,13 +64,13 @@ class Path(Enum):
     COMMODE_MODEL = join(BEDROOM_MODELS_DIR, 'commode2.usdc')
     PAINTING_MODEL = join(BEDROOM_MODELS_DIR, 'painting.usdc')
 
+    # ML_DEPTH_PRO
+    ML_DEPTH_PRO_DIR = os.path.abspath('ml_depth_pro')
+    ML_DEPTH_PRO_CHECKPOINT = join(ML_DEPTH_PRO_DIR, 'src/depth_pro/cli/checkpoints/depth_pro.pt')
+    DEPTH_NPY = join(ML_DEPTH_PRO_DIR, 'output/depth.npy')
+    DEPTH_PLY = join(ML_DEPTH_PRO_DIR, 'output/depth.ply')
+    FLOOR_NPY = join(ML_DEPTH_PRO_DIR, 'output/floor.npy')
+    FLOOR_PLY = join(ML_DEPTH_PRO_DIR, 'output/floor.ply')
+
     # We run it with subprocess to reset all the context for Blender after each scene render
     BLENDER_SCRIPT = os.path.abspath('blender_script.py')
-
-    # DepthAnything
-    DEPTH_ANYTHING_DIR = os.path.abspath('DepthAnythingV2')
-    DEPTH_IMAGE = join(DEPTH_ANYTHING_DIR, 'output/depth.npy')
-    PLY_SPACE = join(DEPTH_ANYTHING_DIR, 'output/depth.ply')
-    DEPTH_CHECKPOINT = join(DEPTH_ANYTHING_DIR, 'metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth')
-    FLOOR_NPY = join(DEPTH_ANYTHING_DIR, 'output/floor.npy')
-    FLOOR_PLY = join(DEPTH_ANYTHING_DIR, 'output/floor.ply')
