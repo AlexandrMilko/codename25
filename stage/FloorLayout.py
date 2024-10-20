@@ -94,16 +94,20 @@ class FloorLayout:
             cv2.imwrite(self.output_image_path, points_image)
             cv2.imwrite(Path.FLOOR_POINTS_IMAGE.value, points_image)
 
-            refined_image = FloorLayout.refine_contours(self.output_image_path)
-            cv2.imwrite(self.output_image_path, refined_image)
-
             FloorLayout.clear_floor_layout(self.output_image_path, self.output_image_path)
 
         self.pixels_dict = result
         camera_pixel = self.pixels_dict['camera']
         FloorLayout.fill_layout_with_camera(self.output_image_path, camera_pixel, self.output_image_path)
+
+        refined_image = FloorLayout.refine_contours(self.output_image_path) # We perform additional cleaning made by Vova
+        cv2.imwrite(self.output_image_path, refined_image)
+
         pixels_per_meter_ratio = self.calculate_pixels_per_meter_ratio()
         print(pixels_per_meter_ratio)
+
+        refined_image = FloorLayout.refine_contours(self.output_image_path)
+        cv2.imwrite(self.output_image_path, refined_image)
 
         self.ratio_x, self.ratio_y = pixels_per_meter_ratio
 
@@ -184,7 +188,7 @@ class FloorLayout:
             # Draw the point itself
             cv2.circle(image, point, 5, (0, 0, 255), -1)  # Red points
 
-        cv2.imwrite(Path.POINTS_DEBUG_IMAGE.value, image)
+        cv2.imwrite(Path.FLOOR_LAYOUT_DEBUG_IMAGE.value, image)
 
     def find_all_sides_sorted_by_length(self, exclude_distance=50, exclude_length=1.5):
         exclusion_zones = self.pixels_dict
