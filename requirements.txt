@@ -11,3 +11,4 @@ websocket
 websocket-client
 matplotlib
 torchvision
+bpy
