@@ -35,10 +35,10 @@ class Furniture:
         # We run it with subprocess to reset all the context for Blender after each scene render
         if os.name == 'nt':
             print("This is a Windows system. Running python")
-            subprocess.run(['python', Path.BLENDER_SCRIPT.value, data], check=True)
+            subprocess.run(['python', Path.BLENDER_SCRIPT.value, data], check=True, env=os.environ)
         elif os.name == 'posix':
             print("This is a Unix or Linux system. Running python3")
-            subprocess.run(['python3', Path.BLENDER_SCRIPT.value, data], check=True)
+            subprocess.run(['python3', Path.BLENDER_SCRIPT.value, data], check=True, env=os.environ)
 
     def calculate_rendering_parameters_without_offsets(self, yaw_angle: float):
         default_angles = self.get_default_angles()

@@ -133,7 +133,7 @@ def save_space_as_point_cloud(npy_path, ply_output_path, focallength_px, color_i
     o3d.io.write_point_cloud(ply_output_path, pcd)
 
     # Visualize the result (Optional)
-    o3d.visualization.draw_geometries([pcd])
+    # o3d.visualization.draw_geometries([pcd])
 
 def save_floor_as_point_cloud(npy_path, ply_output_path, focallength_px, color_image, white_pixel_indices):
     width, height = color_image.size
@@ -172,7 +172,7 @@ def save_floor_as_point_cloud(npy_path, ply_output_path, focallength_px, color_i
     o3d.io.write_point_cloud(ply_output_path, pcd)
 
     # Optionally, visualize the point cloud
-    o3d.visualization.draw_geometries([pcd])
+    # o3d.visualization.draw_geometries([pcd])
 
 
 def rotate_3d_points(input_fname, output_fname, pitch_rad, roll_rad):
