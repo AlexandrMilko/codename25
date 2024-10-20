@@ -16,15 +16,14 @@ This application consists of several components that work together to create a s
    
    **Output:** Base64 encoded staged room image.
    
-3. **Blender Server**  
-   This server renders the furniture and 3D space for codename25.
+2. **Blender 3D furniture models**
 
-4. **Stable Diffusion**  
+3. **Stable Diffusion**  
    Handles preprocessing (segmentation) and postprocessing (image enhancement). You can use either **WebUI** or **ComfyUI** for this task.  
    - **WebUI**: Superior for postprocessing. Arguably easier to install.
    - **ComfyUI**: Manages GPU memory more efficiently but is less effective at postprocessing.
 
-5. **Conda Environment**  
+4. **Conda Environment**  
    Contains all the necessary packages for the application to function correctly.
 
 # Installing each component
@@ -36,12 +35,8 @@ This application consists of several components that work together to create a s
 4. Install PyTorch for AI(Dont forget to activate conda env with `conda activate app` beforehand): `conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia`
 5. `pip install -r requirements.txt`
 
-### Blender
-
-1. Install [Blender 4.2](https://www.blender.org/)
-2. Clone the Blender server: `git clone https://github.com/AlexandrMilko/codename25other.git`
-3. Download [3D models](https://drive.google.com/drive/folders/1Bq_OSmUj9t5iwL2zB5yfb1n_nRBtqSVf?usp=sharing) and put them instead of the folder 3Ds
-4. Add blender to PATH environment variable(`C:\Program Files\Blender Foundation\Blender 4.2` is the default path for Windows)
+### Blender models
+1. Download [3D models](https://drive.google.com/drive/folders/1Bq_OSmUj9t5iwL2zB5yfb1n_nRBtqSVf?usp=sharing) and put them instead of the folder 3Ds in visuals/
 
 ### APP itself (codename25)
 1. `git clone https://github.com/AlexandrMilko/codename25.git`
@@ -76,13 +71,6 @@ Next, activate the conda environment and run the application:
 conda activate app
 cd codename25
 python run.py
-```
-
-## Blender
-Activate the conda environment and run the server:
-```bash
-conda activate app
-python server.py
 ```
 
 ## Test
