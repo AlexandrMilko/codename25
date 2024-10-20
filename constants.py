@@ -7,8 +7,7 @@ def join(directory, file):
 
 
 class Config(Enum):
-    IMAGE_HEIGHT_LIMIT = 512  # To avoid GPU OOM error
-    UI = 'comfyui'  # Or 'webui'
+    UI = 'webui'  # Or 'comfyui'
     DO_POSTPROCESSING = False
     CONTROLNET_HEIGHT_LIMIT = 1024
 
@@ -34,6 +33,8 @@ class Path(Enum):
     STRETCHED_WINDOWS_MASK_INPAINTING = join(PREPROCESSED_IMAGES_DIR, 'stretched_windows_mask_inpainting.png')
     WINDOWS_MASK_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask.png')
     WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'windows_mask_inpainting.png')
+    DEPTH_DEBUG_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'depth_image.png')
+    DEPTH_FLOOR_DEBUG_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'depth_floor_image.png')
     PREPROCESSED_USERS = join(PREPROCESSED_IMAGES_DIR, 'users.png')
 
     # /3Ds
@@ -60,10 +61,11 @@ class Path(Enum):
     COMMODE_MODEL = join(BEDROOM_MODELS_DIR, 'commode2.usdc')
     PAINTING_MODEL = join(BEDROOM_MODELS_DIR, 'painting.usdc')
 
-    # DepthAnything
-    DEPTH_ANYTHING_DIR = os.path.abspath('DepthAnythingV2')
-    DEPTH_IMAGE = join(DEPTH_ANYTHING_DIR, 'output/depth.npy')
-    PLY_SPACE = join(DEPTH_ANYTHING_DIR, 'output/depth.ply')
-    DEPTH_CHECKPOINT = join(DEPTH_ANYTHING_DIR, 'metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth')
-    FLOOR_NPY = join(DEPTH_ANYTHING_DIR, 'output/floor.npy')
-    FLOOR_PLY = join(DEPTH_ANYTHING_DIR, 'output/floor.ply')
+    # ML_DEPTH_PRO
+    ML_DEPTH_PRO_DIR = os.path.abspath('ml_depth_pro')
+    ML_DEPTH_PRO_CHECKPOINT = join(ML_DEPTH_PRO_DIR, 'src/depth_pro/cli/checkpoints/depth_pro.pt')
+    DEPTH_NPY = join(ML_DEPTH_PRO_DIR, 'output/depth.npy')
+    DEPTH_PLY = join(ML_DEPTH_PRO_DIR, 'output/depth.ply')
+    FLOOR_NPY = join(ML_DEPTH_PRO_DIR, 'output/floor.npy')
+    FLOOR_PLY = join(ML_DEPTH_PRO_DIR, 'output/floor.ply')
+
