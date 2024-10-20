@@ -7,7 +7,7 @@ def join(directory, file):
 
 
 class Config(Enum):
-    IMAGE_HEIGHT_LIMIT = 512  # To avoid GPU OOM error
+    IMAGE_HEIGHT_LIMIT = 1440  # For limiting the time it takes to render and depth calculation for the image
     UI = 'webui'  # Or 'comfyui'
     DO_POSTPROCESSING = False
     CONTROLNET_HEIGHT_LIMIT = 1024
@@ -36,7 +36,7 @@ class Path(Enum):
     WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_DIR, 'windows_mask_inpainting.png')
     STRETCHED_WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_DIR, 'stretched_windows_mask_inpainting.png')
     DESIGNED_IMAGE = join(PREPROCESSED_DIR, 'designed.png')
-    DEPTH_DEBUG_IMAGE = join(PREPROCESSED_IMAGES_DIR, 'depth_image.png')
+    DEPTH_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'depth_image.png')
 
     # visuals/3Ds
     MODELS_DIR = join(VISUALS_DIR, '3Ds')

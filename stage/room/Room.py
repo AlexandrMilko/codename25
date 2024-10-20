@@ -228,7 +228,7 @@ class Room:
         return render_parameters
 
     def prepare_empty_room_data(self):
-        resize_and_save_image(self.empty_room_image_path, self.empty_room_image_path, 720)
+        resize_and_save_image(self.empty_room_image_path, self.empty_room_image_path, Config.IMAGE_HEIGHT_LIMIT.value)
         # TODO check if we need to save it at all since we do not even use overlay anymore
         Image.open(self.empty_room_image_path).save(Path.RENDER_IMAGE.value)
         from ml_depth_pro.pro_depth_estimation import (image_pixels_to_space_and_floor_point_clouds, rotate_ply_file_with_colors)
