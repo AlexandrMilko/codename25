@@ -12,3 +12,5 @@ websocket-client
 matplotlib
 torchvision
 bpy
+timm
+pillow_heif
