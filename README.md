@@ -41,8 +41,8 @@ This application consists of several components that work together to create a s
 ### APP itself (codename25)
 1. `git clone https://github.com/AlexandrMilko/codename25.git`
 2. Create folder `codename25\images\preprocessed`
-3. Put [Depth Anything v2](https://huggingface.co/depth-anything/Depth-Anything-V2-Metric-Hypersim-Large/resolve/main/depth_anything_v2_metric_hypersim_vitl.pth?download=true) model into the folder `codename25\DepthAnythingV2\metric_depth\checkpoints`
-4. Create folder `codename25\DepthAnythingV2\output`
+3. Put [depth_pro.pt](https://drive.google.com/drive/u/0/folders/1Kg9j__fVpCMmvZ4Bt6jCDhKo3KH98ZW3) model into the folder `codename25/ml_depth_pro/src/depth_pro/cli/checkpoints/`
+4. Create folder `codename25\ml_depth_pro\output`
 
 ### Stable Diffusion
 1. Install [WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
