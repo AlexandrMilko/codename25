@@ -54,6 +54,7 @@ class Path(Enum):
     KITCHEN_MODELS_DIR = join(MODELS_DIR, 'kitchen')
     KITCHEN_TABLE_WITH_CHAIRS_MODEL = join(KITCHEN_MODELS_DIR, 'kitchen_table_with_chairs.usdc')
     KITCHEN_SET_MODEL = join(KITCHEN_MODELS_DIR, 'Alta_2_0-only.usdc')
+    KITCHEN_SET_MODEL2 = join(KITCHEN_MODELS_DIR, 'kitchenSetTest.usdc')
 
     # visuals/3Ds/bedroom
     BEDROOM_MODELS_DIR = join(MODELS_DIR, 'bedroom')
