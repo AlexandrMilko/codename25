@@ -49,36 +49,6 @@ class Kitchen(Room):
             processor = PostProcessor()
             processor.execute()
 
-    def calculate_kitchen_parameters(self, all_sides, camera_angles_rad: tuple):
-        if len(all_sides) > 0:
-            side = all_sides.pop(0)
-        else:
-            return None
-
-        from stage.furniture.KitchenSet import KitchenSet
-
-        # Получаем коэффициенты пикселей на метр
-        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
-        pixels_dict = self.floor_layout.get_pixels_dict()
-
-        # Рассчитываем разницу в пикселях и смещение для модели кухни
-        middle_point = side.get_middle_point()
-        pixel_diff = -1 * (middle_point[0] - pixels_dict['camera'][0]), middle_point[1] - pixels_dict['camera'][1]
-        kitchen_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
-
-        pitch_rad, roll_rad = camera_angles_rad
-        kitchen_set = KitchenSet()
-
-        # Рассчитываем угол стены (yaw angle)
-        yaw_angle = side.calculate_wall_angle()
-
-        # Получаем параметры рендеринга из базового метода calculate_rendering_parameters
-        render_parameters = kitchen_set.calculate_rendering_parameters(
-            self, kitchen_offset_x_y, yaw_angle, (roll_rad, pitch_rad)
-        )
-
-        return render_parameters
-
     def calculate_table_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
 
@@ -96,40 +66,35 @@ class Kitchen(Room):
             side.calculate_wall_length(self.floor_layout.ratio_x, self.floor_layout.ratio_y) for side in all_sides)
         room_height = area / room_width if room_width > 0 else 0
 
+        # Преобразуем в целые числа
+        room_width = int(room_width)
+        room_height = int(room_height)
+
         # Вычисляем центр комнаты
         center_x = room_width // 2
         center_y = room_height // 2
 
-        # Получаем контуры кухни
-        kitchen_placement_info = KitchenTableWithChairs.find_placement_pixel(self.floor_layout.output_image_path)
+        # Создаем маску кухни
         kitchen_mask = np.zeros((room_height, room_width), dtype=np.uint8)
 
-        # Создаем маску для области кухни
-        if kitchen_placement_info:
-            for (x, y), angle in kitchen_placement_info:
-                cv2.circle(kitchen_mask, (x, y), 50, (255),
-                           thickness=cv2.FILLED)  # Предположим, что 50 - это радиус кухонной мебели
+        # Получаем угол
+        placement_info = KitchenTableWithChairs.find_placement_pixel(self.floor_layout.output_image_path)
 
-        # Проверяем, свободен ли центр комнаты для установки стола
-        if kitchen_mask[center_y, center_x] == 0:  # Если центр не попадает в кухонную мебель
-            chosen_pixel = (center_x, center_y)
-            yaw_angle = 0  # Угол поворота стола по умолчанию
+        if not placement_info:
+            return None  # Если нет доступных пикселей, возвращаем None
+
+        # Сначала выбираем пиксель, ближе к центру комнаты
+        placement_candidates = [
+            (chosen_pixel, yaw_angle) for chosen_pixel, yaw_angle in placement_info
+            if abs(chosen_pixel[0] - center_x) < room_width // 4 and abs(chosen_pixel[1] - center_y) < room_height // 4
+        ]
+
+        # Если нашли подходящие кандидаты, выбираем один из них
+        if placement_candidates:
+            (chosen_pixel, yaw_angle) = placement_candidates[np.random.randint(len(placement_candidates))]
         else:
-            # Если центр занят, ищем свободные пиксели в пределах комнаты
-            placement_candidates = []
-            for dx in range(-room_width // 4, room_width // 4):
-                for dy in range(-room_height // 4, room_height // 4):
-                    new_x = center_x + dx
-                    new_y = center_y + dy
-                    if (0 <= new_x < room_width and 0 <= new_y < room_height and
-                            kitchen_mask[new_y, new_x] == 0):  # Проверяем, свободна ли эта точка
-                        placement_candidates.append((new_x, new_y))
-
-            if placement_candidates:
-                (chosen_pixel_x, chosen_pixel_y) = placement_candidates[np.random.randint(len(placement_candidates))]
-                chosen_pixel = (chosen_pixel_x, chosen_pixel_y)
-            else:
-                return None  # Если не нашли ни одной свободной точки, возвращаем None
+            # Если нет кандидатов в центре, выбираем случайный пиксель
+            (chosen_pixel, yaw_angle) = placement_info[np.random.randint(len(placement_info))]
 
         # Получаем коэффициенты пикселей на метр
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
