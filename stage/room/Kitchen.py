@@ -18,7 +18,10 @@ class Kitchen(Room):
         all_sides = self.floor_layout.find_all_sides_sorted_by_length()
 
         kitchen_parameters = self.calculate_kitchen_parameters(all_sides, (pitch_rad, roll_rad))
-        table_parameters = self.calculate_table_parameters((pitch_rad, roll_rad))
+
+        # Передаем all_sides как аргумент
+        table_parameters = self.calculate_table_parameters(all_sides, (pitch_rad, roll_rad))
+
         plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
 
         scene_render_parameters['objects'] = [
