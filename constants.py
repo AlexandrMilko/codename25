@@ -66,6 +66,7 @@ class Path(Enum):
     COMMODE_MODEL = join(BEDROOM_MODELS_DIR, 'commode2.usdc')
     PAINTING_MODEL = join(BEDROOM_MODELS_DIR, 'painting.usdc')
 
+
     # We run it with subprocess to reset all the context for Blender after each scene render
     BLENDER_SCRIPT = os.path.abspath('blender_script.py')
 
