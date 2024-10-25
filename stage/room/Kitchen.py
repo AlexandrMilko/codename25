@@ -8,6 +8,7 @@ from .Room import Room
 from ..furniture.Furniture import Furniture
 import random
 import json
+import cv2
 
 
 class Kitchen(Room):
@@ -99,24 +100,36 @@ class Kitchen(Room):
         center_x = room_width // 2
         center_y = room_height // 2
 
-        # Получаем угол
-        placement_info = KitchenTableWithChairs.find_placement_pixel(self.floor_layout.output_image_path)
+        # Получаем контуры кухни
+        kitchen_placement_info = KitchenTableWithChairs.find_placement_pixel(self.floor_layout.output_image_path)
+        kitchen_mask = np.zeros((room_height, room_width), dtype=np.uint8)
 
-        if not placement_info:
-            return None  # Если нет доступных пикселей, возвращаем None
+        # Создаем маску для области кухни
+        if kitchen_placement_info:
+            for (x, y), angle in kitchen_placement_info:
+                cv2.circle(kitchen_mask, (x, y), 50, (255),
+                           thickness=cv2.FILLED)  # Предположим, что 50 - это радиус кухонной мебели
 
-        # Сначала выбираем пиксель, ближе к центру комнаты
-        placement_candidates = [
-            (chosen_pixel, yaw_angle) for chosen_pixel, yaw_angle in placement_info
-            if abs(chosen_pixel[0] - center_x) < room_width // 4 and abs(chosen_pixel[1] - center_y) < room_height // 4
-        ]
-
-        # Если нашли подходящие кандидаты, выбираем один из них
-        if placement_candidates:
-            (chosen_pixel, yaw_angle) = placement_candidates[np.random.randint(len(placement_candidates))]
+        # Проверяем, свободен ли центр комнаты для установки стола
+        if kitchen_mask[center_y, center_x] == 0:  # Если центр не попадает в кухонную мебель
+            chosen_pixel = (center_x, center_y)
+            yaw_angle = 0  # Угол поворота стола по умолчанию
         else:
-            # Если нет кандидатов в центре, выбираем случайный пиксель
-            (chosen_pixel, yaw_angle) = placement_info[np.random.randint(len(placement_info))]
+            # Если центр занят, ищем свободные пиксели в пределах комнаты
+            placement_candidates = []
+            for dx in range(-room_width // 4, room_width // 4):
+                for dy in range(-room_height // 4, room_height // 4):
+                    new_x = center_x + dx
+                    new_y = center_y + dy
+                    if (0 <= new_x < room_width and 0 <= new_y < room_height and
+                            kitchen_mask[new_y, new_x] == 0):  # Проверяем, свободна ли эта точка
+                        placement_candidates.append((new_x, new_y))
+
+            if placement_candidates:
+                (chosen_pixel_x, chosen_pixel_y) = placement_candidates[np.random.randint(len(placement_candidates))]
+                chosen_pixel = (chosen_pixel_x, chosen_pixel_y)
+            else:
+                return None  # Если не нашли ни одной свободной точки, возвращаем None
 
         # Получаем коэффициенты пикселей на метр
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
