@@ -9,26 +9,33 @@ class KitchenTableWithChairs(FloorFurniture):
         super().__init__(model_path)
 
     @staticmethod
-    def find_placement_pixel(floor_layout_path: str, kitchen_mask_path: str) -> list[tuple[tuple[int, int], float]]:
+    def find_placement_pixel(floor_layout_path: str) -> list[tuple[tuple[int, int], float]]:
         image = cv2.imread(floor_layout_path, cv2.IMREAD_GRAYSCALE)
-        kitchen_mask = cv2.imread(kitchen_mask_path, cv2.IMREAD_GRAYSCALE)  # Маска кухни
 
-        origin = (image.shape[1] // 2, image.shape[0] // 2)  # Центр комнаты
+        # Получаем контуры кухонной мебели
+        contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Ищем самые большие контуры (кухонная мебель)
+        kitchen_contours = [max(contours, key=cv2.contourArea)]
+        kitchen_mask = np.zeros(image.shape, dtype=np.uint8)
+        cv2.drawContours(kitchen_mask, kitchen_contours, -1, (255), thickness=cv2.FILLED)
+
+        origin = (image.shape[1] // 2, image.shape[0] // 2)
         angle = KitchenTableWithChairs.find_angle(image)
 
         x_coords, y_coords, square_size = KitchenTableWithChairs.crate_grid(image)
         rotated_coords = KitchenTableWithChairs.rotate_coordinates(x_coords, y_coords, angle, origin)
-
-        squares = KitchenTableWithChairs.find_squares(rotated_coords, square_size, image, kitchen_mask)
+        squares = KitchenTableWithChairs.find_squares(rotated_coords, square_size, image)
         centers = KitchenTableWithChairs.find_square_center(squares)
 
-        # Если нашлись центры, возвращаем их
-        if centers:
-            return [(center, angle) for center in centers]
+        # Фильтруем центры, чтобы они не находились в области кухонной мебели
+        valid_centers = []
+        for center in centers:
+            x, y = center
+            if kitchen_mask[y, x] == 0:  # Если центр не попадает в кухонную мебель
+                valid_centers.append((center, angle))
 
-        # Если нет доступных центров, возвращаем пиксели ближе к центру
-        closest_to_center = min(squares, key=lambda c: cv2.norm(np.array(c[:2]) - np.array(origin)))
-        return [(closest_to_center[:2], angle)]
+        return valid_centers
 
     @staticmethod
     def find_angle(image):
@@ -54,17 +61,14 @@ class KitchenTableWithChairs(FloorFurniture):
 
         return angle
 
-
     @staticmethod
     def square_inside_figure(square, shape):
         x, y, size = square
-        if x < 0 or y < 0 or x + size > shape.shape[1] or y + size > shape.shape[0]:
-            return False  # Проверяем, не выходит ли квадрат за пределы изображения
         square_pixels = shape[y:y + size, x:x + size]
-        # Проверяем, что квадрат находится внутри белого пространства (предположим, что комната - белая зона)
+        # Assuming the shape is represented by 255 (white)
         inside_count = np.sum(square_pixels == 255)
         total_count = size * size
-        acceptable_transcend = 0.9 * total_count  # Допускаем до 10% "прозрачности" пересечения
+        acceptable_transcend = 0.9 * total_count
         return inside_count > acceptable_transcend
 
     @staticmethod
@@ -90,11 +94,10 @@ class KitchenTableWithChairs(FloorFurniture):
         return rotated_coords
 
     @staticmethod
-    def find_squares(rotated_coords, square_size, image, kitchen_mask):
+    def find_squares(rotated_coords, square_size, image):
         squares = []
         for x, y in rotated_coords:
-            if KitchenTableWithChairs.square_inside_figure((x, y, square_size), image) and \
-               not KitchenTableWithChairs.square_inside_figure((x, y, square_size), kitchen_mask):
+            if KitchenTableWithChairs.square_inside_figure((x, y, square_size), image):
                 squares.append((x, y, square_size))
         return squares
 
