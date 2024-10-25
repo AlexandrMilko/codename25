@@ -8,7 +8,6 @@ from .Room import Room
 from ..furniture.Furniture import Furniture
 import random
 import json
-import cv2
 
 
 class Kitchen(Room):
@@ -18,10 +17,7 @@ class Kitchen(Room):
         all_sides = self.floor_layout.find_all_sides_sorted_by_length()
 
         kitchen_parameters = self.calculate_kitchen_parameters(all_sides, (pitch_rad, roll_rad))
-
-        # Передаем all_sides как аргумент
-        table_parameters = self.calculate_table_parameters(all_sides, (pitch_rad, roll_rad))
-
+        table_parameters = self.calculate_table_parameters((pitch_rad, roll_rad))
         plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
 
         scene_render_parameters['objects'] = [
@@ -82,58 +78,35 @@ class Kitchen(Room):
 
         return render_parameters
 
-    def calculate_table_parameters(self, all_sides, camera_angles_rad: tuple):
-        if len(all_sides) > 0:
-            side = all_sides.pop(0)
-        else:
-            return None
-
+    def calculate_table_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
+
+        # Получаем подходящие пиксели для размещения стола и угол
+        placement_info = KitchenTableWithChairs.find_placement_pixel(self.floor_layout.output_image_path)
+
+        if not placement_info:
+            return None  # Если нет доступных пикселей, возвращаем None
+
+        # Выбор случайного пикселя для размещения стола
+        (chosen_pixel, yaw_angle) = placement_info[np.random.randint(len(placement_info))]
 
         # Получаем коэффициенты пикселей на метр
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         pixels_dict = self.floor_layout.get_pixels_dict()
 
-        # Рассчитываем центр комнаты
-        room_center = self.calculate_room_center(all_sides, ratio_x, ratio_y)
-
         # Рассчитываем разницу в пикселях и смещение для модели стола
-        pixel_diff = -1 * (room_center[0] - pixels_dict['camera'][0]), room_center[1] - pixels_dict['camera'][1]
+        pixel_diff = -1 * (chosen_pixel[0] - pixels_dict['camera'][0]), chosen_pixel[1] - pixels_dict['camera'][1]
         table_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
 
-        pitch_rad, roll_rad = camera_angles_rad
+        # Убедитесь, что передаете правильные значения
+        pitch_rad, roll_rad = camera_angles_rad  # Убедитесь, что это действительно углы в радианах
         table = KitchenTableWithChairs()
 
-        # Рассчитываем угол стены (yaw angle)
-        yaw_angle = side.calculate_wall_angle()
-
-        # Применяем небольшие смещения для более естественного размещения
-        table_offset_x_y = self.adjust_table_position(table_offset_x_y)
-
-        # Получаем параметры рендеринга из базового метода calculate_rendering_parameters
-        render_parameters = table.calculate_rendering_parameters(
-            self, table_offset_x_y, yaw_angle, (roll_rad, pitch_rad)
-        )
+        # Получаем параметры рендеринга для стола
+        render_parameters = table.calculate_rendering_parameters(self, table_offset_x_y, yaw_angle,
+                                                                 (roll_rad, pitch_rad))  # Обратите внимание на порядок
 
         return render_parameters
-
-    def calculate_room_center(self, all_sides, ratio_x, ratio_y):
-        # Используем первую стену для вычисления центра
-        if all_sides:
-            side = all_sides[0]  # Берем первую стену для упрощения
-            room_width = max(side.calculate_wall_length(ratio_x, ratio_y) for side in all_sides)
-            room_height = sum(side.calculate_wall_length(ratio_x, ratio_y) for side in all_sides) / len(all_sides)
-            center_x = room_width // 2
-            center_y = room_height // 2
-            return center_x, center_y
-        return 0, 0
-
-    def adjust_table_position(self, table_offset_x_y):
-        # Применяем небольшие смещения для более естественного размещения стола
-        adjustment_factor = 0.5  # Небольшое смещение, чтобы стол находился ближе к центру
-        adjusted_x = table_offset_x_y[0] + adjustment_factor
-        adjusted_y = table_offset_x_y[1]  # Y остаётся без изменений, чтобы сохранить глубину
-        return adjusted_x, adjusted_y
 
     def calculate_plant_parameters(self, camera_angles_rad: tuple):
 
