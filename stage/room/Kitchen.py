@@ -79,51 +79,58 @@ class Kitchen(Room):
 
         return render_parameters
 
-    def calculate_table_parameters(self, camera_angles_rad: tuple):
+    def calculate_table_parameters(self, all_sides, camera_angles_rad: tuple):
+        if len(all_sides) > 0:
+            side = all_sides.pop(0)
+        else:
+            return None
+
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
-
-        # Получаем размеры комнаты
-        all_sides = self.floor_layout.find_all_sides_sorted_by_length()
-        if not all_sides:
-            return  # Если нет сторон, просто выходим
-
-        # Предполагаем, что комната имеет прямоугольную форму
-        room_width = max(
-            side.calculate_wall_length(self.floor_layout.ratio_x, self.floor_layout.ratio_y) for side in all_sides)
-        room_height = sum(
-            side.calculate_wall_length(self.floor_layout.ratio_x, self.floor_layout.ratio_y) for side in
-            all_sides) / len(all_sides)
-
-        # Преобразуем в целые числа
-        room_width = int(room_width)
-        room_height = int(room_height)
-
-        # Вычисляем центр комнаты
-        center_x = room_width // 2
-        center_y = room_height // 2
 
         # Получаем коэффициенты пикселей на метр
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         pixels_dict = self.floor_layout.get_pixels_dict()
 
-        # Рассчитываем смещение для модели стола по центру
-        pixel_diff = -1 * (center_x - pixels_dict['camera'][0]), center_y - pixels_dict['camera'][1]
+        # Рассчитываем центр комнаты
+        room_center = self.calculate_room_center(all_sides, ratio_x, ratio_y)
+
+        # Рассчитываем разницу в пикселях и смещение для модели стола
+        pixel_diff = -1 * (room_center[0] - pixels_dict['camera'][0]), room_center[1] - pixels_dict['camera'][1]
         table_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
 
-        # Получаем углы камеры
         pitch_rad, roll_rad = camera_angles_rad
-
-        # Инициализация модели стола
         table = KitchenTableWithChairs()
 
-        # Определяем yaw угол, равный 0 для стола
-        yaw_angle = 0  # Стол всегда направлен в сторону стены или центра комнаты
+        # Рассчитываем угол стены (yaw angle)
+        yaw_angle = side.calculate_wall_angle()
 
-        # Получаем параметры рендеринга для стола
-        render_parameters = table.calculate_rendering_parameters(self, table_offset_x_y, yaw_angle,
-                                                                 (roll_rad, pitch_rad))
+        # Применяем небольшие смещения для более естественного размещения
+        table_offset_x_y = self.adjust_table_position(table_offset_x_y)
+
+        # Получаем параметры рендеринга из базового метода calculate_rendering_parameters
+        render_parameters = table.calculate_rendering_parameters(
+            self, table_offset_x_y, yaw_angle, (roll_rad, pitch_rad)
+        )
 
         return render_parameters
+
+    def calculate_room_center(self, all_sides, ratio_x, ratio_y):
+        # Используем первую стену для вычисления центра
+        if all_sides:
+            side = all_sides[0]  # Берем первую стену для упрощения
+            room_width = max(side.calculate_wall_length(ratio_x, ratio_y) for side in all_sides)
+            room_height = sum(side.calculate_wall_length(ratio_x, ratio_y) for side in all_sides) / len(all_sides)
+            center_x = room_width // 2
+            center_y = room_height // 2
+            return center_x, center_y
+        return 0, 0
+
+    def adjust_table_position(self, table_offset_x_y):
+        # Применяем небольшие смещения для более естественного размещения стола
+        adjustment_factor = 0.5  # Небольшое смещение, чтобы стол находился ближе к центру
+        adjusted_x = table_offset_x_y[0] + adjustment_factor
+        adjusted_y = table_offset_x_y[1]  # Y остаётся без изменений, чтобы сохранить глубину
+        return adjusted_x, adjusted_y
 
     def calculate_plant_parameters(self, camera_angles_rad: tuple):
 
