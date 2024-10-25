@@ -82,19 +82,17 @@ class Kitchen(Room):
     def calculate_table_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
 
-        # Получаем площадь комнаты
-        area = self.floor_layout.estimate_area_from_floor_layout()
-        print(area, "AREA in m2")
-
-        # Используем метод для нахождения сторон и вычисляем размеры комнаты
+        # Получаем размеры комнаты
         all_sides = self.floor_layout.find_all_sides_sorted_by_length()
         if not all_sides:
-            return None  # Если нет сторон, возвращаем None
+            return  # Если нет сторон, просто выходим
 
-        # Предполагаем, что комнаты имеют прямоугольную форму
+        # Предполагаем, что комната имеет прямоугольную форму
         room_width = max(
             side.calculate_wall_length(self.floor_layout.ratio_x, self.floor_layout.ratio_y) for side in all_sides)
-        room_height = area / room_width if room_width > 0 else 0
+        room_height = sum(
+            side.calculate_wall_length(self.floor_layout.ratio_x, self.floor_layout.ratio_y) for side in
+            all_sides) / len(all_sides)
 
         # Преобразуем в целые числа
         room_width = int(room_width)
@@ -104,43 +102,26 @@ class Kitchen(Room):
         center_x = room_width // 2
         center_y = room_height // 2
 
-        # Создаем маску кухни
-        kitchen_mask = np.zeros((room_height, room_width), dtype=np.uint8)
-
-        # Получаем угол
-        placement_info = KitchenTableWithChairs.find_placement_pixel(self.floor_layout.output_image_path)
-
-        if not placement_info:
-            return None  # Если нет доступных пикселей, возвращаем None
-
-        # Сначала выбираем пиксель, ближе к центру комнаты
-        placement_candidates = [
-            (chosen_pixel, yaw_angle) for chosen_pixel, yaw_angle in placement_info
-            if abs(chosen_pixel[0] - center_x) < room_width // 4 and abs(chosen_pixel[1] - center_y) < room_height // 4
-        ]
-
-        # Если нашли подходящие кандидаты, выбираем один из них
-        if placement_candidates:
-            (chosen_pixel, yaw_angle) = placement_candidates[np.random.randint(len(placement_candidates))]
-        else:
-            # Если нет кандидатов в центре, выбираем случайный пиксель
-            (chosen_pixel, yaw_angle) = placement_info[np.random.randint(len(placement_info))]
-
         # Получаем коэффициенты пикселей на метр
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         pixels_dict = self.floor_layout.get_pixels_dict()
 
-        # Рассчитываем разницу в пикселях и смещение для модели стола
-        pixel_diff = -1 * (chosen_pixel[0] - pixels_dict['camera'][0]), chosen_pixel[1] - pixels_dict['camera'][1]
+        # Рассчитываем смещение для модели стола по центру
+        pixel_diff = -1 * (center_x - pixels_dict['camera'][0]), center_y - pixels_dict['camera'][1]
         table_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
 
-        # Убедитесь, что передаете правильные значения
-        pitch_rad, roll_rad = camera_angles_rad  # Убедитесь, что это действительно углы в радианах
+        # Получаем углы камеры
+        pitch_rad, roll_rad = camera_angles_rad
+
+        # Инициализация модели стола
         table = KitchenTableWithChairs()
+
+        # Определяем yaw угол, равный 0 для стола
+        yaw_angle = 0  # Стол всегда направлен в сторону стены или центра комнаты
 
         # Получаем параметры рендеринга для стола
         render_parameters = table.calculate_rendering_parameters(self, table_offset_x_y, yaw_angle,
-                                                                 (roll_rad, pitch_rad))  # Обратите внимание на порядок
+                                                                 (roll_rad, pitch_rad))
 
         return render_parameters
 
