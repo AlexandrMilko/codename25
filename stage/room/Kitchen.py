@@ -81,14 +81,29 @@ class Kitchen(Room):
     def calculate_table_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
 
-        # Получаем подходящие пиксели для размещения стола и угол
+        # Получаем размеры комнаты и вычисляем центр
+        room_width, room_height = self.floor_layout.get_room_dimensions()  # Предполагаем, что у вас есть метод для получения размеров комнаты
+        center_x = room_width // 2
+        center_y = room_height // 2
+
+        # Получаем угол
         placement_info = KitchenTableWithChairs.find_placement_pixel(self.floor_layout.output_image_path)
 
         if not placement_info:
             return None  # Если нет доступных пикселей, возвращаем None
 
-        # Выбор случайного пикселя для размещения стола
-        (chosen_pixel, yaw_angle) = placement_info[np.random.randint(len(placement_info))]
+        # Сначала выбираем пиксель, ближе к центру комнаты
+        placement_candidates = [
+            (chosen_pixel, yaw_angle) for chosen_pixel, yaw_angle in placement_info
+            if abs(chosen_pixel[0] - center_x) < room_width // 4 and abs(chosen_pixel[1] - center_y) < room_height // 4
+        ]
+
+        # Если нашли подходящие кандидаты, выбираем один из них
+        if placement_candidates:
+            (chosen_pixel, yaw_angle) = placement_candidates[np.random.randint(len(placement_candidates))]
+        else:
+            # Если нет кандидатов в центре, выбираем случайный пиксель
+            (chosen_pixel, yaw_angle) = placement_info[np.random.randint(len(placement_info))]
 
         # Получаем коэффициенты пикселей на метр
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
