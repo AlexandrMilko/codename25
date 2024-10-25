@@ -49,6 +49,36 @@ class Kitchen(Room):
             processor = PostProcessor()
             processor.execute()
 
+    def calculate_kitchen_parameters(self, all_sides, camera_angles_rad: tuple):
+        if len(all_sides) > 0:
+            side = all_sides.pop(0)
+        else:
+            return None
+
+        from stage.furniture.KitchenSet import KitchenSet
+
+        # Получаем коэффициенты пикселей на метр
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        pixels_dict = self.floor_layout.get_pixels_dict()
+
+        # Рассчитываем разницу в пикселях и смещение для модели кухни
+        middle_point = side.get_middle_point()
+        pixel_diff = -1 * (middle_point[0] - pixels_dict['camera'][0]), middle_point[1] - pixels_dict['camera'][1]
+        kitchen_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
+
+        pitch_rad, roll_rad = camera_angles_rad
+        kitchen_set = KitchenSet()
+
+        # Рассчитываем угол стены (yaw angle)
+        yaw_angle = side.calculate_wall_angle()
+
+        # Получаем параметры рендеринга из базового метода calculate_rendering_parameters
+        render_parameters = kitchen_set.calculate_rendering_parameters(
+            self, kitchen_offset_x_y, yaw_angle, (roll_rad, pitch_rad)
+        )
+
+        return render_parameters
+
     def calculate_table_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
 
