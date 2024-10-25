@@ -81,8 +81,21 @@ class Kitchen(Room):
     def calculate_table_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
 
-        # Получаем размеры комнаты и вычисляем центр
-        room_width, room_height = self.floor_layout.get_room_dimensions()  # Предполагаем, что у вас есть метод для получения размеров комнаты
+        # Получаем площадь комнаты
+        area = self.floor_layout.estimate_area_from_floor_layout()
+        print(area, "AREA in m2")
+
+        # Используем метод для нахождения сторон и вычисляем размеры комнаты
+        all_sides = self.floor_layout.find_all_sides_sorted_by_length()
+        if not all_sides:
+            return None  # Если нет сторон, возвращаем None
+
+        # Предполагаем, что комнаты имеют прямоугольную форму
+        room_width = max(
+            side.calculate_wall_length(self.floor_layout.ratio_x, self.floor_layout.ratio_y) for side in all_sides)
+        room_height = area / room_width if room_width > 0 else 0
+
+        # Вычисляем центр комнаты
         center_x = room_width // 2
         center_y = room_height // 2
 
