@@ -5,7 +5,7 @@ import cv2
 
 
 class KitchenTableWithChairs(FloorFurniture):
-    def __init__(self, model_path=Path.KITCHEN_TABLE_WITH_CHAIRS_MODEL.value):
+    def __init__(self, model_path=Path.KITCHEN_TABLE_WITH_CHAIRS_MODEL2.value):
         super().__init__(model_path)
 
     @staticmethod
