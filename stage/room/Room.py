@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 import torch
 
+import tools
 from constants import Path, Config
 from preprocessing.preProcessSegment import ImageSegmentor
 from run import SD_DOMAIN
@@ -26,48 +27,6 @@ class Room:
     def __init__(self, empty_room_image_path):  # Original image path is an empty space image
         self.empty_room_image_path = empty_room_image_path
 
-    def prepare_empty_room_data(self):
-        from DepthAnythingV2.depth_estimation import (image_pixels_to_point_cloud, floor_ply_path, depth_ply_path,
-                                                      create_floor_point_cloud, rotate_ply_file_with_colors)
-        Image.open(self.empty_room_image_path).save(Path.RENDER_IMAGE.value)
-
-        image_pixels_to_point_cloud(self.empty_room_image_path)
-
-        # Segment our empty space room. It is used in Room.save_windows_mask
-        width, height = get_image_size(self.empty_room_image_path)
-        PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
-
-        if Config.UI.value == "comfyui":
-            segment = ImageSegmentor(self.empty_room_image_path, Path.SEG_INPUT_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
-            segment.execute()
-        else:
-            run_preprocessor("seg_ofade20k", self.empty_room_image_path,
-                             Path.SEG_INPUT_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
-
-        resize_and_save_image(Path.SEG_INPUT_IMAGE.value, Path.SEG_INPUT_IMAGE.value, height)
-
-        Floor.save_mask(Path.SEG_INPUT_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
-        create_floor_point_cloud(self.empty_room_image_path)
-        roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
-        rotate_ply_file_with_colors(floor_ply_path, floor_ply_path, -pitch_rad, -roll_rad)
-        rotate_ply_file_with_colors(depth_ply_path, depth_ply_path, -pitch_rad, -roll_rad)
-        camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
-
-        scene_render_parameters = dict()
-        from math import radians
-        scene_render_parameters["camera_location"] = [0, 0, 0]
-        # We set opposite
-        # We add 90 to the pitch, because originally a camera is rotated pointing downwards in Blender
-        scene_render_parameters["camera_angles"] = float(radians(90) - pitch_rad), float(
-            +roll_rad), 0  # We convert to float to avoid JSON conversion errors from numpy
-        scene_render_parameters['resolution_x'] = width
-        scene_render_parameters['resolution_y'] = height
-        scene_render_parameters['room_point_cloud_path'] = Path.PLY_SPACE.value
-        scene_render_parameters['objects'] = dict()
-
-        self.create_floor_layout(pitch_rad, roll_rad)
-
-        return camera_height, pitch_rad, roll_rad, height, scene_render_parameters
 
     @staticmethod
     def find_roll_pitch() -> tuple[float, float]:
@@ -84,7 +43,7 @@ class Room:
         target_point = image_pixel_to_3d(*pixel, self.empty_room_image_path, self.focallength_px)
         # We rotate it back to compensate our camera rotation
         offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
-        return offset_relative_to_camera
+        return offset_relative_to_camera.tolist() # We convert it to list to avoid serializing errors for blender_script
 
     def create_floor_layout(self, pitch_rad: float, roll_rad: float):
         horizontal_borders = self.find_horizontal_borders()
@@ -102,7 +61,6 @@ class Room:
 
         print(points_in_3d)
         self.floor_layout = FloorLayout(Path.FLOOR_PLY.value, points_in_3d)
-
 
     def estimate_camera_height(self, camera_angles: tuple[float, float]):
         pitch, roll = camera_angles
@@ -150,6 +108,14 @@ class Room:
         blind_color_mask = cv2.inRange(image, blind_lower_color, blind_upper_color)
         combined_mask = cv2.bitwise_or(window_color_mask, blind_color_mask)
 
+        # Debugging: Check if any window pixels were detected
+        window_pixel_count = np.count_nonzero(window_color_mask)
+        print(f"Window pixels detected: {window_pixel_count}")
+
+        if window_pixel_count == 0:
+            print("No window pixels detected. Check the color values and tolerance.")
+
+        # Process the mask further
         _, thresh = cv2.threshold(combined_mask, 127, 255, cv2.THRESH_BINARY)
         width, height = get_image_size(segmented_image_path)
         kernel = np.ones((height // 25, height // 25), np.uint8)
@@ -159,6 +125,9 @@ class Room:
         bw_mask = np.zeros_like(color_mask)
         bw_mask[color_mask != 0] = 255
         cv2.imwrite(output_windows_mask_path, bw_mask)
+
+        # Debugging: Print confirmation of mask creation
+        print(f"Window mask saved to {output_windows_mask_path}")
 
     @staticmethod
     def move_to_target_color(pixel, img, direction):
@@ -228,27 +197,29 @@ class Room:
         return render_parameters
 
     def prepare_empty_room_data(self):
+        # Original code in the method remains unchanged
         resize_and_save_image(self.empty_room_image_path, self.empty_room_image_path, Config.IMAGE_HEIGHT_LIMIT.value)
-        # TODO check if we need to save it at all since we do not even use overlay anymore
         Image.open(self.empty_room_image_path).save(Path.RENDER_IMAGE.value)
-        from ml_depth_pro.pro_depth_estimation import (image_pixels_to_space_and_floor_point_clouds, rotate_ply_file_with_colors)
+        from ml_depth_pro.pro_depth_estimation import (image_pixels_to_space_and_floor_point_clouds,
+                                                       rotate_ply_file_with_colors)
 
-        # Segment our empty space room. It is used in Room.save_windows_mask
         width, height = get_image_size(self.empty_room_image_path)
         PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
 
         if Config.UI.value == "comfyui":
-            segment = ImageSegmentor(self.empty_room_image_path, Path.SEG_INPUT_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+            segment = ImageSegmentor(self.empty_room_image_path, Path.SEG_INPUT_IMAGE.value,
+                                     PREPROCESSOR_RESOLUTION_LIMIT)
             segment.execute()
         else:
             run_preprocessor("seg_ofade20k", self.empty_room_image_path,
                              Path.SEG_INPUT_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
 
         resize_and_save_image(Path.SEG_INPUT_IMAGE.value, Path.SEG_INPUT_IMAGE.value, height)
-
         Floor.save_mask(Path.SEG_INPUT_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
-        self.focallength_px = image_pixels_to_space_and_floor_point_clouds(self.empty_room_image_path)
 
+        Room.save_windows_mask(Path.SEG_INPUT_IMAGE.value, Path.WINDOWS_MASK_IMAGE.value)
+
+        self.focallength_px = image_pixels_to_space_and_floor_point_clouds(self.empty_room_image_path)
         roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
 
         rotate_ply_file_with_colors(Path.FLOOR_PLY.value, Path.FLOOR_PLY.value, -pitch_rad, -roll_rad)
@@ -259,19 +230,20 @@ class Room:
         scene_render_parameters = dict()
         from math import radians
         scene_render_parameters["camera_location"] = [0, 0, 0]
-        # We set opposite
-        # We add 90 to the pitch, because originally a camera is rotated pointing downwards in Blender
-        scene_render_parameters["camera_angles"] = float(radians(90) - pitch_rad), float(
-            +roll_rad), 0  # We convert to float to avoid JSON conversion errors from numpy
+        scene_render_parameters["camera_angles"] = float(radians(90) - pitch_rad), float(+roll_rad), 0
         scene_render_parameters['resolution_x'] = width
         scene_render_parameters['resolution_y'] = height
         scene_render_parameters['room_point_cloud_path'] = Path.DEPTH_PLY.value
         scene_render_parameters['objects'] = dict()
+        scene_render_parameters['focallength_px'] = self.focallength_px
+        scene_render_parameters['lights'] = self.calculate_light_offsets_and_angles(
+            (pitch_rad, roll_rad)
+        )
 
         self.create_floor_layout(pitch_rad, roll_rad)
 
         return camera_height, pitch_rad, roll_rad, height, scene_render_parameters
-      
+
     def calculate_curtains_parameters(self, camera_height, camera_angles_rad: tuple):
         from stage.furniture.Curtain import Curtain
         pitch_rad, roll_rad = camera_angles_rad
@@ -326,3 +298,109 @@ class Room:
             plant.calculate_rendering_parameters(self, pixels_for_placing[random_index], plant_yaw_angle,
                                                  (roll_rad, pitch_rad)))
         return render_parameters
+
+    @staticmethod
+    def find_window_boundaries(mask_image_path, window_centroid):
+        import cv2
+        import numpy as np
+
+        mask = cv2.imread(mask_image_path, cv2.IMREAD_GRAYSCALE)
+
+        if mask[window_centroid[1], window_centroid[0]] == 0:
+            raise IndexError("Centroid is not inside a window")
+
+        row_pixels = np.where(mask[window_centroid[1], :] > 0)[0]
+        col_pixels = np.where(mask[:, window_centroid[0]] > 0)[0]
+
+        left_edge = np.min(row_pixels)
+        right_edge = np.max(row_pixels)
+        top_edge = np.min(col_pixels)
+        bottom_edge = np.max(col_pixels)
+
+        return left_edge, right_edge, top_edge, bottom_edge
+
+    def calculate_light_offsets_and_angles(self, camera_angles_rad: tuple):
+        """
+        Calculates and returns light parameters based on instance attributes.
+        """
+        pitch_rad, roll_rad = camera_angles_rad[:2]
+
+        # No need to create the window mask again; just use the existing mask
+        window_centroids = Room.find_window_centroid()  # Use the existing window mask for centroid calculation
+        print(f"Window centroids: {window_centroids}")
+
+        light_parameters = []
+
+        for window_centroid in window_centroids:
+            try:
+                # Directly use the existing mask path for boundary detection
+                left_edge, right_edge, top_edge, bottom_edge = Room.find_window_boundaries(
+                    Path.WINDOWS_MASK_IMAGE.value, window_centroid
+                )
+
+                window_width = right_edge - left_edge
+                window_height = bottom_edge - top_edge
+
+                window_width = 2
+                window_height = 2
+
+                left_top_point = (left_edge, top_edge)
+                right_top_point = (right_edge, top_edge)
+
+                # Convert pixels to 3D space with infer_3d
+                left_light_offset, right_light_offset = [
+                    self.infer_3d(pixel, pitch_rad, roll_rad) for pixel in (left_top_point, right_top_point)
+                ]
+
+                # Calculate the yaw angle for light orientation
+                yaw_angle = tools.calculate_angle_from_top_view(left_light_offset, right_light_offset)
+
+                light_parameters.append({
+                    'left_light_offset': left_light_offset,
+                    'right_light_offset': right_light_offset,
+                    'yaw_angle': int(yaw_angle),
+                    'size_x': int(window_width),  # Width in pixels, will need conversion if used directly
+                    'size_y': int(window_height)  # Height in pixels, will need conversion if used directly
+                })
+
+            except IndexError as e:
+                print(f"{e}, skipping this window.")
+        return light_parameters
+
+    @staticmethod
+    def find_window_centroid() -> list[tuple]:
+        """
+        Finds centroids of window contours in the preprocessed window mask.
+
+        :return: List of (x, y) coordinates for each window centroid.
+        :raises Exception: If no contours are found.
+        """
+        import cv2
+        mask_image_path = Path.WINDOWS_MASK_IMAGE.value
+
+        image = cv2.imread(mask_image_path, cv2.IMREAD_GRAYSCALE)
+        contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        centroids = []
+        for contour in contours:
+            M = cv2.moments(contour)
+            if M["m00"] != 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+                centroids.append((cx, cy))
+            else:
+                print("A contour with no area was skipped.")
+
+        if not centroids:
+            raise Exception("No valid window contours found in the image.")
+
+        return centroids
+
+
+
+
+
+
+
+
+
