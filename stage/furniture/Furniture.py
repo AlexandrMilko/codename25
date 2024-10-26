@@ -29,10 +29,10 @@ class Furniture:
             'camera_angles': render_parameters['camera_angles'],
             'resolution_x': render_parameters['resolution_x'],
             'resolution_y': render_parameters['resolution_y'],
-            'objects': render_parameters['objects']
+            'objects': render_parameters['objects'],
+            'lights': render_parameters['lights']
         })
 
-        # We run it with subprocess to reset all the context for Blender after each scene render
         if os.name == 'nt':
             print("This is a Windows system. Running python")
             subprocess.run(['python', Path.BLENDER_SCRIPT.value, data], check=True, env=os.environ)

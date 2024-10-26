@@ -1,4 +1,5 @@
 import json
+import math
 import sys
 import bpy
 
@@ -104,6 +105,7 @@ def import_room(path, res_x, res_y):
     create_material()
     sphere_radius = calculate_sphere_radius(res_x, res_y)
     update_geo_node_tree(node_tree, sphere_radius)
+    bpy.context.object.visible_shadow = False
 
 
 def setup_camera(angles, location):
@@ -131,9 +133,58 @@ def setup_light():
 
     # Set light location, intensity, and color
     light_obj.location = (2, 2, 5)
-    light_data.energy = 4000.0
+    light_data.energy = 2000.0
     light_data.shadow_soft_size = 11
     light_data.color = (1, 1, 1)
+
+
+def add_area_light(light_params):
+    """
+    Adds two AREA lights based on calculated window parameters.
+    """
+    # Define initial light location
+    left_light_offset = light_params.get('left_light_offset', (0, 0, 0))
+    right_light_offset = light_params.get('right_light_offset', (0, 0, 0))
+    top_light_offset = light_params.get('top_light_offset', (0, 0, 0))
+    bottom_light_offset = light_params.get('bottom_light_offset', (0, 0, 0))
+
+    center_light_offset = (
+        (left_light_offset[0] + right_light_offset[0]) / 2,
+        (left_light_offset[1] + right_light_offset[1]) / 2 + 0.15,  # Move 0.15m along Y-axis
+        (top_light_offset[2] + bottom_light_offset[2]) / 2,
+    )
+
+    # First light
+    light_data_1 = bpy.data.lights.new(name='WindowAreaLight1', type='AREA')
+    light_obj_1 = bpy.data.objects.new(name='WindowAreaLight1', object_data=light_data_1)
+    light_obj_1.location = center_light_offset
+    yaw_angle = light_params.get('yaw_angle', 0)
+    light_obj_1.rotation_euler = (math.radians(-90), 0, math.radians(yaw_angle))
+    light_data_1.shape = 'RECTANGLE'
+    light_data_1.size = light_params.get('size_x', 10.0)  # Width of the light
+    light_data_1.size_y = light_params.get('size_y', 10.0)  # Height of the light
+    light_data_1.energy = light_params.get('energy', 80.0)
+    light_data_1.color = light_params.get('color', (1.0, 1.0, 1.0))
+    light_data_1.shadow_soft_size = light_params.get('shadow_soft_size', 1.0)
+    bpy.context.collection.objects.link(light_obj_1)
+
+    # Second light with 90 degrees added rotation around X-axis
+    light_data_2 = bpy.data.lights.new(name='WindowAreaLight2', type='AREA')
+    light_obj_2 = bpy.data.objects.new(name='WindowAreaLight2', object_data=light_data_2)
+    light_obj_2.location = center_light_offset
+    light_obj_2.rotation_euler = (math.radians(90), 0, math.radians(yaw_angle))
+    light_data_2.shape = 'RECTANGLE'
+    light_data_2.size = light_params.get('size_x', 10.0)
+    light_data_2.size_y = light_params.get('size_y', 10.0)
+    light_data_2.energy = light_params.get('energy', 40.0)
+    light_data_2.color = light_params.get('color', (1.0, 1.0, 1.0))
+    light_data_2.shadow_soft_size = light_params.get('shadow_soft_size', 1.0)
+    bpy.context.collection.objects.link(light_obj_2)
+
+
+
+
+
 
 
 def add_furniture(path, location, angles, scale):
@@ -199,7 +250,6 @@ def save_blend_file(path):
 
 
 if __name__ == "__main__":
-    # Parse command-line arguments
     args = sys.argv
     data = json.loads(args[1])
 
@@ -211,16 +261,21 @@ if __name__ == "__main__":
     room_point_cloud_path = data['room_point_cloud_path']
     blend_file_path = data["blend_file_path"]
     objects = data["objects"]
+    lights = data.get("lights", [])
 
     clean_scene()
 
-    # Get a current scene, add camera/light, import models, and render
     scene = bpy.context.scene
     import_room(room_point_cloud_path, resolution_x, resolution_y)
-
     setup_camera(camera_angles, camera_location)
-    setup_light()
 
+    # Add lights from provided data
+    for light_params in lights:
+        add_area_light(light_params)
+    if len(lights) == 0:
+        setup_light()
+
+    # Add objects/furniture from provided data
     for obj in objects:
         add_furniture(obj["obj_path"], obj["obj_offsets"], obj["obj_angles"], obj["obj_scale"])
 
