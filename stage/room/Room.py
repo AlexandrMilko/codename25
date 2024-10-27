@@ -300,107 +300,89 @@ class Room:
         return render_parameters
 
     @staticmethod
-    def find_window_boundaries(mask_image_path, window_centroid):
-        import cv2
-        import numpy as np
+    def find_window_boundaries(mask_image_path):
+        img = cv2.imread(mask_image_path, cv2.IMREAD_GRAYSCALE)
+        blurred = cv2.GaussianBlur(img, (5, 5), 0)
+        _, thresh = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
+        kernel = np.ones((3, 3), np.uint8)
+        erosion = cv2.erode(thresh, kernel, iterations=1)
+        img = cv2.dilate(erosion, kernel, iterations=1)
+        contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        mask = cv2.imread(mask_image_path, cv2.IMREAD_GRAYSCALE)
+        final_points = []
+        # img_vis = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        for contour in contours:
+            contour_points = contour[:, 0, :]
 
-        if mask[window_centroid[1], window_centroid[0]] == 0:
-            raise IndexError("Centroid is not inside a window")
+            # Finding the extreme points for each contour
+            top_left = contour_points[np.argmin(contour_points[:, 0] + contour_points[:, 1])]
+            top_right = contour_points[np.argmax(contour_points[:, 0] - contour_points[:, 1])]
+            bottom_point = contour_points[np.argmax(contour_points[:, 1])]  # Lowest point in y-axis
 
-        row_pixels = np.where(mask[window_centroid[1], :] > 0)[0]
-        col_pixels = np.where(mask[:, window_centroid[0]] > 0)[0]
+            M = cv2.moments(contour)
+            cx = int(M["m10"] / M["m00"])
+            cy = int(M["m01"] / M["m00"])
+            centroid = (cx, cy)
 
-        left_edge = np.min(row_pixels)
-        right_edge = np.max(row_pixels)
-        top_edge = np.min(col_pixels)
-        bottom_edge = np.max(col_pixels)
+            print("Corner coordinates:")
+            print("Top-left:", top_left)
+            print("Top-right:", top_right)
+            print("Bottom:", bottom_point)
 
-        return left_edge, right_edge, top_edge, bottom_edge
+            # Append the triplet of points to the final list
+            final_points.append((top_left, top_right, bottom_point, centroid))
+        # Return the list of points for all windows
+        return final_points
 
     def calculate_light_offsets_and_angles(self, camera_angles_rad: tuple):
         """
         Calculates and returns light parameters based on instance attributes.
         """
-        pitch_rad, roll_rad = camera_angles_rad[:2]
+        pitch_rad, roll_rad = camera_angles_rad
 
-        # No need to create the window mask again; just use the existing mask
-        window_centroids = Room.find_window_centroid()  # Use the existing window mask for centroid calculation
-        print(f"Window centroids: {window_centroids}")
+        # Retrieve window boundaries instead of centroids
+        window_boundaries = Room.find_window_boundaries(Path.WINDOWS_MASK_IMAGE.value)
 
         light_parameters = []
 
-        for window_centroid in window_centroids:
+        for boundary_points in window_boundaries:
             try:
-                # Directly use the existing mask path for boundary detection
-                left_edge, right_edge, top_edge, bottom_edge = Room.find_window_boundaries(
-                    Path.WINDOWS_MASK_IMAGE.value, window_centroid
-                )
+                # Unpack the boundary points returned by find_window_boundaries
+                top_left, top_right, bottom_point, centroid = boundary_points
 
-                window_width = right_edge - left_edge
-                window_height = bottom_edge - top_edge
+                # Assign left and right top points for light placement calculations
+                left_top_point = top_left
+                right_top_point = top_right
 
-                window_width = 2
-                window_height = 2
-
-                left_top_point = (left_edge, top_edge)
-                right_top_point = (right_edge, top_edge)
-
-                # Convert pixels to 3D space with infer_3d
-                left_light_offset, right_light_offset = [
-                    self.infer_3d(pixel, pitch_rad, roll_rad) for pixel in (left_top_point, right_top_point)
+                # Convert boundary points to 3D space with infer_3d
+                left_light_offset, right_light_offset, bottom_offset, window_centroid_offset = [
+                    self.infer_3d(pixel, pitch_rad, roll_rad) for pixel in (left_top_point, right_top_point, bottom_point, centroid)
                 ]
 
-                # Calculate the yaw angle for light orientation
+                # Move light a bit behind the window
+                window_centroid_offset[1] += 0.15
+
+                # Calculate the yaw angle, window_width, window_height for light orientation and size
                 yaw_angle = tools.calculate_angle_from_top_view(left_light_offset, right_light_offset)
+                window_width = np.linalg.norm(np.array(right_light_offset) - np.array(left_light_offset))
+                window_height = np.linalg.norm(np.array(bottom_offset) - np.array(left_light_offset))
+                print("!!!!!")
+                print("!!!!!")
+                print("!!!!!")
+                print(window_width)
+                print(window_height)
+                print(right_light_offset, left_light_offset, bottom_offset, window_centroid_offset)
+                print("!!!!!")
+                print("!!!!!")
+                print("!!!!!")
 
+                # Append light parameters for the current window
                 light_parameters.append({
-                    'left_light_offset': left_light_offset,
-                    'right_light_offset': right_light_offset,
+                    'offset': window_centroid_offset,
                     'yaw_angle': int(yaw_angle),
-                    'size_x': int(window_width),  # Width in pixels, will need conversion if used directly
-                    'size_y': int(window_height)  # Height in pixels, will need conversion if used directly
+                    'size': window_width,
+                    'size_y': window_height
                 })
-
             except IndexError as e:
                 print(f"{e}, skipping this window.")
         return light_parameters
-
-    @staticmethod
-    def find_window_centroid() -> list[tuple]:
-        """
-        Finds centroids of window contours in the preprocessed window mask.
-
-        :return: List of (x, y) coordinates for each window centroid.
-        :raises Exception: If no contours are found.
-        """
-        import cv2
-        mask_image_path = Path.WINDOWS_MASK_IMAGE.value
-
-        image = cv2.imread(mask_image_path, cv2.IMREAD_GRAYSCALE)
-        contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        centroids = []
-        for contour in contours:
-            M = cv2.moments(contour)
-            if M["m00"] != 0:
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"])
-                centroids.append((cx, cy))
-            else:
-                print("A contour with no area was skipped.")
-
-        if not centroids:
-            raise Exception("No valid window contours found in the image.")
-
-        return centroids
-
-
-
-
-
-
-
-
-
