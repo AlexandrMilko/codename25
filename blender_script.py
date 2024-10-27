@@ -125,67 +125,47 @@ def setup_camera(angles, location):
 
 def setup_light():
     # Create light data and object
-    light_data = bpy.data.lights.new(name='PointLight', type='POINT')
-    light_obj = bpy.data.objects.new(name='PointLight', object_data=light_data)
+    light_data = bpy.data.lights.new(name='CameraAreaLight', type='AREA')
+    light_obj = bpy.data.objects.new(name='CameraAreaLight', object_data=light_data)
 
     # Link light object to the scene
     bpy.context.collection.objects.link(light_obj)
 
     # Set light location, intensity, and color
-    light_obj.location = (2, 2, 5)
-    light_data.energy = 2000.0
-    light_data.shadow_soft_size = 11
+    light_obj.location = (0, 0, 0)
+    light_obj.rotation_euler = (math.radians(90), 0, 0)
+    light_data.energy = 75
+    light_data.size = 4
     light_data.color = (1, 1, 1)
+
 
 
 def add_area_light(light_params):
     """
     Adds two AREA lights based on calculated window parameters.
     """
-    # Define initial light location
-    left_light_offset = light_params.get('left_light_offset', (0, 0, 0))
-    right_light_offset = light_params.get('right_light_offset', (0, 0, 0))
-    top_light_offset = light_params.get('top_light_offset', (0, 0, 0))
-    bottom_light_offset = light_params.get('bottom_light_offset', (0, 0, 0))
-
-    center_light_offset = (
-        (left_light_offset[0] + right_light_offset[0]) / 2,
-        (left_light_offset[1] + right_light_offset[1]) / 2 + 0.15,  # Move 0.15m along Y-axis
-        (top_light_offset[2] + bottom_light_offset[2]) / 2,
-    )
-
     # First light
     light_data_1 = bpy.data.lights.new(name='WindowAreaLight1', type='AREA')
     light_obj_1 = bpy.data.objects.new(name='WindowAreaLight1', object_data=light_data_1)
-    light_obj_1.location = center_light_offset
+    light_obj_1.location = light_params.get('offset')
     yaw_angle = light_params.get('yaw_angle', 0)
     light_obj_1.rotation_euler = (math.radians(-90), 0, math.radians(yaw_angle))
-    light_data_1.shape = 'RECTANGLE'
-    light_data_1.size = light_params.get('size_x', 10.0)  # Width of the light
-    light_data_1.size_y = light_params.get('size_y', 10.0)  # Height of the light
-    light_data_1.energy = light_params.get('energy', 80.0)
-    light_data_1.color = light_params.get('color', (1.0, 1.0, 1.0))
-    light_data_1.shadow_soft_size = light_params.get('shadow_soft_size', 1.0)
+    light_obj_1.data.shape = 'RECTANGLE'
+    light_obj_1.data.size = light_params.get('size', 1.0)  # Width of the light
+    light_obj_1.data.size_y = light_params.get('size_y', 1.0)  # Height of the light
+    light_obj_1.data.energy = light_params.get('energy', 80.0)
+    light_obj_1.data.color = light_params.get('color', (1.0, 1.0, 1.0))
+    light_obj_1.data.shadow_soft_size = light_params.get('shadow_soft_size', 1.0)
     bpy.context.collection.objects.link(light_obj_1)
 
-    # Second light with 90 degrees added rotation around X-axis
-    light_data_2 = bpy.data.lights.new(name='WindowAreaLight2', type='AREA')
-    light_obj_2 = bpy.data.objects.new(name='WindowAreaLight2', object_data=light_data_2)
-    light_obj_2.location = center_light_offset
-    light_obj_2.rotation_euler = (math.radians(90), 0, math.radians(yaw_angle))
-    light_data_2.shape = 'RECTANGLE'
-    light_data_2.size = light_params.get('size_x', 10.0)
-    light_data_2.size_y = light_params.get('size_y', 10.0)
-    light_data_2.energy = light_params.get('energy', 40.0)
-    light_data_2.color = light_params.get('color', (1.0, 1.0, 1.0))
-    light_data_2.shadow_soft_size = light_params.get('shadow_soft_size', 1.0)
-    bpy.context.collection.objects.link(light_obj_2)
-
-
-
-
-
-
+    print("!!!!!!!!!")
+    print("!!!!!!!!!")
+    print("!!!!!!!!!")
+    print(light_obj_1.data.size)
+    print(light_obj_1.data.size_y)
+    print("!!!!!!!!!")
+    print("!!!!!!!!!")
+    print("!!!!!!!!!")
 
 def add_furniture(path, location, angles, scale):
     # Import the 3D model
@@ -272,8 +252,7 @@ if __name__ == "__main__":
     # Add lights from provided data
     for light_params in lights:
         add_area_light(light_params)
-    if len(lights) == 0:
-        setup_light()
+    setup_light()
 
     # Add objects/furniture from provided data
     for obj in objects:

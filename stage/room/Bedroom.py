@@ -33,22 +33,6 @@ class Bedroom(Room):
         ]
         # After our parameters calculation som of them will be equal to None, we have to remove them
         scene_render_parameters['objects'] = [item for item in scene_render_parameters['objects'] if item is not None]
-        def print_nested_types(d, parent_key=""):
-            if isinstance(d, dict):
-                for key, value in d.items():
-                    current_key = f"{parent_key}.{key}" if parent_key else key
-                    if isinstance(value, dict) or isinstance(value, list):
-                        print_nested_types(value, current_key)
-                    else:
-                        print(f"Key: {current_key}, Value: {value}, Type: {type(value)}")
-            elif isinstance(d, list):
-                for index, item in enumerate(d):
-                    current_key = f"{parent_key}[{index}]"
-                    if isinstance(item, dict) or isinstance(item, list):
-                        print_nested_types(item, current_key)
-                    else:
-                        print(f"Key: {current_key}, Value: {item}, Type: {type(item)}")
-        print_nested_types(scene_render_parameters)
 
         import json
         print(json.dumps(scene_render_parameters, indent=4))
