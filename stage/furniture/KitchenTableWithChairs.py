@@ -5,20 +5,12 @@ import cv2
 
 
 class KitchenTableWithChairs(FloorFurniture):
-    def __init__(self, model_path=Path.KITCHEN_TABLE_WITH_CHAIRS_MODEL.value):
+    def __init__(self, model_path=Path.KITCHEN_TABLE_WITH_CHAIRS_MODEL2.value):
         super().__init__(model_path)
 
     @staticmethod
     def find_placement_pixel(floor_layout_path: str) -> list[tuple[tuple[int, int], float]]:
         image = cv2.imread(floor_layout_path, cv2.IMREAD_GRAYSCALE)
-
-        # Получаем контуры кухонной мебели
-        contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        # Ищем самые большие контуры (кухонная мебель)
-        kitchen_contours = [max(contours, key=cv2.contourArea)]
-        kitchen_mask = np.zeros(image.shape, dtype=np.uint8)
-        cv2.drawContours(kitchen_mask, kitchen_contours, -1, (255), thickness=cv2.FILLED)
 
         origin = (image.shape[1] // 2, image.shape[0] // 2)
         angle = KitchenTableWithChairs.find_angle(image)
@@ -28,14 +20,8 @@ class KitchenTableWithChairs(FloorFurniture):
         squares = KitchenTableWithChairs.find_squares(rotated_coords, square_size, image)
         centers = KitchenTableWithChairs.find_square_center(squares)
 
-        # Фильтруем центры, чтобы они не находились в области кухонной мебели
-        valid_centers = []
-        for center in centers:
-            x, y = center
-            if kitchen_mask[y, x] == 0:  # Если центр не попадает в кухонную мебель
-                valid_centers.append((center, angle))
-
-        return valid_centers
+        # Теперь возвращаем список кортежей с центрами и углом
+        return [(center, angle) for center in centers]
 
     @staticmethod
     def find_angle(image):
