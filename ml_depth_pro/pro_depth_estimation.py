@@ -94,6 +94,18 @@ def image_pixels_to_space_and_floor_point_clouds(image_path,
     save_space_as_point_cloud(depth_npy_path, depth_ply_path, focallength_px, color_image)
     save_floor_as_point_cloud(floor_npy_path, floor_ply_path, focallength_px, color_image, white_pixel_indices)
 
+    # **Free up memory here**
+    # Delete large variables
+    del model, image_tensor, prediction, depth, inverse_depth, color_image, mask, mask_array, white_pixel_indices, filtered_depth
+
+    # Empty CUDA memory cache (only if using CUDA)
+    if DEVICE == 'cuda':
+        torch.cuda.empty_cache()
+
+    # Force garbage collection
+    import gc
+    gc.collect()
+
     return focallength_px
 
 def save_space_as_point_cloud(npy_path, ply_output_path, focallength_px, color_image):
