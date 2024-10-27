@@ -38,7 +38,10 @@ def get_insane_image_1337():
     save_encoded_image(input_image, Path.INPUT_IMAGE.value)
     apply_style(Path.INPUT_IMAGE.value, room_choice, style_budget_choice)
 
-    output_image = get_encoded_image_from_path(Path.OUTPUT_IMAGE.value)
+    if Config.DO_POSTPROCESSING.value:
+        output_image = get_encoded_image_from_path(Path.OUTPUT_IMAGE.value)
+    else:
+        output_image = get_encoded_image_from_path(Path.RENDER_IMAGE.value)
     return jsonify({'output_image': output_image})
 
 

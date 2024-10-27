@@ -57,7 +57,7 @@ class Bedroom(Room):
             run_preprocessor("seg_ofade20k", Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value,
                              SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
         # WARNING!
-        # We use SEG_PREREQUISITE_IMAGE for calculating painting position.
+        # We use SEG_RENDER_IMAGE for calculating painting position.
         # Do not delete or use it after the painting parameters calculation process.
         resize_and_save_image(Path.SEG_RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, height)
         Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
