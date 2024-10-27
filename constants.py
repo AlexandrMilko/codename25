@@ -21,7 +21,6 @@ class Path(Enum):
     # visuals/image
     IMAGES_DIR = join(VISUALS_DIR, 'images')
     INPUT_IMAGE = join(IMAGES_DIR, 'user_image.png')
-    OUTPUT_IMAGE = join(IMAGES_DIR, 'applied.jpg')
 
     # visuals/image/preprocessed
     PREPROCESSED_DIR = join(IMAGES_DIR, 'preprocessed')
@@ -38,6 +37,8 @@ class Path(Enum):
     DESIGNED_IMAGE = join(PREPROCESSED_DIR, 'designed.png')
     DEPTH_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'depth_image.png')
 
+    OUTPUT_IMAGE = RENDER_IMAGE
+
     # visuals/3Ds
     MODELS_DIR = join(VISUALS_DIR, '3Ds')
     SCENE_FILE = join(MODELS_DIR, 'scene.blend')
@@ -49,7 +50,7 @@ class Path(Enum):
 
     # visuals/3Ds/living_room
     LIVING_ROOM_MODELS_DIR = join(MODELS_DIR, 'living_room')
-    SOFA_WITH_TABLE_MODEL = join(LIVING_ROOM_MODELS_DIR, 'sofa_with_table.usdc')
+    LIVING_ROOM_SET = join(LIVING_ROOM_MODELS_DIR, 'living_room_set.usdc')
 
     # visuals/3Ds/kitchen
     KITCHEN_MODELS_DIR = join(MODELS_DIR, 'kitchen')
