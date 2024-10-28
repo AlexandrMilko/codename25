@@ -123,7 +123,7 @@ def setup_camera(angles, location):
     bpy.context.scene.camera = cam_obj
 
 
-def setup_light():
+def setup_light(has_area_light):
     # Create light data and object
     light_data = bpy.data.lights.new(name='CameraAreaLight', type='AREA')
     light_obj = bpy.data.objects.new(name='CameraAreaLight', object_data=light_data)
@@ -134,7 +134,7 @@ def setup_light():
     # Set light location, intensity, and color
     light_obj.location = (0, 0, 0)
     light_obj.rotation_euler = (math.radians(90), 0, 0)
-    light_data.energy = 75
+    light_data.energy = 75 if has_area_light else 130
     light_data.size = 4
     light_data.color = (1, 1, 1)
 
@@ -214,8 +214,8 @@ def save_render(path, res_x, res_y):
     # Set render settings
     bpy.context.scene.render.engine = 'CYCLES'
     use_gpu()
-    scene.render.image_settings.file_format = 'JPG'
-    scene.render.image_settings.color_mode = 'RGBA'
+    scene.render.image_settings.file_format = 'JPEG'
+    scene.render.image_settings.color_mode = 'RGB'
     scene.render.filepath = path
     scene.render.resolution_x = res_x
     scene.render.resolution_y = res_y
@@ -252,7 +252,8 @@ if __name__ == "__main__":
     # Add lights from provided data
     for light_params in lights:
         add_area_light(light_params)
-    setup_light()
+    # Pass bool(lights) to setup_light to adjust energy based on area lights
+    setup_light(has_area_light=bool(lights))
 
     # Add objects/furniture from provided data
     for obj in objects:

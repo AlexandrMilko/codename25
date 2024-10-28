@@ -43,6 +43,7 @@ This application consists of several components that work together to create a s
 2. Create folder `codename25\images\preprocessed`
 3. Put [depth_pro.pt](https://drive.google.com/drive/u/0/folders/1Kg9j__fVpCMmvZ4Bt6jCDhKo3KH98ZW3) model into the folder `codename25/ml_depth_pro/src/depth_pro/cli/checkpoints/`
 4. Create folder `codename25\ml_depth_pro\output`
+5. If you have macbook: `pip install git+https://github.com/rwightman/pytorch-image-models.git`
 
 ### Stable Diffusion
 1. Install [WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
