@@ -214,7 +214,7 @@ def save_render(path, res_x, res_y):
     # Set render settings
     bpy.context.scene.render.engine = 'CYCLES'
     use_gpu()
-    scene.render.image_settings.file_format = 'PNG'
+    scene.render.image_settings.file_format = 'JPG'
     scene.render.image_settings.color_mode = 'RGBA'
     scene.render.filepath = path
     scene.render.resolution_x = res_x
