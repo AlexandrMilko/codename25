@@ -8,7 +8,7 @@ def join(directory, file):
 
 class Config(Enum):
     IMAGE_HEIGHT_LIMIT = 1080  # For limiting the time it takes to render and depth calculation for the image
-    UI = 'comfyui'  # 'webui' or 'comfyui'
+    UI = 'webui'  # 'webui' or 'comfyui'
     DO_POSTPROCESSING = False
     CONTROLNET_HEIGHT_LIMIT = 1024
 
@@ -26,7 +26,7 @@ class Path(Enum):
     PREPROCESSED_DIR = join(IMAGES_DIR, 'preprocessed')
     SEG_INPUT_IMAGE = join(PREPROCESSED_DIR, 'segmented_es.png')
     SEG_RENDER_IMAGE = join(PREPROCESSED_DIR, 'seg_prerequisite.png')
-    RENDER_IMAGE = join(PREPROCESSED_DIR, 'prerequisite.png')
+    RENDER_IMAGE = join(PREPROCESSED_DIR, 'prerequisite.jpg')
     FLOOR_POINTS_IMAGE = join(PREPROCESSED_DIR, 'floor_points.png')
     FLOOR_LAYOUT_IMAGE = join(PREPROCESSED_DIR, 'floor_layout.png')
     FLOOR_LAYOUT_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'floor_layout_debug.png')

@@ -6,8 +6,6 @@ numpy
 pillow
 requests
 flask
-flask_cors
-websocket
 websocket-client
 matplotlib
 torchvision
