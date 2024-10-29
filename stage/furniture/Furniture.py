@@ -28,6 +28,7 @@ class Furniture:
             'room_point_cloud_path': render_parameters['room_point_cloud_path'],
             'camera_location': render_parameters['camera_location'],
             'camera_angles': render_parameters['camera_angles'],
+            'focal_length_px': render_parameters['focal_length_px'],
             'resolution_x': render_parameters['resolution_x'],
             'resolution_y': render_parameters['resolution_y'],
             'objects': render_parameters['objects'],

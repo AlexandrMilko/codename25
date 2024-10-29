@@ -108,7 +108,13 @@ def import_room(path, res_x, res_y):
     bpy.context.object.visible_shadow = False
 
 
-def setup_camera(angles, location):
+def setup_camera(angles, location, focal_length_px, image_width_px):
+    # Get the default sensor width in mm (usually 36 mm for a full-frame camera in Blender)
+    sensor_width_mm = bpy.data.cameras.new(name='Camera').sensor_width
+
+    # Convert focal length from pixels to millimeters
+    focal_length_mm = (focal_length_px * sensor_width_mm) / image_width_px
+
     # Create a new camera object
     cam_data = bpy.data.cameras.new(name='Camera')
     cam_obj = bpy.data.objects.new('Camera', cam_data)
@@ -116,10 +122,10 @@ def setup_camera(angles, location):
     # Link the camera to the scene
     bpy.context.collection.objects.link(cam_obj)
 
-    # Set the camera's location and rotation
+    # Set the camera's location, rotation, and focal length in mm
     cam_obj.location = location
     cam_obj.rotation_euler = angles
-    cam_obj.data.lens = 23
+    cam_obj.data.lens = focal_length_mm
     bpy.context.scene.camera = cam_obj
 
 
@@ -234,6 +240,7 @@ if __name__ == "__main__":
     blend_file_path = data['blend_file_path']
     render_samples = data['render_samples']
     room_point_cloud_path = data['room_point_cloud_path']
+    focal_length_px = data['focal_length_px']
     camera_location = data['camera_location']
     camera_angles = data['camera_angles']
     resolution_x = data['resolution_x']
@@ -245,7 +252,7 @@ if __name__ == "__main__":
 
     scene = bpy.context.scene
     import_room(room_point_cloud_path, resolution_x, resolution_y)
-    setup_camera(camera_angles, camera_location)
+    setup_camera(camera_angles, camera_location, focal_length_px, resolution_x)
 
     # Add lights from provided data
     for light_params in lights:
