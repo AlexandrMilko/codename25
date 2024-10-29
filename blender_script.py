@@ -108,7 +108,13 @@ def import_room(path, res_x, res_y):
     bpy.context.object.visible_shadow = False
 
 
-def setup_camera(angles, location):
+def setup_camera(angles, location, focal_length_px, image_width_px):
+    # Get the default sensor width in mm (usually 36 mm for a full-frame camera in Blender)
+    sensor_width_mm = bpy.data.cameras.new(name='Camera').sensor_width
+
+    # Convert focal length from pixels to millimeters
+    focal_length_mm = (focal_length_px * sensor_width_mm) / image_width_px
+
     # Create a new camera object
     cam_data = bpy.data.cameras.new(name='Camera')
     cam_obj = bpy.data.objects.new('Camera', cam_data)
@@ -116,10 +122,10 @@ def setup_camera(angles, location):
     # Link the camera to the scene
     bpy.context.collection.objects.link(cam_obj)
 
-    # Set the camera's location and rotation
+    # Set the camera's location, rotation, and focal length in mm
     cam_obj.location = location
     cam_obj.rotation_euler = angles
-    cam_obj.data.lens = 23
+    cam_obj.data.lens = focal_length_mm
     bpy.context.scene.camera = cam_obj
 
 
@@ -137,7 +143,6 @@ def setup_light(has_area_light):
     light_data.energy = 75 if has_area_light else 130
     light_data.size = 4
     light_data.color = (1, 1, 1)
-
 
 
 def add_area_light(light_params):
@@ -158,14 +163,8 @@ def add_area_light(light_params):
     light_obj_1.data.shadow_soft_size = light_params.get('shadow_soft_size', 1.0)
     bpy.context.collection.objects.link(light_obj_1)
 
-    print("!!!!!!!!!")
-    print("!!!!!!!!!")
-    print("!!!!!!!!!")
-    print(light_obj_1.data.size)
-    print(light_obj_1.data.size_y)
-    print("!!!!!!!!!")
-    print("!!!!!!!!!")
-    print("!!!!!!!!!")
+    print(f"Light size (Width x Height) = {light_obj_1.data.size} x {light_obj_1.data.size_y}")
+
 
 def add_furniture(path, location, angles, scale):
     # Import the 3D model
@@ -210,10 +209,14 @@ def use_gpu():
         print(d["name"], d["use"])
 
 
-def save_render(path, res_x, res_y):
+def save_render(path, res_x, res_y, samples):
     # Set render settings
     bpy.context.scene.render.engine = 'CYCLES'
     use_gpu()
+
+    # Set the number of samples
+    bpy.context.scene.cycles.samples = samples
+
     scene.render.image_settings.file_format = 'JPEG'
     scene.render.image_settings.color_mode = 'RGB'
     scene.render.filepath = path
@@ -233,21 +236,23 @@ if __name__ == "__main__":
     args = sys.argv
     data = json.loads(args[1])
 
-    camera_location = data["camera_location"]
-    camera_angles = data["camera_angles"]
-    resolution_x = data["resolution_x"]
-    resolution_y = data["resolution_y"]
-    render_path = data["render_path"]
+    render_path = data['render_path']
+    blend_file_path = data['blend_file_path']
+    render_samples = data['render_samples']
     room_point_cloud_path = data['room_point_cloud_path']
-    blend_file_path = data["blend_file_path"]
-    objects = data["objects"]
-    lights = data.get("lights", [])
+    focal_length_px = data['focal_length_px']
+    camera_location = data['camera_location']
+    camera_angles = data['camera_angles']
+    resolution_x = data['resolution_x']
+    resolution_y = data['resolution_y']
+    objects = data['objects']
+    lights = data.get('lights', [])
 
     clean_scene()
 
     scene = bpy.context.scene
     import_room(room_point_cloud_path, resolution_x, resolution_y)
-    setup_camera(camera_angles, camera_location)
+    setup_camera(camera_angles, camera_location, focal_length_px, resolution_x)
 
     # Add lights from provided data
     for light_params in lights:
@@ -257,7 +262,7 @@ if __name__ == "__main__":
 
     # Add objects/furniture from provided data
     for obj in objects:
-        add_furniture(obj["obj_path"], obj["obj_offsets"], obj["obj_angles"], obj["obj_scale"])
+        add_furniture(obj['obj_path'], obj['obj_offsets'], obj['obj_angles'], obj['obj_scale'])
 
-    save_render(render_path, resolution_x, resolution_y)
+    save_render(render_path, resolution_x, resolution_y, render_samples)
     save_blend_file(blend_file_path)

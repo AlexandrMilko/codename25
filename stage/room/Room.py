@@ -1,8 +1,8 @@
 import math
+
 import cv2
 import numpy as np
 from PIL import Image
-import torch
 
 import tools
 from constants import Path, Config
@@ -12,9 +12,6 @@ from stage import Floor
 from tools import get_image_size, calculate_angle_from_top_view, resize_and_save_image, run_preprocessor
 from ..FloorLayout import FloorLayout
 
-
-
-from ml_depth_pro.src.depth_pro.depth_pro import create_model_and_transforms, DEFAULT_MONODEPTH_CONFIG_DICT
 
 class Room:
     # BGR, used in segmented images
@@ -26,7 +23,7 @@ class Room:
 
     def __init__(self, empty_room_image_path):  # Original image path is an empty space image
         self.empty_room_image_path = empty_room_image_path
-
+        self.focal_length_px = 0
 
     @staticmethod
     def find_roll_pitch() -> tuple[float, float]:
@@ -40,10 +37,10 @@ class Room:
         # Using depth-pro methods
         from ml_depth_pro.pro_depth_estimation import image_pixel_to_3d, rotate_3d_point
         print(self.empty_room_image_path, pixel, "IMAGE PATH and PIXEL")
-        target_point = image_pixel_to_3d(*pixel, self.empty_room_image_path, self.focallength_px)
+        target_point = image_pixel_to_3d(*pixel, self.empty_room_image_path, self.focal_length_px)
         # We rotate it back to compensate our camera rotation
         offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
-        return offset_relative_to_camera.tolist() # We convert it to list to avoid serializing errors for blender_script
+        return offset_relative_to_camera.tolist()  # We convert it to list to avoid serializing errors for blender_script
 
     def create_floor_layout(self, pitch_rad: float, roll_rad: float):
         horizontal_borders = self.find_horizontal_borders()
@@ -67,7 +64,7 @@ class Room:
         from ml_depth_pro.pro_depth_estimation import rotate_3d_point, image_pixel_to_3d
         import stage.Floor
         floor_pixel = stage.Floor.find_centroid(Path.SEG_INPUT_IMAGE.value)
-        point_3d = image_pixel_to_3d(*floor_pixel, self.empty_room_image_path, self.focallength_px)
+        point_3d = image_pixel_to_3d(*floor_pixel, self.empty_room_image_path, self.focal_length_px)
         print(f"Floor Centroid: {floor_pixel} -> {point_3d}")
         rotated_point = rotate_3d_point(point_3d, -pitch, -roll)
         z_coordinate = rotated_point[2]
@@ -219,13 +216,13 @@ class Room:
 
         Room.save_windows_mask(Path.SEG_INPUT_IMAGE.value, Path.WINDOWS_MASK_IMAGE.value)
 
-        self.focallength_px = image_pixels_to_space_and_floor_point_clouds(self.empty_room_image_path)
+        self.focal_length_px = image_pixels_to_space_and_floor_point_clouds(self.empty_room_image_path)
         roll_rad, pitch_rad = np.negative(self.find_roll_pitch())
 
         rotate_ply_file_with_colors(Path.FLOOR_PLY.value, Path.FLOOR_PLY.value, -pitch_rad, -roll_rad)
         rotate_ply_file_with_colors(Path.DEPTH_PLY.value, Path.DEPTH_PLY.value, -pitch_rad, -roll_rad)
 
-        camera_height = self.estimate_camera_height([pitch_rad, roll_rad])
+        camera_height = self.estimate_camera_height((pitch_rad, roll_rad))
 
         scene_render_parameters = dict()
         from math import radians
@@ -235,7 +232,7 @@ class Room:
         scene_render_parameters['resolution_y'] = height
         scene_render_parameters['room_point_cloud_path'] = Path.DEPTH_PLY.value
         scene_render_parameters['objects'] = dict()
-        scene_render_parameters['focallength_px'] = self.focallength_px
+        scene_render_parameters['focal_length_px'] = self.focal_length_px
         scene_render_parameters['lights'] = self.calculate_light_offsets_and_angles(
             (pitch_rad, roll_rad)
         )
@@ -280,7 +277,7 @@ class Room:
             except IndexError as e:
                 print(f"{e}, we skip adding curtains for a window.")
         return curtains_parameters
-      
+
     def calculate_plant_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.Plant import Plant
         from stage.Floor import Floor
@@ -356,7 +353,8 @@ class Room:
 
                 # Convert boundary points to 3D space with infer_3d
                 left_light_offset, right_light_offset, bottom_offset, window_centroid_offset = [
-                    self.infer_3d(pixel, pitch_rad, roll_rad) for pixel in (left_top_point, right_top_point, bottom_point, centroid)
+                    self.infer_3d(pixel, pitch_rad, roll_rad) for pixel in
+                    (left_top_point, right_top_point, bottom_point, centroid)
                 ]
 
                 # Move light a bit behind the window
