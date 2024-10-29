@@ -2,7 +2,7 @@ import json
 import subprocess
 from math import radians
 
-from constants import Path
+from constants import Path, Config
 import os
 
 
@@ -24,9 +24,11 @@ class Furniture:
         data = json.dumps({
             'render_path': Path.RENDER_IMAGE.value,
             'blend_file_path': Path.SCENE_FILE.value,
+            'render_samples': Config.RENDER_SAMPLES.value,
             'room_point_cloud_path': render_parameters['room_point_cloud_path'],
             'camera_location': render_parameters['camera_location'],
             'camera_angles': render_parameters['camera_angles'],
+            'focal_length_px': render_parameters['focal_length_px'],
             'resolution_x': render_parameters['resolution_x'],
             'resolution_y': render_parameters['resolution_y'],
             'objects': render_parameters['objects'],

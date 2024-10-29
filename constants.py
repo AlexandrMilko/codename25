@@ -8,7 +8,8 @@ def join(directory, file):
 
 class Config(Enum):
     IMAGE_HEIGHT_LIMIT = 1080  # For limiting the time it takes to render and depth calculation for the image
-    UI = 'webui'  # 'webui' or 'comfyui'
+    RENDER_SAMPLES = 64  # Lower samples: faster render times but reduced image quality
+    UI = 'comfyui'  # 'webui' or 'comfyui'
     DO_POSTPROCESSING = False
     CONTROLNET_HEIGHT_LIMIT = 1024
 
