@@ -139,7 +139,6 @@ def setup_light(has_area_light):
     light_data.color = (1, 1, 1)
 
 
-
 def add_area_light(light_params):
     """
     Adds two AREA lights based on calculated window parameters.
@@ -158,14 +157,8 @@ def add_area_light(light_params):
     light_obj_1.data.shadow_soft_size = light_params.get('shadow_soft_size', 1.0)
     bpy.context.collection.objects.link(light_obj_1)
 
-    print("!!!!!!!!!")
-    print("!!!!!!!!!")
-    print("!!!!!!!!!")
-    print(light_obj_1.data.size)
-    print(light_obj_1.data.size_y)
-    print("!!!!!!!!!")
-    print("!!!!!!!!!")
-    print("!!!!!!!!!")
+    print(f"Light size (Width x Height) = {light_obj_1.data.size} x {light_obj_1.data.size_y}")
+
 
 def add_furniture(path, location, angles, scale):
     # Import the 3D model
@@ -210,10 +203,14 @@ def use_gpu():
         print(d["name"], d["use"])
 
 
-def save_render(path, res_x, res_y):
+def save_render(path, res_x, res_y, samples):
     # Set render settings
     bpy.context.scene.render.engine = 'CYCLES'
     use_gpu()
+
+    # Set the number of samples
+    bpy.context.scene.cycles.samples = samples
+
     scene.render.image_settings.file_format = 'JPEG'
     scene.render.image_settings.color_mode = 'RGB'
     scene.render.filepath = path
@@ -233,15 +230,16 @@ if __name__ == "__main__":
     args = sys.argv
     data = json.loads(args[1])
 
-    camera_location = data["camera_location"]
-    camera_angles = data["camera_angles"]
-    resolution_x = data["resolution_x"]
-    resolution_y = data["resolution_y"]
-    render_path = data["render_path"]
+    render_path = data['render_path']
+    blend_file_path = data['blend_file_path']
+    render_samples = data['render_samples']
     room_point_cloud_path = data['room_point_cloud_path']
-    blend_file_path = data["blend_file_path"]
-    objects = data["objects"]
-    lights = data.get("lights", [])
+    camera_location = data['camera_location']
+    camera_angles = data['camera_angles']
+    resolution_x = data['resolution_x']
+    resolution_y = data['resolution_y']
+    objects = data['objects']
+    lights = data.get('lights', [])
 
     clean_scene()
 
@@ -257,7 +255,7 @@ if __name__ == "__main__":
 
     # Add objects/furniture from provided data
     for obj in objects:
-        add_furniture(obj["obj_path"], obj["obj_offsets"], obj["obj_angles"], obj["obj_scale"])
+        add_furniture(obj['obj_path'], obj['obj_offsets'], obj['obj_angles'], obj['obj_scale'])
 
-    save_render(render_path, resolution_x, resolution_y)
+    save_render(render_path, resolution_x, resolution_y, render_samples)
     save_blend_file(blend_file_path)
