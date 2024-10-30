@@ -200,6 +200,7 @@ def use_gpu():
 
     # Set the device and feature set
     bpy.context.scene.cycles.device = "GPU"
+    bpy.context.scene.cycles.denoising_use_gpu = True
 
     # get_devices() to let Blender detects GPU device
     bpy.context.preferences.addons["cycles"].preferences.get_devices()
@@ -209,13 +210,25 @@ def use_gpu():
         print(d["name"], d["use"])
 
 
-def save_render(path, res_x, res_y, samples):
-    # Set render settings
+def set_rendering_parameters(samples):
+    # Set up Cycles rendering with GPU, adaptive sampling, and denoising
     bpy.context.scene.render.engine = 'CYCLES'
     use_gpu()
-
-    # Set the number of samples
     bpy.context.scene.cycles.samples = samples
+
+    # Adaptive sampling to reduce render times in low-noise areas
+    bpy.context.scene.cycles.use_adaptive_sampling = True
+    bpy.context.scene.cycles.adaptive_threshold = 0.1  # Noise threshold
+
+    # Enable AI denoising with high-quality settings
+    bpy.context.scene.cycles.use_denoising = True
+    bpy.context.scene.cycles.denoiser = 'OPENIMAGEDENOISE'
+    bpy.context.scene.cycles.denoising_input_passes = 'RGB_ALBEDO_NORMAL'
+    bpy.context.scene.cycles.denoising_prefilter = 'ACCURATE'
+
+
+def save_render(path, res_x, res_y, samples):
+    set_rendering_parameters(samples)
 
     scene.render.image_settings.file_format = 'JPEG'
     scene.render.image_settings.color_mode = 'RGB'
