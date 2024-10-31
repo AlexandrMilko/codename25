@@ -1,7 +1,8 @@
 from postprocessing.postProcessing import PostProcessor
 from preprocessing.preProcessSegment import ImageSegmentor
 from constants import Path
-from tools import resize_and_save_image
+from run import SD_DOMAIN
+from tools import run_preprocessor
 from .Room import Room
 from .. import Floor
 from ..furniture.Furniture import Furniture
@@ -34,6 +35,15 @@ class LivingRoom(Room):
         print(json.dumps(scene_render_parameters, indent=4))
 
         Furniture.start_blender_render(scene_render_parameters)
+
+        PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
+        if Config.UI.value == "comfyui":
+            segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value,
+                                     PREPROCESSOR_RESOLUTION_LIMIT)
+            segment.execute()
+        else:
+            run_preprocessor("seg_ofade20k", Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value,
+                             SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
 
         if Config.DO_POSTPROCESSING.value and Config.UI.value == "comfyui":
             processor = PostProcessor()
