@@ -9,7 +9,7 @@ def join(directory, file):
 class Config(Enum):
     IMAGE_HEIGHT_LIMIT = 1080  # For limiting the time it takes to render and depth calculation for the image
     RENDER_SAMPLES = 64  # Lower samples: faster render times but reduced image quality
-    UI = 'comfyui'  # 'webui' or 'comfyui'
+    UI = 'webui'  # 'webui' or 'comfyui'
     DO_POSTPROCESSING = False
     CONTROLNET_HEIGHT_LIMIT = 1024
 
@@ -38,7 +38,7 @@ class Path(Enum):
     DESIGNED_IMAGE = join(PREPROCESSED_DIR, 'designed.png')
     DEPTH_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'depth_image.png')
 
-    OUTPUT_IMAGE = RENDER_IMAGE
+    OUTPUT_IMAGE = join(PREPROCESSED_DIR, 'applied.jpg')
 
     # visuals/3Ds
     MODELS_DIR = join(VISUALS_DIR, '3Ds')
