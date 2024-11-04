@@ -55,18 +55,18 @@ class GreenScreenImageQuery(Query):
     def design(self):
         self.denoising_strength = 0.75
         self.cfg_scale = 7
-        self.steps = 40
+        self.steps = 20
 
         data = {
             "prompt": self.prompt,
             # "prompt": "",
             "sampler_name": self.sampler_name,
             # "negative_prompt": self.negative_prompt,
-            "init_images": [self.prerequisite_image_b64],
+            # "init_images": [self.prerequisite_image_b64],
             "batch_size": 1,
             "steps": self.steps,
             "cfg_scale": self.cfg_scale,
-            "denoising_strength": self.denoising_strength,
+            # "denoising_strength": self.denoising_strength,
             "width": self.width,
             "height": self.height,
             "seed": -1,
@@ -90,7 +90,7 @@ class GreenScreenImageQuery(Query):
             }
         }
 
-        img2img_url = f'http://{SD_DOMAIN}:7861/sdapi/v1/img2img'
+        img2img_url = f'http://{SD_DOMAIN}:7861/sdapi/v1/txt2img'
         response = submit_post(img2img_url, data)
         output_filepath = Path.DESIGNED_IMAGE.value
 
