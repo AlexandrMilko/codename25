@@ -196,7 +196,7 @@ class Room:
     def prepare_empty_room_data(self):
         # Original code in the method remains unchanged
         resize_and_save_image(self.empty_room_image_path, self.empty_room_image_path, Config.IMAGE_HEIGHT_LIMIT.value)
-        Image.open(self.empty_room_image_path).save(Path.RENDER_IMAGE.value)
+        # Image.open(self.empty_room_image_path).save(Path.RENDER_IMAGE.value)
         from ml_depth_pro.pro_depth_estimation import (image_pixels_to_space_and_floor_point_clouds,
                                                        rotate_ply_file_with_colors)
 
