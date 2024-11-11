@@ -1,7 +1,10 @@
+import sys
 import pymeshlab
 
 
-def screened_poisson_surface_reconstruction(mesh_path: str) -> None:
+def screened_poisson_surface_reconstruction():
+    mesh_path = sys.argv[1]
+
     # Create a MeshSet object
     ms = pymeshlab.MeshSet()
 
@@ -12,7 +15,7 @@ def screened_poisson_surface_reconstruction(mesh_path: str) -> None:
     ms.compute_normal_for_point_clouds()
 
     # Perform Screened Poisson Surface Reconstruction
-    ms.generate_surface_reconstruction_screened_poisson(depth=9, scale=1, samplespernode=2)
+    ms.generate_surface_reconstruction_screened_poisson(depth=8, scale=1, samplespernode=2)
 
     # Select faces with edges longer than a default threshold
     ms.compute_selection_by_edge_length()
@@ -42,3 +45,6 @@ def screened_poisson_surface_reconstruction(mesh_path: str) -> None:
 
     print("Mesh processing completed and saved as 'output_mesh.ply'")
 
+
+if __name__ == '__main__':
+    screened_poisson_surface_reconstruction()
