@@ -1,15 +1,14 @@
+import cv2
+import numpy as np
+
+from constants import Path, Config
 from postprocessing.postProcessing import PostProcessor
 from preprocessing.preProcessSegment import ImageSegmentor
-from constants import Path
 from run import SD_DOMAIN
 from tools import run_preprocessor
 from .Room import Room
-from .. import Floor
 from ..furniture.Furniture import Furniture
-import os
-import numpy as np
-import cv2
-from constants import Config
+
 
 class LivingRoom(Room):
     def stage(self):

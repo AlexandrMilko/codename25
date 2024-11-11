@@ -9,7 +9,7 @@ def join(directory, file):
 class Config(Enum):
     IMAGE_HEIGHT_LIMIT = 1080  # For limiting the time it takes to render and depth calculation for the image
     RENDER_SAMPLES = 64  # Lower samples: faster render times but reduced image quality
-    UI = 'webui'  # 'webui' or 'comfyui'
+    UI = 'comfyui'  # 'webui' or 'comfyui'
     DO_POSTPROCESSING = False
     CONTROLNET_HEIGHT_LIMIT = 1024
 
@@ -77,5 +77,6 @@ class Path(Enum):
     FLOOR_NPY = join(ML_DEPTH_PRO_DIR, 'output/floor.npy')
     FLOOR_PLY = join(ML_DEPTH_PRO_DIR, 'output/floor.ply')
 
-    # We run it with subprocess to reset all the context for Blender after each scene render
+    # We run it with subprocess to reset all the context after each scene render
     BLENDER_SCRIPT = os.path.abspath('blender_script.py')
+    MESHLAB_SCRIPT = os.path.abspath('meshlab_script.py')
