@@ -3,6 +3,7 @@ import subprocess
 from math import radians
 
 from constants import Path, Config
+from tools import run_subprocess
 import os
 
 
@@ -35,12 +36,7 @@ class Furniture:
             'lights': render_parameters['lights']
         })
 
-        if os.name == 'nt':
-            print("This is a Windows system. Running python")
-            subprocess.run(['python', Path.BLENDER_SCRIPT.value, data], check=True, env=os.environ)
-        elif os.name == 'posix':
-            print("This is a Unix or Linux system. Running python3")
-            subprocess.run(['python3', Path.BLENDER_SCRIPT.value, data], check=True, env=os.environ)
+        run_subprocess(Path.BLENDER_SCRIPT.value, data)
 
     def calculate_rendering_parameters_without_offsets(self, yaw_angle: float):
         default_angles = self.get_default_angles()

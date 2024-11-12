@@ -1,15 +1,16 @@
 import math
+import os
+import subprocess
 
 import cv2
 import numpy as np
-from PIL import Image
 
-import tools
 from constants import Path, Config
 from preprocessing.preProcessSegment import ImageSegmentor
 from run import SD_DOMAIN
 from stage import Floor
-from tools import get_image_size, calculate_angle_from_top_view, resize_and_save_image, run_preprocessor
+from tools import (get_image_size, calculate_angle_from_top_view, resize_and_save_image, run_preprocessor,
+                   downscale_image_if_bigger, run_subprocess)
 from ..FloorLayout import FloorLayout
 
 
@@ -194,8 +195,7 @@ class Room:
         return render_parameters
 
     def prepare_empty_room_data(self):
-        # Original code in the method remains unchanged
-        resize_and_save_image(self.empty_room_image_path, self.empty_room_image_path, Config.IMAGE_HEIGHT_LIMIT.value)
+        downscale_image_if_bigger(self.empty_room_image_path, self.empty_room_image_path, Config.IMAGE_HEIGHT_LIMIT.value)
         # Image.open(self.empty_room_image_path).save(Path.RENDER_IMAGE.value)
         from ml_depth_pro.pro_depth_estimation import (image_pixels_to_space_and_floor_point_clouds,
                                                        rotate_ply_file_with_colors)
@@ -221,6 +221,9 @@ class Room:
 
         rotate_ply_file_with_colors(Path.FLOOR_PLY.value, Path.FLOOR_PLY.value, -pitch_rad, -roll_rad)
         rotate_ply_file_with_colors(Path.DEPTH_PLY.value, Path.DEPTH_PLY.value, -pitch_rad, -roll_rad)
+
+        # Run screened_poisson_surface_reconstruction()
+        run_subprocess(Path.MESHLAB_SCRIPT.value, Path.DEPTH_PLY.value)
 
         camera_height = self.estimate_camera_height((pitch_rad, roll_rad))
 
@@ -361,18 +364,13 @@ class Room:
                 window_centroid_offset[1] += 0.15
 
                 # Calculate the yaw angle, window_width, window_height for light orientation and size
-                yaw_angle = tools.calculate_angle_from_top_view(left_light_offset, right_light_offset)
+                yaw_angle = calculate_angle_from_top_view(left_light_offset, right_light_offset)
                 window_width = np.linalg.norm(np.array(right_light_offset) - np.array(left_light_offset))
                 window_height = np.linalg.norm(np.array(bottom_offset) - np.array(left_light_offset))
-                print("!!!!!")
-                print("!!!!!")
-                print("!!!!!")
-                print(window_width)
-                print(window_height)
-                print(right_light_offset, left_light_offset, bottom_offset, window_centroid_offset)
-                print("!!!!!")
-                print("!!!!!")
-                print("!!!!!")
+                print(f' Window Width: {window_width}'
+                      f'Window Height: {window_height}'
+                      f'Offsets: Right Light = {right_light_offset}, Left Light = {left_light_offset}, '
+                      f'Bottom = {bottom_offset}, Centroid = {window_centroid_offset}')
 
                 # Append light parameters for the current window
                 light_parameters.append({
