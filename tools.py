@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import subprocess
 
 import cv2
 import numpy as np
@@ -92,6 +93,15 @@ def run_preprocessor(preprocessor_name, input_path, output_filepath, SD_DOMAIN, 
     save_encoded_image(response.json()['images'][0], output_filepath)
 
 
+def run_subprocess(script_path: str, data=''):
+    if os.name == 'nt':
+        print("This is a Windows system. Running python")
+        subprocess.run(['python', script_path, data], check=True, env=os.environ)
+    elif os.name == 'posix':
+        print("This is a Unix or Linux system. Running python3")
+        subprocess.run(['python3', script_path, data], check=True, env=os.environ)
+
+
 def create_visuals_dir():
     directories = [
         "visuals/3Ds",
@@ -124,6 +134,14 @@ def resize_and_save_image(input_path, output_path, height):
         width = int(height * aspect_ratio)
         resized_img = img.resize((width, height), Image.LANCZOS)
         resized_img.save(output_path)
+
+
+def downscale_image_if_bigger(input_path, output_path, height):
+    with Image.open(input_path) as img:
+        aspect_ratio = img.width / img.height
+        width = int(height * aspect_ratio)
+        img.thumbnail((width, height), Image.LANCZOS)
+        img.save(output_path)
 
 
 def get_encoded_image_from_path(image_path):

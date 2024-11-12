@@ -1,7 +1,5 @@
 opencv-python
 open3d
-Flask-Cors
-torch
 numpy
 pillow
 requests
@@ -11,4 +9,5 @@ matplotlib
 torchvision
 bpy
 timm
-pillow_heif
+flask_cors
+pymeshlab
