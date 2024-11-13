@@ -1,13 +1,14 @@
+import json
+import random
+
 import numpy as np
+
 from constants import Path, Config
 from postprocessing.postProcessing import PostProcessor
 from preprocessing.preProcessSegment import ImageSegmentor
-from run import SD_DOMAIN
-from tools import resize_and_save_image, run_preprocessor
+from tools import resize_and_save_image
 from .Room import Room
 from ..furniture.Furniture import Furniture
-import random
-import json
 
 
 class Kitchen(Room):
@@ -33,18 +34,13 @@ class Kitchen(Room):
 
         PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
 
-        if Config.UI.value == "comfyui":
-            segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value,
-                                     PREPROCESSOR_RESOLUTION_LIMIT)
-            segment.execute()
-        else:
-            run_preprocessor("seg_ofade20k", Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value,
-                             SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment.execute()
 
         resize_and_save_image(Path.SEG_RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, height)
         Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
-        if Config.DO_POSTPROCESSING.value and Config.UI.value == "comfyui":
+        if Config.DO_POSTPROCESSING.value:
             processor = PostProcessor()
             processor.execute()
 

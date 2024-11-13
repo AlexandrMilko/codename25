@@ -1,15 +1,12 @@
 import math
-import os
-import subprocess
 
 import cv2
 import numpy as np
 
 from constants import Path, Config
 from preprocessing.preProcessSegment import ImageSegmentor
-from run import SD_DOMAIN
 from stage import Floor
-from tools import (get_image_size, calculate_angle_from_top_view, resize_and_save_image, run_preprocessor,
+from tools import (get_image_size, calculate_angle_from_top_view, resize_and_save_image,
                    downscale_image_if_bigger, run_subprocess)
 from ..FloorLayout import FloorLayout
 
@@ -203,13 +200,8 @@ class Room:
         width, height = get_image_size(self.empty_room_image_path)
         PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
 
-        if Config.UI.value == "comfyui":
-            segment = ImageSegmentor(self.empty_room_image_path, Path.SEG_INPUT_IMAGE.value,
-                                     PREPROCESSOR_RESOLUTION_LIMIT)
-            segment.execute()
-        else:
-            run_preprocessor("seg_ofade20k", self.empty_room_image_path,
-                             Path.SEG_INPUT_IMAGE.value, SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment = ImageSegmentor(self.empty_room_image_path, Path.SEG_INPUT_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment.execute()
 
         resize_and_save_image(Path.SEG_INPUT_IMAGE.value, Path.SEG_INPUT_IMAGE.value, height)
         Floor.save_mask(Path.SEG_INPUT_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
