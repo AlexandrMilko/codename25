@@ -1,11 +1,11 @@
+import json
+import urllib.parse
+import urllib.request
+import uuid
+
 import requests  # Correctly import the requests library
 import websocket  # NOTE: websocket-client (https://github.com/websocket-client/websocket-client)
-import uuid
-import json
-import urllib.request
-import urllib.parse
 
-from constants import Path
 
 class ImageSegmentor:
     def __init__(self, input_path, output_path, resolution):
@@ -17,35 +17,21 @@ class ImageSegmentor:
     def queue_prompt(self, prompt):
         p = {"prompt": prompt, "client_id": self.client_id}
         data = json.dumps(p).encode('utf-8')
-        try:
-            server_address = "127.0.0.1:8188"
-            req = urllib.request.Request(f"http://{server_address}/prompt", data=data)
-        except:
-            server_address = 'host.docker.internal:8188'
-            req = urllib.request.Request(f"http://{server_address}/prompt", data=data)
+        server_address = "127.0.0.1:8188"
+        req = urllib.request.Request(f"http://{server_address}/prompt", data=data)
         return json.loads(urllib.request.urlopen(req).read())
 
     def get_image(self, filename, subfolder, folder_type):
         data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
         url_values = urllib.parse.urlencode(data)
-        try:
-            server_address = "127.0.0.1:8188"
-            with urllib.request.urlopen(f"http://{server_address}/view?{url_values}") as response:
-                return response.read()
-        except:
-            server_address = 'host.docker.internal:8188'
-            with urllib.request.urlopen(f"http://{server_address}/view?{url_values}") as response:
-                return response.read()
+        server_address = "127.0.0.1:8188"
+        with urllib.request.urlopen(f"http://{server_address}/view?{url_values}") as response:
+            return response.read()
 
     def get_history(self, prompt_id):
-        try:
-            server_address = "127.0.0.1:8188"
-            with urllib.request.urlopen(f"http://{server_address}/history/{prompt_id}") as response:
-                return json.loads(response.read())
-        except:
-            server_address = 'host.docker.internal:8188'
-            with urllib.request.urlopen(f"http://{server_address}/history/{prompt_id}") as response:
-                return json.loads(response.read())
+        server_address = "127.0.0.1:8188"
+        with urllib.request.urlopen(f"http://{server_address}/history/{prompt_id}") as response:
+            return json.loads(response.read())
 
     def get_images(self, ws, prompt):
         print("Queueing prompt...")
@@ -92,14 +78,9 @@ class ImageSegmentor:
             if subfolder:
                 data["subfolder"] = subfolder
 
-            try:
-                server_address = "127.0.0.1:8188"
-                print(f"Uploading file to: http://{server_address}/upload/image")
-                resp = requests.post(f"http://{server_address}/upload/image", files=files, data=data)
-            except:
-                server_address = 'host.docker.internal:8188'
-                print(f"Uploading file to: http://{server_address}/upload/image")
-                resp = requests.post(f"http://{server_address}/upload/image", files=files, data=data)
+            server_address = "127.0.0.1:8188"
+            print(f"Uploading file to: http://{server_address}/upload/image")
+            resp = requests.post(f"http://{server_address}/upload/image", files=files, data=data)
 
             if resp.status_code == 200:
                 response_data = resp.json()
@@ -129,7 +110,6 @@ class ImageSegmentor:
             comfyui_path_image = self.upload_file(f, "", True)
             print(f"comfyui_path_image: {comfyui_path_image}")
 
-
         # Check if images were uploaded successfully before proceeding
         if not comfyui_path_image:
             print("Image upload failed. Exiting.")
@@ -145,14 +125,9 @@ class ImageSegmentor:
 
         # Connect to the WebSocket server
         ws = websocket.WebSocket()
-        try:
-            server_address = "127.0.0.1:8188"
-            ws.connect(f"ws://{server_address}/ws?clientId={self.client_id}")
-            print("Connected to WebSocket server.")
-        except:
-            server_address = 'host.docker.internal:8188'
-            ws.connect(f"ws://{server_address}/ws?clientId={self.client_id}")
-            print("Connected to WebSocket server.")
+        server_address = "127.0.0.1:8188"
+        ws.connect(f"ws://{server_address}/ws?clientId={self.client_id}")
+        print("Connected to WebSocket server.")
 
         images = self.get_images(ws, prompt)
         print(f"Received images: {len(images)}")

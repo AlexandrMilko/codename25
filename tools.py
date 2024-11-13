@@ -78,21 +78,6 @@ def get_encoded_image(image_path):
     return base64.b64encode(bytes).decode('utf-8')
 
 
-def run_preprocessor(preprocessor_name, input_path, output_filepath, SD_DOMAIN, res=512):
-    input_image = get_encoded_image(input_path)
-    data = {
-        "controlnet_module": preprocessor_name,
-        "controlnet_input_images": [input_image],
-        "controlnet_processor_res": res,
-        "controlnet_threshold_a": 64,
-        "controlnet_threshold_b": 64
-    }
-    preprocessor_url = f'http://{SD_DOMAIN}:7861/controlnet/detect'
-    response = submit_post(preprocessor_url, data)
-
-    save_encoded_image(response.json()['images'][0], output_filepath)
-
-
 def run_subprocess(script_path: str, data=''):
     if os.name == 'nt':
         print("This is a Windows system. Running python")
