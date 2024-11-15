@@ -172,32 +172,3 @@ def calculate_angle_from_top_view(point1, point2):
     if angle_pos_degrees < angle_neg_degrees:
         return -angle_pos_degrees * rotation_direction_pos
     return -angle_neg_degrees * rotation_direction_neg
-
-
-def restart_stable_diffusion(api_url: str):
-    import time
-    """
-    Restart the Stable Diffusion WebUI using its API.
-    """
-    restart_endpoint = f"{api_url}/sdapi/v1/restart"
-
-    response = requests.post(restart_endpoint)
-
-    if response.status_code == 200:
-        print("Restart command sent successfully.")
-    else:
-        print(f"Failed to send restart command. Status code: {response.status_code}")
-
-    # Wait for the server to restart
-    time.sleep(10)
-
-    # Verify if the server is up
-    try:
-        health_check_url = f"{api_url}/healthcheck"
-        health_response = requests.get(health_check_url)
-        if health_response.status_code == 200:
-            print("Server restarted successfully.")
-        else:
-            print("Server is still down. Please check manually.")
-    except requests.exceptions.RequestException as e:
-        print(f"Exception during health check: {e}")
