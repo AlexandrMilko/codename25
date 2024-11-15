@@ -6,6 +6,8 @@ import uuid
 import requests  # Correctly import the requests library
 import websocket  # NOTE: websocket-client (https://github.com/websocket-client/websocket-client)
 
+from constants import URL
+
 
 class ImageNormalMap:
     def __init__(self, input_path, output_path, resolution):
@@ -17,20 +19,17 @@ class ImageNormalMap:
     def queue_prompt(self, prompt):
         p = {"prompt": prompt, "client_id": self.client_id}
         data = json.dumps(p).encode('utf-8')
-        server_address = "127.0.0.1:8188"
-        req = urllib.request.Request(f"http://{server_address}/prompt", data=data)
+        req = urllib.request.Request(f"{URL.SERVER.value}prompt", data=data)
         return json.loads(urllib.request.urlopen(req).read())
 
     def get_image(self, filename, subfolder, folder_type):
         data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
         url_values = urllib.parse.urlencode(data)
-        server_address = "127.0.0.1:8188"
-        with urllib.request.urlopen(f"http://{server_address}/view?{url_values}") as response:
+        with urllib.request.urlopen(f"{URL.SERVER.value}view?{url_values}") as response:
             return response.read()
 
     def get_history(self, prompt_id):
-        server_address = "127.0.0.1:8188"
-        with urllib.request.urlopen(f"http://{server_address}/history/{prompt_id}") as response:
+        with urllib.request.urlopen(f"{URL.SERVER.value}history/{prompt_id}") as response:
             return json.loads(response.read())
 
     def get_images(self, ws, prompt):
@@ -78,9 +77,8 @@ class ImageNormalMap:
             if subfolder:
                 data["subfolder"] = subfolder
 
-            server_address = "127.0.0.1:8188"
-            print(f"Uploading file to: http://{server_address}/upload/image")
-            resp = requests.post(f"http://{server_address}/upload/image", files=files, data=data)
+            print(f"Uploading file to: {URL.SERVER.value}upload/image")
+            resp = requests.post(f"{URL.SERVER.value}upload/image", files=files, data=data)
 
             if resp.status_code == 200:
                 response_data = resp.json()
@@ -110,7 +108,6 @@ class ImageNormalMap:
             comfyui_path_image = self.upload_file(f, "", True)
             print(f"comfyui_path_image: {comfyui_path_image}")
 
-
         # Check if images were uploaded successfully before proceeding
         if not comfyui_path_image:
             print("Image upload failed. Exiting.")
@@ -126,8 +123,7 @@ class ImageNormalMap:
 
         # Connect to the WebSocket server
         ws = websocket.WebSocket()
-        server_address = "127.0.0.1:8188"
-        ws.connect(f"ws://{server_address}/ws?clientId={self.client_id}")
+        ws.connect(f"{URL.WS.value}{self.client_id}")
         print("Connected to WebSocket server.")
 
         images = self.get_images(ws, prompt)
