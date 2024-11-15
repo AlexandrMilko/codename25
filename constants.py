@@ -15,7 +15,7 @@ class Config(Enum):
 
 class URL(Enum):
     SERVER = 'http://127.0.0.1:8188/'
-    WS = 'ws://127.0.0.1:8188//ws?clientId='
+    WS = 'ws://127.0.0.1:8188/ws?clientId='
 
 
 class Path(Enum):
