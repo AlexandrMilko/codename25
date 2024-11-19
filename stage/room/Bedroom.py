@@ -19,9 +19,13 @@ class Bedroom(Room):
         all_sides = self.floor_layout.find_all_sides_sorted_by_length()
         print(all_sides, "ALL SIDES")
 
+        room_size_required = 6
         bed_parameters = self.calculate_bed_parameters(all_sides, (pitch_rad, roll_rad))
-        wardrobe_parameters = self.calculate_wardrobe_parameters(all_sides, (pitch_rad, roll_rad))
-        commode_parameters = self.calculate_commode_parameters(all_sides, (pitch_rad, roll_rad))
+        if area > room_size_required: # We will add these types of furniture only if the room is bigger than room_size_required
+            wardrobe_parameters = self.calculate_wardrobe_parameters(all_sides, (pitch_rad, roll_rad))
+            commode_parameters = self.calculate_commode_parameters(all_sides, (pitch_rad, roll_rad))
+        else:
+            wardrobe_parameters, commode_parameters = None, None
         plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
 
         # curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
