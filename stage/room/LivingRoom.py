@@ -4,8 +4,6 @@ import numpy as np
 from constants import Path, Config
 from postprocessing.postProcessing import PostProcessor
 from preprocessing.preProcessSegment import ImageSegmentor
-from run import SD_DOMAIN
-from tools import run_preprocessor
 from .Room import Room
 from ..furniture.Furniture import Furniture
 
@@ -36,15 +34,10 @@ class LivingRoom(Room):
         Furniture.start_blender_render(scene_render_parameters)
 
         PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
-        if Config.UI.value == "comfyui":
-            segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value,
-                                     PREPROCESSOR_RESOLUTION_LIMIT)
-            segment.execute()
-        else:
-            run_preprocessor("seg_ofade20k", Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value,
-                             SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment.execute()
 
-        if Config.DO_POSTPROCESSING.value and Config.UI.value == "comfyui":
+        if Config.DO_POSTPROCESSING.value:
             processor = PostProcessor()
             processor.execute()
 

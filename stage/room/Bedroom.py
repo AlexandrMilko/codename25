@@ -3,8 +3,7 @@ import random
 from constants import Path, Config
 from postprocessing.postProcessing import PostProcessor
 from preprocessing.preProcessSegment import ImageSegmentor
-from run import SD_DOMAIN
-from tools import resize_and_save_image, run_preprocessor
+from tools import resize_and_save_image
 from .Room import Room
 from ..furniture.Furniture import Furniture
 
@@ -19,9 +18,13 @@ class Bedroom(Room):
         all_sides = self.floor_layout.find_all_sides_sorted_by_length()
         print(all_sides, "ALL SIDES")
 
+        room_size_required = 6
         bed_parameters = self.calculate_bed_parameters(all_sides, (pitch_rad, roll_rad))
-        wardrobe_parameters = self.calculate_wardrobe_parameters(all_sides, (pitch_rad, roll_rad))
-        commode_parameters = self.calculate_commode_parameters(all_sides, (pitch_rad, roll_rad))
+        if area > room_size_required: # We will add these types of furniture only if the room is bigger than room_size_required
+            wardrobe_parameters = self.calculate_wardrobe_parameters(all_sides, (pitch_rad, roll_rad))
+            commode_parameters = self.calculate_commode_parameters(all_sides, (pitch_rad, roll_rad))
+        else:
+            wardrobe_parameters, commode_parameters = None, None
         plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
 
         # curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
@@ -49,13 +52,8 @@ class Bedroom(Room):
         Furniture.start_blender_render(scene_render_parameters)
 
         PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
-        if Config.UI.value == "comfyui":
-            segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value,
-                                     PREPROCESSOR_RESOLUTION_LIMIT)
-            segment.execute()
-        else:
-            run_preprocessor("seg_ofade20k", Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value,
-                             SD_DOMAIN, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        segment.execute()
         # WARNING!
         # We use SEG_RENDER_IMAGE for calculating painting position.
         # Do not delete or use it after the painting parameters calculation process.
@@ -70,7 +68,7 @@ class Bedroom(Room):
         # except TypeError as e:
         #     print(e, "FAILED TO ADD PAINTING")
 
-        if Config.DO_POSTPROCESSING.value and Config.UI.value == "comfyui":
+        if Config.DO_POSTPROCESSING.value:
             processor = PostProcessor()
             processor.execute()
 
