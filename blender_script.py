@@ -135,14 +135,27 @@ def add_area_light(light_params):
     yaw_angle = light_params.get('yaw_angle', 0)
     light_obj_1.rotation_euler = (math.radians(-90), 0, math.radians(yaw_angle))
     light_obj_1.data.shape = 'RECTANGLE'
-    light_obj_1.data.size = light_params.get('size', 1.0)  # Width of the light
-    light_obj_1.data.size_y = light_params.get('size_y', 1.0)  # Height of the light
-    light_obj_1.data.energy = light_params.get('energy', 80.0)
+    light_obj_1.data.size = light_params.get('size', 1.0)/1.5  # Width of the light
+    light_obj_1.data.size_y = light_params.get('size_y', 1.0)/1.5  # Height of the light
+    light_obj_1.data.energy = light_params.get('energy', 70.0)
     light_obj_1.data.color = light_params.get('color', (1.0, 1.0, 1.0))
     light_obj_1.data.shadow_soft_size = light_params.get('shadow_soft_size', 1.0)
     bpy.context.collection.objects.link(light_obj_1)
-
     print(f"Light size (Width x Height) = {light_obj_1.data.size} x {light_obj_1.data.size_y}")
+    #
+    # # Second light (rotated by -90 degrees on X-axis)
+    light_data_2 = bpy.data.lights.new(name='WindowAreaLi ght2', type='AREA')
+    light_obj_2 = bpy.data.objects.new(name='WindowAreaLight2', object_data=light_data_2)
+    light_obj_2.location = light_params.get('offset')
+    light_obj_2.rotation_euler = (math.radians(90), 0, math.radians(yaw_angle))  # Adjusted rotation on X-axis
+    light_obj_2.data.shape = 'RECTANGLE'
+    light_obj_2.data.size = light_params.get('size', 1.0)/1.5  # Width of the light
+    light_obj_2.data.size_y = light_params.get('size_y', 1.0)/1.5  # Height of the light
+    light_obj_2.data.energy = light_params.get('energy', 5.0)
+    light_obj_2.data.color = light_params.get('color', (1.0, 1.0, 1.0))
+    light_obj_2.data.shadow_soft_size = light_params.get('shadow_soft_size', 1.0)
+    bpy.context.collection.objects.link(light_obj_2)
+    print(f"Second light added with size (Width x Height) = {light_obj_2.data.size} x {light_obj_2.data.size_y}")
 
 
 def add_furniture(path, location, angles, scale):
