@@ -361,8 +361,8 @@ class Room:
                 ]
 
                 # Move light a bit behind the window
-                window_centroid_offset[1] += 0.15
-
+                window_centroid_offset[1] -= 0.15
+                window_centroid_offset[0] -= 0.15
                 # Calculate the yaw angle, window_width, window_height for light orientation and size
                 yaw_angle = calculate_angle_from_top_view(left_light_offset, right_light_offset)
                 window_width = np.linalg.norm(np.array(right_light_offset) - np.array(left_light_offset))
