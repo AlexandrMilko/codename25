@@ -77,33 +77,29 @@ class Kitchen(Room):
     def calculate_table_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
 
-        # Получаем подходящие пиксели для размещения стола и угол
+        # Получаем пиксель центра комнаты
         placement_info = KitchenTableWithChairs.find_placement_pixel(self.floor_layout.output_image_path)
 
         if not placement_info:
-            return None  # Если нет доступных пикселей, возвращаем None
+            return None  # Если нет подходящих мест, возвращаем None
 
-        # Выбор случайного пикселя для размещения стола
-        (chosen_pixel, yaw_angle) = placement_info[np.random.randint(len(placement_info))]
+        (chosen_pixel, yaw_angle) = placement_info[0]  # Используем только центр комнаты
 
-        # Получаем коэффициенты пикселей на метр
+        # Рассчитываем смещение и углы
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         pixels_dict = self.floor_layout.get_pixels_dict()
 
-        # Рассчитываем разницу в пикселях и смещение для модели стола
         pixel_diff = -1 * (chosen_pixel[0] - pixels_dict['camera'][0]), chosen_pixel[1] - pixels_dict['camera'][1]
         table_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
 
-        # Убедитесь, что передаете правильные значения
-        pitch_rad, roll_rad = camera_angles_rad  # Убедитесь, что это действительно углы в радианах
+        pitch_rad, roll_rad = camera_angles_rad
         table = KitchenTableWithChairs()
 
-        # Получаем параметры рендеринга для стола
+        # Получаем параметры рендеринга
         render_parameters = table.calculate_rendering_parameters(self, table_offset_x_y, yaw_angle,
-                                                                 (roll_rad, pitch_rad))  # Обратите внимание на порядок
+                                                                 (roll_rad, pitch_rad))
 
         return render_parameters
-
     def calculate_plant_parameters(self, camera_angles_rad: tuple):
 
          from stage.furniture.Plant import Plant
