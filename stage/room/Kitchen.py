@@ -53,9 +53,10 @@ class Kitchen(Room):
 
         side = all_sides.pop(0)
 
-        # Получаем размеры стены
-        wall_length = side.length
-        wall_height = side.height
+        # Получаем размеры стены в метрах
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        wall_length = side.calculate_wall_length(ratio_x, ratio_y)
+        wall_height = side.calculate_wall_height(ratio_y)
 
         # Доступные модели кухни
         kitchen_models = [
@@ -81,7 +82,6 @@ class Kitchen(Room):
         kitchen_set = KitchenSet(chosen_model['name'])
 
         # Рассчитываем параметры размещения
-        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         pixels_dict = self.floor_layout.get_pixels_dict()
         middle_point = side.get_middle_point()
         pixel_diff = -1 * (middle_point[0] - pixels_dict['camera'][0]), middle_point[1] - pixels_dict['camera'][1]
@@ -108,6 +108,7 @@ class Kitchen(Room):
         (chosen_pixel, yaw_angle) = placement_info[0]
 
         # Получаем размеры доступного пространства
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         space_length = self.get_available_space_length()
         space_width = self.get_available_space_width()
 
@@ -133,7 +134,6 @@ class Kitchen(Room):
         table = KitchenTableWithChairs(chosen_model['name'])
 
         # Рассчитываем параметры размещения
-        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         pixels_dict = self.floor_layout.get_pixels_dict()
         pixel_diff = -1 * (chosen_pixel[0] - pixels_dict['camera'][0]), chosen_pixel[1] - pixels_dict['camera'][1]
         table_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
