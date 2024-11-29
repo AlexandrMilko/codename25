@@ -8,6 +8,7 @@ import numpy as np
 import open3d as o3d
 import requests
 from PIL import Image
+from pxr import Usd, UsdGeom
 
 
 def calculate_pitch_angle(plane_normal):
@@ -172,3 +173,16 @@ def calculate_angle_from_top_view(point1, point2):
     if angle_pos_degrees < angle_neg_degrees:
         return -angle_pos_degrees * rotation_direction_pos
     return -angle_neg_degrees * rotation_direction_neg
+
+
+def get_model_dimensions(model_path):
+    stage = Usd.Stage.Open(model_path)
+    root_prim = stage.GetDefaultPrim()
+    bbox = UsdGeom.BBoxCache(Usd.TimeCode.Default(), UsdGeom.Tokens.default_).ComputeWorldBound(root_prim)
+    min_point, max_point = bbox.GetRange().GetMin(), bbox.GetRange().GetMax()
+
+    length = max_point[0] - min_point[0]
+    width = max_point[1] - min_point[1]
+    height = max_point[2] - min_point[2]
+
+    return {'length': length, 'width': width, 'height': height}
