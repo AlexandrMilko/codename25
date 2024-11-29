@@ -175,12 +175,32 @@ def calculate_angle_from_top_view(point1, point2):
     return -angle_neg_degrees * rotation_direction_neg
 
 
+from pxr import Usd, UsdGeom, Tf
+
+
 def get_model_dimensions(model_path):
+    """
+    Читает размеры модели из файла .usdc.
+    :param model_path: Путь к файлу .usdc
+    :return: Словарь с длиной, шириной и высотой модели
+    """
     stage = Usd.Stage.Open(model_path)
     root_prim = stage.GetDefaultPrim()
-    bbox = UsdGeom.BBoxCache(Usd.TimeCode.Default(), UsdGeom.Tokens.default_).ComputeWorldBound(root_prim)
-    min_point, max_point = bbox.GetRange().GetMin(), bbox.GetRange().GetMax()
 
+    # Создаём объект BBoxCache с корректным аргументом includedPurposes
+    bbox_cache = UsdGeom.BBoxCache(
+        Usd.TimeCode.Default(),
+        [UsdGeom.Tokens.default_],  # Список токенов
+        useExtentsHint=True
+    )
+
+    # Вычисляем границы модели
+    bbox = bbox_cache.ComputeWorldBound(root_prim)
+    bbox_range = bbox.GetRange()
+    min_point = bbox_range.GetMin()
+    max_point = bbox_range.GetMax()
+
+    # Вычисляем размеры
     length = max_point[0] - min_point[0]
     width = max_point[1] - min_point[1]
     height = max_point[2] - min_point[2]
