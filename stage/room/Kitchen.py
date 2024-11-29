@@ -44,6 +44,49 @@ class Kitchen(Room):
             processor = PostProcessor()
             processor.execute()
 
+    def get_available_space_length(self):
+        """
+        Рассчитывает доступную длину пространства для размещения стола.
+        :return: Длина в метрах
+        """
+        # Пример: рассчитываем длину на основе размера стены или области
+        ratio_x, _ = self.floor_layout.get_pixels_per_meter_ratio()
+        pixels_dict = self.floor_layout.get_pixels_dict()
+
+        # Получаем пиксели окна или другой области
+        window_pixel = pixels_dict.get("window0")
+        camera_pixel = pixels_dict.get("camera")
+
+        if not window_pixel or not camera_pixel:
+            raise ValueError("Недостаточно данных для расчёта длины пространства")
+
+        # Рассчитываем длину между камерой и окном
+        pixel_diff_x = abs(window_pixel[0] - camera_pixel[0])
+        space_length = pixel_diff_x / ratio_x  # Перевод в метры
+        return space_length
+
+    # Добавим метод для вычисления доступной ширины пространства
+    def get_available_space_width(self):
+        """
+        Рассчитывает доступную ширину пространства для размещения стола.
+        :return: Ширина в метрах
+        """
+        # Пример: рассчитываем ширину на основе размера стены или области
+        _, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        pixels_dict = self.floor_layout.get_pixels_dict()
+
+        # Получаем пиксели окна или другой области
+        window_pixel = pixels_dict.get("window0")
+        camera_pixel = pixels_dict.get("camera")
+
+        if not window_pixel or not camera_pixel:
+            raise ValueError("Недостаточно данных для расчёта ширины пространства")
+
+        # Рассчитываем ширину между камерой и окном
+        pixel_diff_y = abs(window_pixel[1] - camera_pixel[1])
+        space_width = pixel_diff_y / ratio_y  # Перевод в метры
+        return space_width
+
     def calculate_kitchen_parameters(self, all_sides, camera_angles_rad: tuple):
         from stage.furniture.KitchenSet import KitchenSet
         from tools import get_model_dimensions  # Импорт функции для расчета размеров модели
@@ -108,7 +151,6 @@ class Kitchen(Room):
         (chosen_pixel, yaw_angle) = placement_info[0]
 
         # Получаем размеры доступного пространства
-        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         space_length = self.get_available_space_length()
         space_width = self.get_available_space_width()
 
@@ -134,6 +176,7 @@ class Kitchen(Room):
         table = KitchenTableWithChairs(chosen_model['name'])
 
         # Рассчитываем параметры размещения
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         pixels_dict = self.floor_layout.get_pixels_dict()
         pixel_diff = -1 * (chosen_pixel[0] - pixels_dict['camera'][0]), chosen_pixel[1] - pixels_dict['camera'][1]
         table_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
