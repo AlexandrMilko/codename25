@@ -175,8 +175,6 @@ def calculate_angle_from_top_view(point1, point2):
     return -angle_neg_degrees * rotation_direction_neg
 
 
-from pxr import Usd, UsdGeom, Tf
-
 
 def get_model_dimensions(model_path):
     """
