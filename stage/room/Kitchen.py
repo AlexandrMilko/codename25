@@ -141,6 +141,7 @@ class Kitchen(Room):
     def calculate_table_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
         from tools import get_model_dimensions  # Импорт функции для расчета размеров модели
+        import random
 
         # Определяем место для стола
         placement_info = KitchenTableWithChairs.find_placement_pixel(self.floor_layout.output_image_path)
@@ -150,27 +151,14 @@ class Kitchen(Room):
 
         (chosen_pixel, yaw_angle) = placement_info[0]
 
-        # Получаем размеры доступного пространства
-        space_length = self.get_available_space_length()
-        space_width = self.get_available_space_width()
-
         # Доступные модели столов
         table_models = [
-            {'name': Path.KITCHEN_TABLE_MODEL_ONE.value, **get_model_dimensions(Path.KITCHEN_TABLE_MODEL_ONE.value)},
-            {'name': Path.KITCHEN_TABLE_MODEL_TWO.value, **get_model_dimensions(Path.KITCHEN_TABLE_MODEL_TWO.value)},
+            {'name': Path.KITCHEN_TABLE_MODEL_ONE.value},
+            {'name': Path.KITCHEN_TABLE_MODEL_TWO.value},
         ]
 
-        # Фильтруем подходящие модели
-        suitable_models = [
-            model for model in table_models
-            if model['length'] <= space_length and model['width'] <= space_width
-        ]
-
-        if not suitable_models:
-            return None  # Нет подходящих моделей
-
-        # Выбираем случайную модель из подходящих
-        chosen_model = random.choice(suitable_models)
+        # Выбираем случайную модель из списка доступных
+        chosen_model = random.choice(table_models)
 
         # Создаем экземпляр KitchenTableWithChairs с выбранной моделью
         table = KitchenTableWithChairs(chosen_model['name'])
