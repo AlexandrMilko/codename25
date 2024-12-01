@@ -41,6 +41,7 @@ class Path(Enum):
     STRETCHED_WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_DIR, 'stretched_windows_mask_inpainting.png')
     DESIGNED_IMAGE = join(PREPROCESSED_DIR, 'designed.png')
     DEPTH_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'depth_image.png')
+    DOOR_SEG_IMG_OUTPUT = join(PREPROCESSED_DIR, 'doorway_seg.png')
 
     OUTPUT_IMAGE = join(PREPROCESSED_DIR, 'applied.jpg')
 
