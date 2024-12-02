@@ -44,7 +44,8 @@ class Room:
         horizontal_borders = self.find_horizontal_borders()
         print(horizontal_borders)
 
-        points_in_3d = {}
+        middle_points_in_3d = {}
+        borders_in_3d = {}
         for name, value in horizontal_borders.items():
             left_pixel, right_pixel = value
             left_offset = self.infer_3d(left_pixel, pitch_rad, roll_rad)
@@ -52,10 +53,11 @@ class Room:
             middle_offset = [(left_offset[0] + right_offset[0]) / 2,
                              (left_offset[1] + right_offset[1]) / 2,
                              (left_offset[2] + right_offset[2]) / 2]
-            points_in_3d[name] = middle_offset
+            middle_points_in_3d[name] = middle_offset
+            borders_in_3d[name] = [left_offset, right_offset]
 
-        print(points_in_3d)
-        self.floor_layout = FloorLayout(Path.FLOOR_PLY.value, points_in_3d)
+        print(middle_points_in_3d)
+        self.floor_layout = FloorLayout(Path.FLOOR_PLY.value, middle_points_in_3d, borders_in_3d)
 
     def estimate_camera_height(self, camera_angles: tuple[float, float]):
         pitch, roll = camera_angles
