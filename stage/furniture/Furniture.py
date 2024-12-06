@@ -23,7 +23,7 @@ class Furniture:
     @staticmethod
     def start_blender_render(render_parameters):
         data = json.dumps({
-            'render_path': Path.RENDER_IMAGE.value,
+            'render_path': render_parameters['render_path'],
             'blend_file_path': Path.SCENE_FILE.value,
             'render_samples': Config.RENDER_SAMPLES.value,
             'room_point_cloud_path': render_parameters['room_point_cloud_path'],
