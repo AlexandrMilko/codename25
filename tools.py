@@ -1,14 +1,15 @@
 import base64
-import json
 import os
 import subprocess
+from io import BytesIO
 
 import cv2
 import numpy as np
 import open3d as o3d
-import requests
 from PIL import Image
 from pxr import Usd, UsdGeom
+
+from lang_segment_anything.app import predict
 
 
 def calculate_pitch_angle(plane_normal):
@@ -99,13 +100,6 @@ def create_visuals_dir():
             os.makedirs(directory)
 
 
-def submit_post(url: str, data: dict):
-    """
-    Submit a POST request to the given URL with the given data.
-    """
-    return requests.post(url, data=json.dumps(data))
-
-
 def save_encoded_image(b64_image: str, output_path: str):
     """
     Save the given image to the given output path.
@@ -175,7 +169,6 @@ def calculate_angle_from_top_view(point1, point2):
     return -angle_neg_degrees * rotation_direction_neg
 
 
-
 def get_model_dimensions(model_path):
     """
     Читает размеры модели из файла .usdc.
@@ -204,3 +197,26 @@ def get_model_dimensions(model_path):
     height = max_point[2] - min_point[2]
 
     return {'length': length, 'width': width, 'height': height}
+
+def get_image_bytes(image_path):
+    # Open the image with PIL
+    img = Image.open(image_path).convert("RGB")  # Convert to RGB for consistent encoding
+    # Encode the image as PNG
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    # Get the binary data
+    image_bytes = buffer.getvalue()
+    return image_bytes
+
+
+def segment_lang_sam(image_path, output_path):
+    inputs = {
+        "sam_type": "sam2.1_hiera_small",
+        "box_threshold": 0.3,
+        "text_threshold": 0.25,
+        "text_prompt": "doorway",
+        "image_bytes": get_image_bytes(image_path),
+    }
+    output = predict(inputs)
+    output_image = output["output_image"]
+    output_image.save(output_path, format="PNG")

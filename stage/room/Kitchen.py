@@ -1,5 +1,7 @@
 import json
+import os
 import random
+from itertools import permutations
 
 import numpy as np
 
@@ -15,34 +17,39 @@ class Kitchen(Room):
     def stage(self):
         camera_height, pitch_rad, roll_rad, height, scene_render_parameters = self.prepare_empty_room_data()
 
-        all_sides = self.floor_layout.find_all_sides_sorted_by_length()
+        all_sides = self.floor_layout.find_all_sides()
+        permuted_sides = [list(perm) for perm in permutations(all_sides)]
 
-        kitchen_parameters = self.calculate_kitchen_parameters(all_sides, (pitch_rad, roll_rad))
-        table_parameters = self.calculate_table_parameters((pitch_rad, roll_rad))
-        plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
+        for idx, sides in enumerate(permuted_sides):
+            kitchen_parameters = self.calculate_kitchen_parameters(sides, (pitch_rad, roll_rad))
+            table_parameters = self.calculate_table_parameters((pitch_rad, roll_rad))
+            plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
 
-        scene_render_parameters['objects'] = [
-            kitchen_parameters,
-            table_parameters,
-            plant_parameters,
-        ]
-        scene_render_parameters['objects'] = [item for item in scene_render_parameters['objects'] if item is not None]
+            scene_render_parameters['objects'] = [
+                kitchen_parameters,
+                table_parameters,
+                plant_parameters,
+            ]
+            scene_render_parameters['objects'] = [item for item in scene_render_parameters['objects'] if item is not None]
+            print(json.dumps(scene_render_parameters, indent=4))
 
-        print(json.dumps(scene_render_parameters, indent=4))
+            base, ext = os.path.splitext(Path.RENDER_IMAGE.value)
+            file_path = f"{base}{idx}{ext}"
+            scene_render_parameters['render_path'] = file_path
 
-        Furniture.start_blender_render(scene_render_parameters)
+            Furniture.start_blender_render(scene_render_parameters)
 
-        PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
+            PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
 
-        segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
-        segment.execute()
+            segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+            segment.execute()
 
-        resize_and_save_image(Path.SEG_RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, height)
-        Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
+            resize_and_save_image(Path.SEG_RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, height)
+            Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
-        if Config.DO_POSTPROCESSING.value:
-            processor = PostProcessor()
-            processor.execute()
+            if Config.DO_POSTPROCESSING.value:
+                processor = PostProcessor()
+                processor.execute()
 
     def get_available_space_length(self):
         """

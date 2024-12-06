@@ -11,6 +11,7 @@ class Config(Enum):
     RENDER_SAMPLES = 64  # Lower samples: faster render times but reduced image quality
     DO_POSTPROCESSING = False
     CONTROLNET_HEIGHT_LIMIT = 1024
+    FLOOR_LAYOUT_CONTOUR_SIZE_TO_REMOVE = 1000
 
 
 class URL(Enum):
@@ -41,6 +42,8 @@ class Path(Enum):
     STRETCHED_WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_DIR, 'stretched_windows_mask_inpainting.png')
     DESIGNED_IMAGE = join(PREPROCESSED_DIR, 'designed.png')
     DEPTH_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'depth_image.png')
+    WALL_SEGMENTS_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'last_wall_segment.png')
+    DOOR_SEG_IMG_OUTPUT = join(PREPROCESSED_DIR, 'doorway_seg.png')
 
     OUTPUT_IMAGE = join(PREPROCESSED_DIR, 'applied.jpg')
 
