@@ -187,7 +187,7 @@ class FloorLayout:
 
         cv2.imwrite(Path.FLOOR_LAYOUT_DEBUG_IMAGE.value, image)
 
-    def find_all_sides_sorted_by_length(self, exclude_distance=50, exclude_length=1.5):
+    def find_all_sides(self, exclude_distance=50, exclude_length=1.5):
         exclusion_zones = self.pixels_dict
         image = cv2.imread(self.output_image_path)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -215,8 +215,7 @@ class FloorLayout:
                 continue
             sides.append(side)
 
-        sides.sort(reverse=True, key=lambda x: x.calculate_wall_length(self.ratio_x, self.ratio_y))
-
+        # sides.sort(reverse=True, key=lambda x: x.calculate_wall_length(self.ratio_x, self.ratio_y))
         self.draw_points_and_contours(exclusion_zones, exclude_distance, sides)
 
         return sides

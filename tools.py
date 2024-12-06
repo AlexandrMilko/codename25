@@ -1,12 +1,10 @@
 import base64
-import json
 import os
 import subprocess
 
 import cv2
 import numpy as np
 import open3d as o3d
-import requests
 from PIL import Image
 
 
@@ -96,13 +94,6 @@ def create_visuals_dir():
     for directory in directories:
         if not os.path.exists(directory):
             os.makedirs(directory)
-
-
-def submit_post(url: str, data: dict):
-    """
-    Submit a POST request to the given URL with the given data.
-    """
-    return requests.post(url, data=json.dumps(data))
 
 
 def save_encoded_image(b64_image: str, output_path: str):
