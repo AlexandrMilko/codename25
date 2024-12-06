@@ -2,12 +2,13 @@ import math
 
 import cv2
 import numpy as np
+from pywin.framework.toolmenu import tools
 
 from constants import Path, Config
 from preprocessing.preProcessSegment import ImageSegmentor
 from stage import Floor
 from tools import (get_image_size, calculate_angle_from_top_view, resize_and_save_image,
-                   downscale_image_if_bigger, run_subprocess)
+                   downscale_image_if_bigger, run_subprocess, segment_lang_sam)
 from ..FloorLayout import FloorLayout
 
 
@@ -208,6 +209,8 @@ class Room:
         resize_and_save_image(Path.SEG_INPUT_IMAGE.value, Path.SEG_INPUT_IMAGE.value, height)
         Floor.save_mask(Path.SEG_INPUT_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
 
+        segment_lang_sam(Path.INPUT_IMAGE.value, Path.DOOR_SEG_IMG_OUTPUT.value)
+
         Room.save_windows_mask(Path.SEG_INPUT_IMAGE.value, Path.WINDOWS_MASK_IMAGE.value)
 
         self.focal_length_px = image_pixels_to_space_and_floor_point_clouds(self.empty_room_image_path)
@@ -355,8 +358,8 @@ class Room:
                 ]
 
                 # Move light a bit behind the window
-                window_centroid_offset[1] += 0.15
-
+                window_centroid_offset[1] -= 0.15
+                window_centroid_offset[0] -= 0.15
                 # Calculate the yaw angle, window_width, window_height for light orientation and size
                 yaw_angle = calculate_angle_from_top_view(left_light_offset, right_light_offset)
                 window_width = np.linalg.norm(np.array(right_light_offset) - np.array(left_light_offset))

@@ -15,7 +15,7 @@ class LivingRoom(Room):
         area = self.floor_layout.estimate_area_from_floor_layout()
         print(area, "AREA in m2")
 
-        all_sides = self.floor_layout.find_all_sides_sorted_by_length()
+        all_sides = self.floor_layout.find_all_sides()
         print(all_sides, "ALL SIDES")
 
         # Add living room sofa, table, and sofachairs
