@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import open3d as o3d
 from PIL import Image
+from pxr import Usd, UsdGeom
 
 from lang_segment_anything.app import predict
 
@@ -166,6 +167,36 @@ def calculate_angle_from_top_view(point1, point2):
     if angle_pos_degrees < angle_neg_degrees:
         return -angle_pos_degrees * rotation_direction_pos
     return -angle_neg_degrees * rotation_direction_neg
+
+
+def get_model_dimensions(model_path):
+    """
+    Читает размеры модели из файла .usdc.
+    :param model_path: Путь к файлу .usdc
+    :return: Словарь с длиной, шириной и высотой модели
+    """
+    stage = Usd.Stage.Open(model_path)
+    root_prim = stage.GetDefaultPrim()
+
+    # Создаём объект BBoxCache с корректным аргументом includedPurposes
+    bbox_cache = UsdGeom.BBoxCache(
+        Usd.TimeCode.Default(),
+        [UsdGeom.Tokens.default_],  # Список токенов
+        useExtentsHint=True
+    )
+
+    # Вычисляем границы модели
+    bbox = bbox_cache.ComputeWorldBound(root_prim)
+    bbox_range = bbox.GetRange()
+    min_point = bbox_range.GetMin()
+    max_point = bbox_range.GetMax()
+
+    # Вычисляем размеры
+    length = max_point[0] - min_point[0]
+    width = max_point[1] - min_point[1]
+    height = max_point[2] - min_point[2]
+
+    return {'length': length, 'width': width, 'height': height}
 
 def get_image_bytes(image_path):
     # Open the image with PIL

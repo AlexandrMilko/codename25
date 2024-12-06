@@ -51,64 +51,136 @@ class Kitchen(Room):
                 processor = PostProcessor()
                 processor.execute()
 
-    def calculate_kitchen_parameters(self, all_sides, camera_angles_rad: tuple):
-        if len(all_sides) > 0:
-            side = all_sides.pop(0)
-        else:
-            return None
-
-        from stage.furniture.KitchenSet import KitchenSet
-
-        # Получаем коэффициенты пикселей на метр
-        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+    def get_available_space_length(self):
+        """
+        Рассчитывает доступную длину пространства для размещения стола.
+        :return: Длина в метрах
+        """
+        # Пример: рассчитываем длину на основе размера стены или области
+        ratio_x, _ = self.floor_layout.get_pixels_per_meter_ratio()
         pixels_dict = self.floor_layout.get_pixels_dict()
 
-        # Рассчитываем разницу в пикселях и смещение для модели кухни
+        # Получаем пиксели окна или другой области
+        window_pixel = pixels_dict.get("window0")
+        camera_pixel = pixels_dict.get("camera")
+
+        if not window_pixel or not camera_pixel:
+            raise ValueError("Недостаточно данных для расчёта длины пространства")
+
+        # Рассчитываем длину между камерой и окном
+        pixel_diff_x = abs(window_pixel[0] - camera_pixel[0])
+        space_length = pixel_diff_x / ratio_x  # Перевод в метры
+        return space_length
+
+    # Добавим метод для вычисления доступной ширины пространства
+    def get_available_space_width(self):
+        """
+        Рассчитывает доступную ширину пространства для размещения стола.
+        :return: Ширина в метрах
+        """
+        # Пример: рассчитываем ширину на основе размера стены или области
+        _, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        pixels_dict = self.floor_layout.get_pixels_dict()
+
+        # Получаем пиксели окна или другой области
+        window_pixel = pixels_dict.get("window0")
+        camera_pixel = pixels_dict.get("camera")
+
+        if not window_pixel or not camera_pixel:
+            raise ValueError("Недостаточно данных для расчёта ширины пространства")
+
+        # Рассчитываем ширину между камерой и окном
+        pixel_diff_y = abs(window_pixel[1] - camera_pixel[1])
+        space_width = pixel_diff_y / ratio_y  # Перевод в метры
+        return space_width
+
+    def calculate_kitchen_parameters(self, all_sides, camera_angles_rad: tuple):
+        from stage.furniture.KitchenSet import KitchenSet
+        from tools import get_model_dimensions  # Импорт функции для расчета размеров модели
+
+        if len(all_sides) == 0:
+            return None
+
+        side = all_sides.pop(0)
+
+        # Получаем размеры стены в метрах
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        wall_length = side.calculate_wall_length(ratio_x, ratio_y)
+        wall_height = side.calculate_wall_height(ratio_y)
+
+        # Доступные модели кухни
+        kitchen_models = [
+            {'name': Path.KITCHEN_BIG_MODEL.value, **get_model_dimensions(Path.KITCHEN_BIG_MODEL.value)},
+            {'name': Path.KITCHEN_SMALL_ONE.value, **get_model_dimensions(Path.KITCHEN_SMALL_ONE.value)},
+            {'name': Path.KITCHEN_SMALL_TWO.value, **get_model_dimensions(Path.KITCHEN_SMALL_TWO.value)},
+            {'name': Path.KITCHEN_SMALL_THREE.value, **get_model_dimensions(Path.KITCHEN_SMALL_THREE.value)},
+        ]
+
+        # Фильтруем подходящие модели
+        suitable_models = [
+            model for model in kitchen_models
+            if model['length'] <= wall_length and model['height'] <= wall_height
+        ]
+
+        if not suitable_models:
+            return None  # Нет подходящих моделей
+
+        # Выбираем случайную модель из подходящих
+        chosen_model = random.choice(suitable_models)
+
+        # Создаем экземпляр KitchenSet с выбранной моделью
+        kitchen_set = KitchenSet(chosen_model['name'])
+
+        # Рассчитываем параметры размещения
+        pixels_dict = self.floor_layout.get_pixels_dict()
         middle_point = side.get_middle_point()
         pixel_diff = -1 * (middle_point[0] - pixels_dict['camera'][0]), middle_point[1] - pixels_dict['camera'][1]
         kitchen_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
 
-        pitch_rad, roll_rad = camera_angles_rad
-        kitchen_set = KitchenSet()
-
-        # Рассчитываем угол стены (yaw angle)
         yaw_angle = side.calculate_wall_angle()
+        pitch_rad, roll_rad = camera_angles_rad
 
-        # Получаем параметры рендеринга из базового метода calculate_rendering_parameters
         render_parameters = kitchen_set.calculate_rendering_parameters(
             self, kitchen_offset_x_y, yaw_angle, (roll_rad, pitch_rad)
         )
-
         return render_parameters
 
     def calculate_table_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
+        from tools import get_model_dimensions  # Импорт функции для расчета размеров модели
+        import random
 
-        # Получаем подходящие пиксели для размещения стола и угол
+        # Определяем место для стола
         placement_info = KitchenTableWithChairs.find_placement_pixel(self.floor_layout.output_image_path)
 
         if not placement_info:
-            return None  # Если нет доступных пикселей, возвращаем None
+            return None  # Нет подходящих мест для стола
 
-        # Выбор случайного пикселя для размещения стола
-        (chosen_pixel, yaw_angle) = placement_info[np.random.randint(len(placement_info))]
+        (chosen_pixel, yaw_angle) = placement_info[0]
 
-        # Получаем коэффициенты пикселей на метр
+        # Доступные модели столов
+        table_models = [
+            {'name': Path.KITCHEN_TABLE_MODEL_ONE.value},
+            {'name': Path.KITCHEN_TABLE_MODEL_TWO.value},
+        ]
+
+        # Выбираем случайную модель из списка доступных
+        chosen_model = random.choice(table_models)
+
+        # Создаем экземпляр KitchenTableWithChairs с выбранной моделью
+        table = KitchenTableWithChairs(chosen_model['name'])
+
+        # Рассчитываем параметры размещения
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         pixels_dict = self.floor_layout.get_pixels_dict()
-
-        # Рассчитываем разницу в пикселях и смещение для модели стола
         pixel_diff = -1 * (chosen_pixel[0] - pixels_dict['camera'][0]), chosen_pixel[1] - pixels_dict['camera'][1]
         table_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
 
-        # Убедитесь, что передаете правильные значения
-        pitch_rad, roll_rad = camera_angles_rad  # Убедитесь, что это действительно углы в радианах
-        table = KitchenTableWithChairs()
+        pitch_rad, roll_rad = camera_angles_rad
 
-        # Получаем параметры рендеринга для стола
-        render_parameters = table.calculate_rendering_parameters(self, table_offset_x_y, yaw_angle,
-                                                                 (roll_rad, pitch_rad))  # Обратите внимание на порядок
-
+        render_parameters = table.calculate_rendering_parameters(
+            self, table_offset_x_y, yaw_angle, (roll_rad, pitch_rad)
+        )
         return render_parameters
 
     def calculate_plant_parameters(self, camera_angles_rad: tuple):
