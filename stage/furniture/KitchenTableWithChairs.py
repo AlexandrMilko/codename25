@@ -5,23 +5,22 @@ import cv2
 
 
 class KitchenTableWithChairs(FloorFurniture):
-    def __init__(self, model_path=Path.KITCHEN_TABLE_WITH_CHAIRS_MODEL2.value):
+    def __init__(self, model_path):
         super().__init__(model_path)
 
     @staticmethod
     def find_placement_pixel(floor_layout_path: str) -> list[tuple[tuple[int, int], float]]:
         image = cv2.imread(floor_layout_path, cv2.IMREAD_GRAYSCALE)
 
-        origin = (image.shape[1] // 2, image.shape[0] // 2)
-        angle = KitchenTableWithChairs.find_angle(image)
+        # Получаем размеры комнаты
+        height, width = image.shape[:2]
+        center = (width // 2, height // 2)
 
-        x_coords, y_coords, square_size = KitchenTableWithChairs.crate_grid(image)
-        rotated_coords = KitchenTableWithChairs.rotate_coordinates(x_coords, y_coords, angle, origin)
-        squares = KitchenTableWithChairs.find_squares(rotated_coords, square_size, image)
-        centers = KitchenTableWithChairs.find_square_center(squares)
-
-        # Теперь возвращаем список кортежей с центрами и углом
-        return [(center, angle) for center in centers]
+        # Проверяем, находится ли центр в допустимой области
+        if KitchenTableWithChairs.square_inside_figure((center[0], center[1], 50), image):  # 50 - пример размера стола
+            angle = 0  # Центр комнаты не требует поворота
+            return [(center, angle)]
+        return []
 
     @staticmethod
     def find_angle(image):
