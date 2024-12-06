@@ -4,8 +4,10 @@ import math
 
 class LayoutSide:
     def __init__(self, points):
-        self.points = points
-        self.middle_point = (points[0] + points[1]) // 2
+        self.points = [list(map(int, point)) for point in points]
+        first_point = points[0]
+        second_point = points[1]
+        self.middle_point = (first_point[0] + second_point[0]) // 2, (first_point[1] + second_point[1]) // 2
 
     def calculate_wall_angle(self):
         # Define the vertical line
@@ -33,13 +35,10 @@ class LayoutSide:
     def get_middle_point(self):
         return self.middle_point
 
-    def calculate_length(self):
-        return np.linalg.norm(self.points[0] - self.points[1])
-
     def calculate_wall_length(self, ratio_x, ratio_y):
         first_leg = abs(self.points[0][0] - self.points[1][0]) / ratio_x
         second_leg = abs(self.points[0][1] - self.points[1][1]) / ratio_y
         return math.sqrt(first_leg ** 2 + second_leg ** 2)
 
     def __repr__(self):
-        return f"Floor Layout Side: {self.points}, {self.middle_point}, length: {self.calculate_length()}"
+        return f"Floor Layout Side: {self.points}, {self.middle_point}"

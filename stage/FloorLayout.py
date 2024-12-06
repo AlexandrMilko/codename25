@@ -4,22 +4,23 @@ import cv2
 import numpy as np
 import open3d as o3d
 
-from constants import Path
+from constants import Path, Config
 from .LayoutSide import LayoutSide
 
 
 class FloorLayout:
-    def __init__(self, ply_path, points_dict, output_image_path=Path.FLOOR_LAYOUT_IMAGE.value):
+    def __init__(self, ply_path, middle_points_3d_dict, window_door_borders_3d_dict, output_image_path=Path.FLOOR_LAYOUT_IMAGE.value):
 
         """
         :param ply_path: path to the .ply file that represents 3d floor plane
         :param output_path: path to save the debug layout image
-        :param points_dict: 3d points to be converted into 2d layout pixel coords
+        :param middle_points_3d_dict: 3d points to be converted into 2d layout pixel coords
         :return: dictionary of converted 2D points and pixels-per-meter ratio
         """
 
         self.ply_path = ply_path
-        self.points_dict = points_dict
+        self.middle_points_3d_dict = middle_points_3d_dict
+        self.window_door_borders_3d_dict = window_door_borders_3d_dict
         self.output_image_path = output_image_path
 
         # Load the point cloud
@@ -37,14 +38,14 @@ class FloorLayout:
         points_image = np.zeros((height, width, 3), dtype=np.uint8)
 
         # Add camera and relative point for pixel-per-meter calculation
-        self.points_dict['camera'] = [0, 0, 0]
-        self.points_dict['point_for_calculating_ratio'] = [0.2, 0.2, 0]
+        self.middle_points_3d_dict['camera'] = [0, 0, 0]
+        self.middle_points_3d_dict['point_for_calculating_ratio'] = [0.2, 0.2, 0]
 
         # Process user's points
         all_points = floor_points.copy()
-        for point_name in self.points_dict.keys():
-            print(self.points_dict[point_name], " self.points_dict[point_name]")
-            middle_point = self.points_dict[point_name]
+        for point_name in self.middle_points_3d_dict.keys():
+            print(self.middle_points_3d_dict[point_name], " self.middle_points_3d_dict[point_name]")
+            middle_point = self.middle_points_3d_dict[point_name]
 
             # We reverse x-axis, because in blender it points to the opposite than in image pixel coordinate system
             middle_point[0] = -middle_point[0]
@@ -55,10 +56,6 @@ class FloorLayout:
         # Find min and max coordinates of the floor
         min_coords = all_points.min(axis=0)
         max_coords = all_points.max(axis=0)
-
-        # Print min and max coordinates for debugging
-        print("Min coordinates:", min_coords)
-        print("Max coordinates:", max_coords)
 
         # Normalize floor points to image dimensions
         norm_points = (floor_points - min_coords) / (max_coords - min_coords)
@@ -71,11 +68,11 @@ class FloorLayout:
             pixel_y = int(point[1])
             cv2.circle(points_image, (pixel_x, pixel_y), 3, (255, 255, 255), -1)  # White color for all points
 
-        # Convert 3D points to 2D pixels
+        # Convert 3D window, doors and camera middle points to 2D pixels on floor layout
         result = dict()
-        for point_name in self.points_dict.keys():
-            print(self.points_dict)
-            middle_point = self.points_dict[point_name]
+        for point_name in self.middle_points_3d_dict.keys():
+            print(self.middle_points_3d_dict)
+            middle_point = self.middle_points_3d_dict[point_name]
             print(middle_point)
             x_3d, y_3d, _ = middle_point
             print(f"3D Point: {middle_point}")
@@ -89,6 +86,26 @@ class FloorLayout:
             result[point_name] = [pixel_x, pixel_y]
             # cv2.circle(points_image, (pixel_x, pixel_y), 5, (0, 0, 255), -1)  # Red color for specific points
 
+        # Convert 3D window and doors border points to 2D pixels on floor layout
+        self.window_door_borders_pixels = dict()
+        for zone_name in self.window_door_borders_3d_dict.keys():
+            left_offset, right_offset = self.window_door_borders_3d_dict[zone_name]
+            zone_pixel_borders = []
+            for offset in left_offset, right_offset:
+                x_3d, y_3d, _ = offset
+                # We reverse x-axis, because in blender it points to the opposite than in image pixel coordinate system
+                x_3d = -x_3d
+                pixel_x = int((x_3d - min_coords[0]) / (max_coords[0] - min_coords[0]) * (width - 1))
+                pixel_y = int((y_3d - min_coords[1]) / (max_coords[1] - min_coords[1]) * (height - 1))
+
+                # Ensure pixel coordinates are within bounds
+                pixel_x = np.clip(pixel_x, 0, width - 1)
+                pixel_y = np.clip(pixel_y, 0, height - 1)
+                print(f"Mapped to 2D: x={pixel_x}, y={pixel_y}")  # Debug message
+                zone_pixel_borders.append([pixel_x, pixel_y])
+            self.window_door_borders_pixels[zone_name] = zone_pixel_borders
+
+
         if self.output_image_path is not None:
             os.makedirs(os.path.dirname(self.output_image_path), exist_ok=True)
             cv2.imwrite(self.output_image_path, points_image)
@@ -98,10 +115,11 @@ class FloorLayout:
 
         self.pixels_dict = result
         camera_pixel = self.pixels_dict['camera']
-        FloorLayout.fill_layout_with_camera(self.output_image_path, camera_pixel, self.output_image_path)
 
         refined_image = FloorLayout.refine_contours(self.output_image_path) # We perform additional cleaning made by Vova
         cv2.imwrite(self.output_image_path, refined_image)
+        FloorLayout.fill_small_contours(self.output_image_path, self.output_image_path, Config.FLOOR_LAYOUT_CONTOUR_SIZE_TO_REMOVE.value)
+        FloorLayout.fill_layout_with_camera(self.output_image_path, camera_pixel, self.output_image_path)
 
         pixels_per_meter_ratio = self.calculate_pixels_per_meter_ratio()
         print(pixels_per_meter_ratio)
@@ -117,8 +135,8 @@ class FloorLayout:
         camera_pixel = self.pixels_dict['camera']
         point_pixel = self.pixels_dict['point_for_calculating_ratio']
 
-        camera_offset = self.points_dict['camera']
-        point_offset = self.points_dict['point_for_calculating_ratio']
+        camera_offset = self.middle_points_3d_dict['camera']
+        point_offset = self.middle_points_3d_dict['point_for_calculating_ratio']
         pixels_x_diff = camera_pixel[0] - point_pixel[0]
         pixels_y_diff = camera_pixel[1] - point_pixel[1]
         offsets_x_diff = camera_offset[0] - point_offset[0]
@@ -133,11 +151,44 @@ class FloorLayout:
     def get_pixels_per_meter_ratio(self):
         return self.ratio_x, self.ratio_y
 
-    def get_points_dict(self):
-        return self.points_dict
+    def get_middle_points_3d_dict(self):
+        return self.middle_points_3d_dict
 
     def get_pixels_dict(self):
         return self.pixels_dict
+
+    @staticmethod
+    def find_all_tangent_zones(point1, point2, exclusion_zones, exclude_distance):
+        zone_names = []
+        for zone_name, zone_coords in exclusion_zones.items():
+            exclusion_point = np.array(zone_coords)
+
+            # Vector from point1 to point2 (the line segment)
+            line_vec = np.array(point2) - np.array(point1)
+
+            # Vector from point1 to the exclusion point
+            point_vec = exclusion_point - np.array(point1)
+
+            # Project point_vec onto the line_vec to find the closest point on the line
+            line_len = np.linalg.norm(line_vec)
+            if line_len == 0:
+                continue  # Skip degenerate lines (though they shouldn't occur here)
+
+            projection = np.dot(point_vec, line_vec) / (line_len ** 2)
+            if projection < 0:
+                closest_point = np.array(point1)
+            elif projection > 1:
+                closest_point = np.array(point2)
+            else:
+                closest_point = np.array(point1) + projection * line_vec
+
+            # Calculate the distance from the exclusion point to the closest point on the line
+            distance_to_line = np.linalg.norm(closest_point - exclusion_point)
+
+            if distance_to_line < exclude_distance:
+                zone_names.append(zone_name)
+
+        return zone_names
 
     @staticmethod
     def is_tangent_to_any(point1, point2, exclusion_zones, exclude_distance):
@@ -172,7 +223,7 @@ class FloorLayout:
         return False
 
     @staticmethod
-    def draw_points_and_contours(exclusion_zones, exclude_distance, sides):
+    def draw_points_and_contours(exclusion_zones, exclude_distance, sides, window_door_borders_pixels):
         image = cv2.imread(Path.FLOOR_LAYOUT_IMAGE.value)
 
         for side in sides:
@@ -185,7 +236,12 @@ class FloorLayout:
             # Draw the point itself
             cv2.circle(image, point, 5, (0, 0, 255), -1)  # Red points
 
+        for zone_name in window_door_borders_pixels.keys():
+            left_border_pixel, right_border_pixel = window_door_borders_pixels[zone_name]
+            cv2.line(image, left_border_pixel, right_border_pixel, (0, 128, 128), 2)
+
         cv2.imwrite(Path.FLOOR_LAYOUT_DEBUG_IMAGE.value, image)
+
 
     def find_all_sides(self, exclude_distance=50, exclude_length=1.5):
         exclusion_zones = self.pixels_dict
@@ -203,22 +259,181 @@ class FloorLayout:
             approx_contours.append(approx)
 
         sides = []
-        contour = approx_contours[0]
-        for i in range(len(contour)):
-            pt1 = contour[i][0]
-            pt2 = contour[(i + 1) % len(contour)][0]
-            print(exclusion_zones)
+        biggest_contour = max(approx_contours, key=cv2.contourArea)
+        for i in range(len(biggest_contour)):
+            pt1 = biggest_contour[i][0]
+            pt2 = biggest_contour[(i + 1) % len(biggest_contour)][0]
             # Exclude sides that are too close to the camera, windows, or doors
-            side = LayoutSide((pt1, pt2))
-            if (self.is_tangent_to_any(pt1, pt2, exclusion_zones, exclude_distance) or
-                    side.calculate_wall_length(self.ratio_x, self.ratio_y) < exclude_length):
-                continue
-            sides.append(side)
-
+            zone_names = FloorLayout.find_all_tangent_zones(pt1, pt2, exclusion_zones, exclude_distance)
+            tangent_borders = [self.window_door_borders_pixels[zone_name] for zone_name in self.window_door_borders_pixels.keys() if zone_name in zone_names]
+            free_side_segments = FloorLayout.find_empty_places_on_wall(pt1, pt2, tangent_borders)
+            print(pt1, pt2, "Pt1, Pt2")
+            print(tangent_borders, "tangent_borders")
+            print()
+            print()
+            print()
+            if tangent_borders:
+                FloorLayout.visualize_wall_segments(pt1, pt2, tangent_borders, free_side_segments)
+            for segment in free_side_segments:
+                side = LayoutSide(segment)
+                if not (self.is_tangent_to_any(segment[0], segment[1], exclusion_zones, exclude_distance)
+                        and side.calculate_wall_length(self.ratio_x, self.ratio_y) >= exclude_length):
+                    sides.append(side)
+                    
         # sides.sort(reverse=True, key=lambda x: x.calculate_wall_length(self.ratio_x, self.ratio_y))
         self.draw_points_and_contours(exclusion_zones, exclude_distance, sides)
 
         return sides
+
+    @staticmethod
+    def find_empty_places_on_wall(wall_start, wall_end, window_door_borders):
+        def find_intersections(wall_start, wall_end, all_points):
+            def line_equation(p1, p2):
+                a = p2[1] - p1[1]  # y2 - y1
+                b = p1[0] - p2[0]  # x1 - x2
+                c = a * p1[0] + b * p1[1]  # ax1 + by1
+                return a, b, -c
+
+            def perpendicular_line(a, b, c, point):
+                px, py = point
+                if b == 0:
+                    return 0, 1, -py
+                elif a == 0:
+                    return 1, 0, -px
+                else:
+                    perp_a = -b
+                    perp_b = a
+                    perp_c = b * px - a * py
+                    return perp_a, perp_b, perp_c
+
+            def line_intersection(a1, b1, c1, a2, b2, c2):
+                determinant = a1 * b2 - a2 * b1
+                if determinant == 0:
+                    return None
+                x = (b2 * -c1 - b1 * -c2) / determinant
+                y = (a1 * -c2 - a2 * -c1) / determinant
+                return x, y
+
+            a1, b1, c1 = line_equation(wall_start, wall_end)
+            intersections = []
+
+            for point in all_points:
+                perp_a, perp_b, perp_c = perpendicular_line(a1, b1, c1, point)
+                intersection = line_intersection(a1, b1, c1, perp_a, perp_b, perp_c)
+                if intersection is not None:
+                    intersections.append(intersection)
+
+            intersections = sorted(
+                intersections, key=lambda p: np.linalg.norm(np.array(p) - np.array(wall_start))
+            )
+
+            return intersections
+
+        # Flatten dividing line points into one list
+        all_points = [point for line in window_door_borders for point in line]
+
+        # Find intersections
+        intersections = find_intersections(wall_start, wall_end, all_points)
+
+        # Create segments from intersections
+        line_segments = []
+        prev_point = wall_start
+        for point in intersections:
+            line_segments.append((prev_point, point))
+            prev_point = point
+        line_segments.append((prev_point, wall_end))
+
+        # Determine if the segment center lies between any projected point pair
+        def is_center_in_between(center, point_pairs):
+            for start, end in point_pairs:
+                # Ensure start and end are in consistent order. Sometimes points are not arranged in the correct order
+                x_min, x_max = sorted([start[0], end[0]])
+                y_min, y_max = sorted([start[1], end[1]])
+
+                # Check if the center is within the bounds
+                if x_min <= center[0] <= x_max and y_min <= center[1] <= y_max:
+                    return True
+            return False
+
+        # Pair dividing points to check the center
+        point_pairs = [(window_door_borders[i][0], window_door_borders[i][1]) for i in range(len(window_door_borders))]
+
+        # Exclude segments whose centers are in between any pair of projected points
+        filtered_segments = []
+        for segment in line_segments:
+            center = (
+                (segment[0][0] + segment[1][0]) / 2,
+                (segment[0][1] + segment[1][1]) / 2,
+            )
+            print(center, point_pairs)
+            if not is_center_in_between(center, point_pairs):
+                filtered_segments.append(segment)
+
+        return filtered_segments
+
+    @staticmethod
+    def visualize_wall_segments(wall_start, wall_end, window_door_borders, filtered_segments):
+        import matplotlib.pyplot as plt
+        # Visualization
+        plt.figure(figsize=(8, 8))
+
+        # Plot Line A
+        plt.plot(
+            [wall_start[0], wall_end[0]],
+            [wall_start[1], wall_end[1]],
+            label="Line A",
+            color="blue",
+            linewidth=2,
+        )
+
+        # Plot dividing line points
+        for line_points in window_door_borders:
+            for point in line_points:
+                plt.scatter(*point, color="red", label="Dividing Line Points")
+            plt.plot(
+                [line_points[0][0], line_points[1][0]],
+                [line_points[0][1], line_points[1][1]],
+                color="green",
+                linestyle="dotted",
+                label="Dividing Line",
+            )
+
+        # Plot filtered segments and their centers
+        for segment in filtered_segments:
+            # Plot the segment
+            plt.plot(
+                [segment[0][0], segment[1][0]],
+                [segment[0][1], segment[1][1]],
+                label="Filtered Segment",
+                color="orange",
+                linestyle="dashed",
+            )
+            # Compute and plot the center of the segment
+            center = (
+                (segment[0][0] + segment[1][0]) / 2,
+                (segment[0][1] + segment[1][1]) / 2,
+            )
+            plt.scatter(*center, color="purple", label="Segment Center", zorder=5)
+
+        # Remove duplicate labels
+        handles, labels = plt.gca().get_legend_handles_labels()
+        unique_labels = dict(zip(labels, handles))
+        plt.legend(unique_labels.values(), unique_labels.keys())
+
+        plt.grid(True)
+        plt.xlabel("X-axis")
+        plt.ylabel("Y-axis")
+        plt.title("Filtered Segments of Line A with Multiple Dividing Lines")
+        plt.axis("equal")
+
+        from io import BytesIO
+        buffer = BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)  # Rewind the buffer to the beginning
+        plt.close()  # Close the plt to free resources
+
+        with open(Path.WALL_SEGMENTS_DEBUG_IMAGE.value, "wb") as f:
+            f.write(buffer.getvalue())
 
     @staticmethod
     def calculate_offset_from_pixel_diff(pixels_diff, ratio):
@@ -279,6 +494,29 @@ class FloorLayout:
 
         # Step 7: Save the resulting filled image
         cv2.imwrite(output_path, filled_image)
+
+    @staticmethod
+    def fill_small_contours(image_path, output_image_path, area_threshold): # We use it to remove the noise
+        # Read the image in grayscale mode
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        if image is None:
+            raise FileNotFoundError(f"Image at path {image_path} not found.")
+
+        # Threshold the image to ensure binary format (black and white)
+        _, binary_image = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
+
+        # Find contours
+        contours, _ = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Loop through contours
+        for contour in contours:
+            # Check the area of the contour
+            if cv2.contourArea(contour) < area_threshold:
+                # Fill the contour with black
+                cv2.drawContours(binary_image, [contour], -1, (0), thickness=cv2.FILLED)
+
+        # Save the processed image
+        cv2.imwrite(output_image_path, binary_image)
 
     @staticmethod
     def fill_layout_with_camera(image_path, camera_pixel, output_path):
