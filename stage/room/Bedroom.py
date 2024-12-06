@@ -1,4 +1,7 @@
+import os
 import random
+import json
+from itertools import permutations
 
 from constants import Path, Config
 from postprocessing.postProcessing import PostProcessor
@@ -15,69 +18,53 @@ class Bedroom(Room):
         area = self.floor_layout.estimate_area_from_floor_layout()
         print(area, "AREA in m2")
 
-        all_sides = self.floor_layout.find_all_sides_sorted_by_length()
+        all_sides = self.floor_layout.find_all_sides()
         print(all_sides, "ALL SIDES")
+        permuted_sides = [list(perm) for perm in permutations(all_sides)]
+        print(permuted_sides)
 
         room_size_required = 6
-        bed_parameters = self.calculate_bed_parameters(all_sides, (pitch_rad, roll_rad))
-        if area > room_size_required: # We will add these types of furniture only if the room is bigger than room_size_required
-            wardrobe_parameters = self.calculate_wardrobe_parameters(all_sides, (pitch_rad, roll_rad))
-            commode_parameters = self.calculate_commode_parameters(all_sides, (pitch_rad, roll_rad))
-        else:
-            wardrobe_parameters, commode_parameters = None, None
-        plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
+        for idx, sides in enumerate(permuted_sides):
+            bed_parameters = self.calculate_bed_parameters(sides, (pitch_rad, roll_rad))
+            if area < room_size_required:
+                wardrobe_parameters, commode_parameters = None, None
+            else:  # We will add these types of furniture only if the room is bigger than room_size_required
+                wardrobe_parameters = self.calculate_wardrobe_parameters(sides, (pitch_rad, roll_rad))
+                commode_parameters = self.calculate_commode_parameters(sides, (pitch_rad, roll_rad))
+            plant_parameters = self.calculate_plant_parameters((pitch_rad, roll_rad))
+            # curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
 
-        # curtains_parameters = self.calculate_curtains_parameters(camera_height, (pitch_rad, roll_rad))
+            scene_render_parameters['objects'] = [
+                # *curtains_parameters,
+                plant_parameters, bed_parameters,
+                wardrobe_parameters, commode_parameters,
+            ]
+            # After our parameters calculation som of them will be equal to None, we have to remove them
+            scene_render_parameters['objects'] = [item for item in scene_render_parameters['objects'] if item is not None]
+            print(json.dumps(scene_render_parameters, indent=4))
 
-        scene_render_parameters['objects'] = [
-            # *curtains_parameters,
-            plant_parameters, bed_parameters,
-            wardrobe_parameters, commode_parameters,
-        ]
-        # After our parameters calculation som of them will be equal to None, we have to remove them
-        scene_render_parameters['objects'] = [item for item in scene_render_parameters['objects'] if item is not None]
+            base, ext = os.path.splitext(Path.RENDER_IMAGE.value)
+            file_path = f"{base}{idx}{ext}"
+            scene_render_parameters['render_path'] = file_path
 
-        import json
-        print(json.dumps(scene_render_parameters, indent=4))
+            Furniture.start_blender_render(scene_render_parameters)
 
-        # # Add plant
-        # # TODO change algo for plant with new Kyrylo algorithm
-        # # self.calculate_plant_parameters((pitch_rad, roll_rad))
-        #
-        # # Add kitchen_table_with_chairs
-        # bed_parameters = self.calculate_bed_parameters((pitch_rad, roll_rad))
-        #
-        # scene_render_parameters['objects'] = [*curtains_parameters, bed_parameters]
-        #
-        Furniture.start_blender_render(scene_render_parameters)
+            PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
 
-        PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
-        segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
-        segment.execute()
-        # WARNING!
-        # We use SEG_RENDER_IMAGE for calculating painting position.
-        # Do not delete or use it after the painting parameters calculation process.
-        resize_and_save_image(Path.SEG_RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, height)
-        Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
+            ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT).execute()
 
-        # try:
-        #     painting_parameters = self.calculate_painting_parameters((pitch_rad, roll_rad))
-        #     scene_render_parameters['objects'] = [painting_parameters]
-        #     furniture_image = Furniture.start_blender_render(scene_render_parameters)
-        #     Room.process_rendered_image(furniture_image)
-        # except TypeError as e:
-        #     print(e, "FAILED TO ADD PAINTING")
+            resize_and_save_image(Path.SEG_RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, height)
+            Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
-        if Config.DO_POSTPROCESSING.value:
-            processor = PostProcessor()
-            processor.execute()
+            if Config.DO_POSTPROCESSING.value:
+                PostProcessor().execute()
 
     def calculate_bed_parameters(self, all_sides, camera_angles_rad: tuple):
-        if len(all_sides) > 0:
-            side = all_sides.pop(0)
-        else:
-            return None
         from stage.furniture.Bed import Bed
+        if len(all_sides) == 0:
+            return None
+
+        side = all_sides.pop(0)
 
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         pixels_dict = self.floor_layout.get_pixels_dict()
