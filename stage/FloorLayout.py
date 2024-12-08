@@ -276,12 +276,12 @@ class FloorLayout:
                 FloorLayout.visualize_wall_segments(pt1, pt2, tangent_borders, free_side_segments)
             for segment in free_side_segments:
                 side = LayoutSide(segment)
-                if not (self.is_tangent_to_any(segment[0], segment[1], exclusion_zones, exclude_distance)
+                if (not self.is_tangent_to_any(segment[0], segment[1], exclusion_zones, exclude_distance)
                         and side.calculate_wall_length(self.ratio_x, self.ratio_y) >= exclude_length):
                     sides.append(side)
                     
         # sides.sort(reverse=True, key=lambda x: x.calculate_wall_length(self.ratio_x, self.ratio_y))
-        self.draw_points_and_contours(exclusion_zones, exclude_distance, sides)
+        self.draw_points_and_contours(exclusion_zones, exclude_distance, sides, self.window_door_borders_pixels)
 
         return sides
 

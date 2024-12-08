@@ -33,13 +33,15 @@ class LivingRoom(Room):
 
         Furniture.start_blender_render(scene_render_parameters)
 
-        PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
-        segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
-        segment.execute()
+        # WARNING! WE DO NOT USE SEG_RENDER_IMAGE. UNLESS YOU WANT TO ADD PAINTING
+        # PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
+        # segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+        # segment.execute()
 
         if Config.DO_POSTPROCESSING.value:
             processor = PostProcessor()
             processor.execute()
+        return [Path.RENDER_IMAGE.value] # We return just one image, because for living room we always have same layout for same image
 
     def calculate_sofa_with_table_parameters(self, all_sides, camera_angles_rad: tuple):
         if len(all_sides) > 0:
