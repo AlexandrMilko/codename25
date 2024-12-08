@@ -20,13 +20,20 @@ def get_insane_image_1337():
 
     create_visuals_dir()
     save_encoded_image(input_image, Path.INPUT_IMAGE.value)
-    apply_style(Path.INPUT_IMAGE.value, room_choice, style_budget_choice)
+    output_image_paths = apply_style(Path.INPUT_IMAGE.value, room_choice, style_budget_choice)
 
     if Config.DO_POSTPROCESSING.value:
+        # WARNING! WE REMOVED WEBUI, so NOW THE POSTPROCESSING IS DONE THROUGH COMFYUI AND IT DOES NOT MAKE IMAGE BETTER
+        # UNTIL we decide what we do with postprocessing - set DO_POSTPROCESSING to FALSE.
+        # Plus, at this point, postprocessing is run only for one image
         output_image = get_encoded_image_from_path(Path.OUTPUT_IMAGE.value)
+        return jsonify({'output_image': output_image})
     else:
-        output_image = get_encoded_image_from_path(Path.RENDER_IMAGE.value)
-    return jsonify({'output_image': output_image})
+        encoded_images_dict = dict()
+        for i in range(len(output_image_paths)):
+            image_path = output_image_paths[i]
+            encoded_images_dict[f"output_image_{i}"] = get_encoded_image_from_path(image_path)
+        return jsonify(encoded_images_dict)
 
 
 def apply_style(es_path, room_choice, style_budget_choice):
@@ -34,16 +41,16 @@ def apply_style(es_path, room_choice, style_budget_choice):
 
     if room_choice.lower() == "bedroom":
         room = stage.Bedroom(es_path)
-        room.stage()
+        output_image_paths = room.stage()
     elif room_choice.lower() == "kitchen":
         room = stage.Kitchen(es_path)
-        room.stage()
+        output_image_paths = room.stage()
     elif room_choice.lower() == "living room":
         room = stage.LivingRoom(es_path)
-        room.stage()
+        output_image_paths = room.stage()
     else:
         raise Exception(f"Wrong Room Type was specified: {room_choice.lower()}")
-
+    return output_image_paths
 
 def is_port_in_use(port: int) -> bool:
     import socket

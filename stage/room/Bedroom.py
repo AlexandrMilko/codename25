@@ -24,6 +24,7 @@ class Bedroom(Room):
         print(permuted_sides)
 
         room_size_required = 6
+        output_image_paths = []
         for idx, sides in enumerate(permuted_sides):
             bed_parameters = self.calculate_bed_parameters(sides, (pitch_rad, roll_rad))
             if area < room_size_required:
@@ -45,19 +46,21 @@ class Bedroom(Room):
 
             base, ext = os.path.splitext(Path.RENDER_IMAGE.value)
             file_path = f"{base}{idx}{ext}"
+            output_image_paths.append(file_path)
             scene_render_parameters['render_path'] = file_path
 
             Furniture.start_blender_render(scene_render_parameters)
 
-            PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
-
-            ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT).execute()
-
-            resize_and_save_image(Path.SEG_RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, height)
-            Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
+            # WARNING! WE DO NOT USE WINDOW MASK ANYMORE. UNLESS YOU WANT TO ADD CURTAINS
+            # PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
+            # ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT).execute()
+            #
+            # resize_and_save_image(Path.SEG_RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, height)
+            # Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
             if Config.DO_POSTPROCESSING.value:
                 PostProcessor().execute()
+        return output_image_paths
 
     def calculate_bed_parameters(self, all_sides, camera_angles_rad: tuple):
         from stage.furniture.Bed import Bed

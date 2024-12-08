@@ -20,6 +20,7 @@ class Kitchen(Room):
         all_sides = self.floor_layout.find_all_sides()
         permuted_sides = [list(perm) for perm in permutations(all_sides)]
 
+        output_image_paths = []
         for idx, sides in enumerate(permuted_sides):
             kitchen_parameters = self.calculate_kitchen_parameters(sides, (pitch_rad, roll_rad))
             table_parameters = self.calculate_table_parameters((pitch_rad, roll_rad))
@@ -35,21 +36,24 @@ class Kitchen(Room):
 
             base, ext = os.path.splitext(Path.RENDER_IMAGE.value)
             file_path = f"{base}{idx}{ext}"
+            output_image_paths.append(file_path)
             scene_render_parameters['render_path'] = file_path
 
             Furniture.start_blender_render(scene_render_parameters)
 
             PREPROCESSOR_RESOLUTION_LIMIT = Config.CONTROLNET_HEIGHT_LIMIT.value if height > Config.CONTROLNET_HEIGHT_LIMIT.value else height
 
-            segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
-            segment.execute()
-
-            resize_and_save_image(Path.SEG_RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, height)
-            Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
+            # WARNING! WE DO NOT USE WINDOW MASK ANYMORE. UNLESS YOU WANT TO ADD CURTAINS
+            # segment = ImageSegmentor(Path.RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, PREPROCESSOR_RESOLUTION_LIMIT)
+            # segment.execute()
+            #
+            # resize_and_save_image(Path.SEG_RENDER_IMAGE.value, Path.SEG_RENDER_IMAGE.value, height)
+            # Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
             if Config.DO_POSTPROCESSING.value:
                 processor = PostProcessor()
                 processor.execute()
+        return output_image_paths
 
     def get_available_space_length(self):
         """
