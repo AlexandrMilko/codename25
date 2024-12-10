@@ -267,11 +267,6 @@ class FloorLayout:
             zone_names = FloorLayout.find_all_tangent_zones(pt1, pt2, exclusion_zones, exclude_distance)
             tangent_borders = [self.window_door_borders_pixels[zone_name] for zone_name in self.window_door_borders_pixels.keys() if zone_name in zone_names]
             free_side_segments = FloorLayout.find_empty_places_on_wall(pt1, pt2, tangent_borders)
-            print(pt1, pt2, "Pt1, Pt2")
-            print(tangent_borders, "tangent_borders")
-            print()
-            print()
-            print()
             if tangent_borders:
                 FloorLayout.visualize_wall_segments(pt1, pt2, tangent_borders, free_side_segments)
             for segment in free_side_segments:
@@ -287,6 +282,7 @@ class FloorLayout:
 
     @staticmethod
     def find_empty_places_on_wall(wall_start, wall_end, window_door_borders):
+        if not window_door_borders: return [[wall_start, wall_end]]
         def find_intersections(wall_start, wall_end, all_points):
             def line_equation(p1, p2):
                 a = p2[1] - p1[1]  # y2 - y1
