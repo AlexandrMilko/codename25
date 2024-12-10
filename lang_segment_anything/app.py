@@ -56,8 +56,12 @@ def predict(inputs: dict) -> dict:
         results["labels"],
     )
     output_image = Image.fromarray(np.uint8(output_image)).convert("RGB")
+    # Convert bboxes to integers
+    results["boxes"].flags.writeable = False  # Simulate a non-writable array
+    # Create a writable copy and convert values to integers
+    bboxes = results["boxes"].copy().astype(int)
 
-    return {"output_image": output_image}
+    return {"output_image": output_image, "boxes": bboxes}
 
 
 
