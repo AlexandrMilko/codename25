@@ -2,13 +2,12 @@ import math
 
 import cv2
 import numpy as np
-from pywin.framework.toolmenu import tools
 
 from constants import Path, Config
 from preprocessing.preProcessSegment import ImageSegmentor
 from stage import Floor
 from tools import (get_image_size, calculate_angle_from_top_view, resize_and_save_image,
-                   downscale_image_if_bigger, run_subprocess, segment_lang_sam)
+                   downscale_image_if_bigger, run_subprocess, segment_lang_sam, substract_bbox_from_mask)
 from ..FloorLayout import FloorLayout
 
 
@@ -43,6 +42,8 @@ class Room:
 
     def create_floor_layout(self, pitch_rad: float, roll_rad: float):
         horizontal_borders = self.find_horizontal_borders()
+        for i, doorway in enumerate(self.doorways_bottom_pixels):
+            horizontal_borders[f"doorway_{i}"] = doorway
         print(horizontal_borders)
 
         middle_points_in_3d = {}
@@ -209,7 +210,10 @@ class Room:
         resize_and_save_image(Path.SEG_INPUT_IMAGE.value, Path.SEG_INPUT_IMAGE.value, height)
         Floor.save_mask(Path.SEG_INPUT_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
 
-        segment_lang_sam(Path.INPUT_IMAGE.value, Path.DOOR_SEG_IMG_OUTPUT.value)
+        doorways_bounding_boxes = segment_lang_sam(Path.INPUT_IMAGE.value, Path.DOOR_SEG_IMG_OUTPUT.value)
+        self.doorways_bottom_pixels = substract_bbox_from_mask(Path.FLOOR_MASK_IMAGE.value,
+                                                          Path.FLOOR_MASK_IMAGE.value,
+                                                          doorways_bounding_boxes)
 
         Room.save_windows_mask(Path.SEG_INPUT_IMAGE.value, Path.WINDOWS_MASK_IMAGE.value)
 

@@ -220,3 +220,53 @@ def segment_lang_sam(image_path, output_path):
     output = predict(inputs)
     output_image = output["output_image"]
     output_image.save(output_path, format="PNG")
+    return output["boxes"]
+
+def substract_bbox_from_mask(input_mask_path, output_mask_path, bounding_boxes):
+    """
+    Process the mask image by setting pixels in the given bounding boxes to black.
+
+    Args:
+        input_mask_path (str): Path to the input mask image (PNG format).
+        output_mask_path (str): Path to save the processed mask image (PNG format).
+        bounding_boxes (list of tuples): List of bounding boxes in the format [(x1, y1, x2, y2), ...].
+
+    Returns:
+        list: A one-dimensional array of bottom-left and bottom-right pixel coordinates [(x, y), ...].
+    """
+    # Open the image and convert it to grayscale
+    image = Image.open(input_mask_path).convert("L")
+
+    # Convert the image to a NumPy array
+    image_array = np.array(image)
+
+    # Identify white pixels (255 in grayscale)
+    white_pixel_mask = image_array == 255
+
+    # Initialize a list to store bottom-left and bottom-right pixels
+    bottom_pixels = []
+
+    # Process each bounding box
+    for box in bounding_boxes:
+        x1, y1, x2, y2 = box
+
+        # Ensure coordinates are within image bounds
+        x1, y1 = max(x1, 0), max(y1, 0)
+        x2, y2 = min(x2, image_array.shape[1]), min(y2, image_array.shape[0])
+
+        # Extract the region of interest (ROI)
+        roi = white_pixel_mask[y1:y2, x1:x2]
+
+        # Check if any white pixels are in the ROI
+        if np.any(roi):
+            # Add bottom-left and bottom-right coordinates
+            bottom_pixels.append([(x1, y2 - 1), (x2 - 1, y2 - 1)])
+
+        # Set the pixels in the bounding box to black (0 in grayscale)
+        image_array[y1:y2, x1:x2] = 0
+
+    # Save the modified image
+    result_image = Image.fromarray(image_array)
+    result_image.save(output_mask_path)
+
+    return bottom_pixels
