@@ -141,7 +141,7 @@ class Kitchen(Room):
         pixel_diff = -1 * (middle_point[0] - pixels_dict['camera'][0]), middle_point[1] - pixels_dict['camera'][1]
         kitchen_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
 
-        yaw_angle = side.calculate_wall_angle()
+        yaw_angle = side.calculate_wall_angle(ratio_x, ratio_y)
         pitch_rad, roll_rad = camera_angles_rad
 
         render_parameters = kitchen_set.calculate_rendering_parameters(
