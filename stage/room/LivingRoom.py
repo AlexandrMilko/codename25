@@ -57,7 +57,7 @@ class LivingRoom(Room):
         pixels_dict = self.floor_layout.get_pixels_dict()
 
         # TODO rename to offset_pixel and use same name in all the rest of the functions
-        offset_point, yaw_angle = self.calculate_angle_and_offset_pixel(biggest_side)
+        offset_point, yaw_angle = self.calculate_angle_and_offset_pixel(biggest_side, ratio_x, ratio_y)
         pixel_diff = -1 * (offset_point[0] - pixels_dict['camera'][0]), offset_point[1] - pixels_dict['camera'][1]
         living_room_set_offset = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
 
@@ -66,13 +66,13 @@ class LivingRoom(Room):
             living_room_set.calculate_rendering_parameters(self, living_room_set_offset, yaw_angle, (roll_rad, pitch_rad)))
         return render_parameters
 
-    def calculate_angle_and_offset_pixel(self, longest_side):
+    def calculate_angle_and_offset_pixel(self, longest_side, ratio_x, ratio_y):
         # Load the original image
         image_path = Path.FLOOR_LAYOUT_IMAGE.value
         new_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
         # Find the largest rectangle that is perpendicular to this blue side
-        best_rect, best_angle, best_center = find_largest_rectangle_perpendicular_to_side(new_image, longest_side)
+        best_rect, best_angle, best_center = find_largest_rectangle_perpendicular_to_side(new_image, longest_side, ratio_x, ratio_y)
 
         x1, y1, x2, y2 = best_rect
         cv2.rectangle(new_image, (x1, y1), (x2, y2), (0, 0, 255), 2)
@@ -142,8 +142,8 @@ def dynamic_remove_padding(image, original_image_shape):
     else:
         return image
 
-def calculate_perpendicular_angle(side):
-    angle = side.calculate_wall_angle()  # Get the angle of the side in degrees
+def calculate_perpendicular_angle(side, ratio_x, ratio_y):
+    angle = side.calculate_wall_angle(ratio_x, ratio_y)  # Get the angle of the side in degrees
     perpendicular_angle = (angle + 90) % 360  # Find the perpendicular angle by adding 90 degrees
     return perpendicular_angle
 
@@ -157,9 +157,9 @@ def invert_rotate_pixel(pixel, matrix):
     original_best_center = (int(original_best_center[0]), int(original_best_center[1]))
     return original_best_center
 
-def find_largest_rectangle_perpendicular_to_side(image, side):
+def find_largest_rectangle_perpendicular_to_side(image, side, ratio_x, ratio_y):
     # Calculate the perpendicular angle to the given side
-    perpendicular_angle = calculate_perpendicular_angle(side)
+    perpendicular_angle = calculate_perpendicular_angle(side, ratio_x, ratio_y)
 
     # Rotate the image so that the side is perpendicular
     rotated_image, matrix = rotate_image(image, perpendicular_angle)

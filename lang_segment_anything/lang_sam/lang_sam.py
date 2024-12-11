@@ -52,8 +52,8 @@ class LangSAM:
             }
 
             if result["labels"]:
-                processed_result["boxes"] = result["boxes"].cpu().numpy()
-                processed_result["scores"] = result["scores"].cpu().numpy()
+                processed_result["boxes"] = result["boxes"].cpu().numpy().copy() # We are making it a copy to make it writable
+                processed_result["scores"] = result["scores"].cpu().numpy().copy()
                 sam_images.append(np.asarray(images_pil[idx]))
                 sam_boxes.append(processed_result["boxes"])
                 sam_indices.append(idx)

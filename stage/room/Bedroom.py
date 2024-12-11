@@ -86,7 +86,7 @@ class Bedroom(Room):
         bed = Bed(Path.BED_WITH_TABLES_MODEL.value if side.calculate_wall_length(ratio_x, ratio_y) > 3 else Path.BED_MODEL.value)
 
         print(f"BED floor placement pixel: {middle_point}")
-        yaw_angle = side.calculate_wall_angle()
+        yaw_angle = side.calculate_wall_angle(ratio_x, ratio_y)
         print(yaw_angle, "BED yaw angle in degrees")
         render_parameters = (
             bed.calculate_rendering_parameters(self, bed_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
@@ -110,7 +110,7 @@ class Bedroom(Room):
 
         pitch_rad, roll_rad = camera_angles_rad
         wardrobe = Wardrobe()
-        yaw_angle = side.calculate_wall_angle()
+        yaw_angle = side.calculate_wall_angle(ratio_x, ratio_y)
         render_parameters = (
             wardrobe.calculate_rendering_parameters(self, wardrobe_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
         return render_parameters
@@ -133,7 +133,7 @@ class Bedroom(Room):
 
         pitch_rad, roll_rad = camera_angles_rad
         commode = Commode()
-        yaw_angle = side.calculate_wall_angle()
+        yaw_angle = side.calculate_wall_angle(ratio_x, ratio_y)
         render_parameters = (
             commode.calculate_rendering_parameters(self, commode_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
         return render_parameters

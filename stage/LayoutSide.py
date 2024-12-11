@@ -9,12 +9,15 @@ class LayoutSide:
         second_point = points[1]
         self.middle_point = (first_point[0] + second_point[0]) // 2, (first_point[1] + second_point[1]) // 2
 
-    def calculate_wall_angle(self):
-        top_point = (self.middle_point[0], 0)
+    def calculate_wall_angle(self, ratio_x, ratio_y):
+        proportioned_middle_point = LayoutSide.preserved_proportions(self.middle_point, ratio_x, ratio_y)
+        proportioned_first_point = LayoutSide.preserved_proportions(self.points[0], ratio_x, ratio_y)
+        proportioned_second_point = LayoutSide.preserved_proportions(self.points[1], ratio_x, ratio_y)
+        top_point = (proportioned_middle_point[0], 0)
 
-        vector_top_to_middle = np.array(self.middle_point) - np.array(top_point)
+        vector_top_to_middle = np.array(proportioned_middle_point) - np.array(top_point)
 
-        vector_wall = np.array(self.points[1]) - np.array(self.points[0])
+        vector_wall = np.array(proportioned_second_point) - np.array(proportioned_first_point)
         perpendicular_vector = np.array([-vector_wall[1], vector_wall[0]])
 
         angle_radians = math.atan2(
@@ -41,3 +44,8 @@ class LayoutSide:
 
     def __repr__(self):
         return f"Floor Layout Side: {self.points}, {self.middle_point}"
+    @staticmethod
+    def preserved_proportions(point, ratio_x, ratio_y):
+        y_to_x = ratio_y / ratio_x  # Calculate how much smaller y is compared to x axis
+        proportions_preserved_point = (point[0] * y_to_x, point[1])
+        return proportions_preserved_point
