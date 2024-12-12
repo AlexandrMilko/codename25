@@ -2,6 +2,8 @@ import json
 import math
 import sys
 import bpy
+from constants import Config,Path
+from tools import get_image_size
 
 
 def clean_scene():
@@ -59,7 +61,7 @@ def create_material(name="Material"):
     return material
 
 
-def create_geo_node_tree():
+def create_geo_node_tree_for_mesh():
     node_tree = bpy.data.node_groups["Geometry Nodes"]
 
     # Add and link geometry nodes for mesh and material processing
@@ -76,6 +78,118 @@ def create_geo_node_tree():
     node_tree.links.new(in_node.outputs["Geometry"], set_material_node.inputs['Geometry'])
     node_tree.links.new(set_material_node.outputs["Geometry"], out_node.inputs['Geometry'])
 
+def create_geo_node_tree_for_adaptive_points():
+    node_tree = bpy.data.node_groups["Geometry Nodes"]
+
+    width, height = get_image_size(Path.INPUT_IMAGE.value)
+    num_of_pixels = width * height
+
+    # Add and link geometry nodes for mesh and material processing
+    in_node = node_tree.nodes["Group Input"]
+    out_node = node_tree.nodes["Group Output"]
+
+    # Add input and output sockets
+
+    # Initialize node placement logic
+    node_x_location = -600
+    node_location_step_x = 200
+
+    # Add and link nodes
+
+    # k_value_node
+    k_value_node, _ = create_node(node_tree, "ShaderNodeValue",
+                               node_x_location, node_location_step_x)
+    k_value_node.outputs[0].default_value = 1/Config.K_VALUE.value
+
+    # num_of_points
+    num_of_points, _ = create_node(node_tree, "ShaderNodeValue",
+                               node_x_location, node_location_step_x)
+    num_of_points.outputs[0].default_value =  num_of_pixels
+
+    # Mesh to Points
+    mesh_to_points, node_x_location = create_node(node_tree, "GeometryNodeMeshToPoints",
+                                                  node_x_location, node_location_step_x)
+    mesh_to_points.inputs["Radius"].default_value = 0.05
+
+    # Set Point Radius
+    set_point_radius, node_x_location = create_node(node_tree, "GeometryNodeSetPointRadius",
+                                                    node_x_location, node_location_step_x)
+
+    # Set Material node
+    set_material_node, node_x_location = create_node(node_tree, "GeometryNodeSetMaterial",
+                                                     node_x_location, node_location_step_x)
+    set_material_node.inputs[2].default_value = bpy.data.materials["Material"]
+    node_tree.links.new(in_node.outputs["Geometry"], set_material_node.inputs['Geometry'])
+    node_tree.links.new(set_material_node.outputs["Geometry"], out_node.inputs['Geometry'])
+
+    # Position
+    position_node, node_x_location = create_node(node_tree, "GeometryNodeInputPosition",
+                                                 -800, 0)
+
+    # Separate XYZ
+    separate_xyz, node_x_location = create_node(node_tree, "ShaderNodeSeparateXYZ",
+                                                -600, 0)
+
+    # Combine XYZ
+    combine_xyz, node_x_location = create_node(node_tree, "ShaderNodeCombineXYZ",
+                                               -400, 0)
+
+    # Distance
+    distance_node, node_x_location = create_node(node_tree, "ShaderNodeVectorMath",
+                                                 -200, 0)
+    distance_node.operation = 'DISTANCE'
+
+    # Math (Divide 1)
+    divide_node_1, node_x_location = create_node(node_tree, "ShaderNodeMath",
+                                                 0, node_location_step_x)
+    divide_node_1.operation = 'DIVIDE'
+
+    # Math (Square Root)
+    sqrt_node, node_x_location = create_node(node_tree, "ShaderNodeMath",
+                                             200, node_location_step_x)
+    sqrt_node.operation = 'SQRT'
+
+    # Math (Divide 2)
+    divide_node_2, node_x_location = create_node(node_tree, "ShaderNodeMath",
+                                                 400, node_location_step_x)
+    divide_node_2.operation = 'DIVIDE'
+
+    # Linking nodes
+    links = node_tree.links
+
+    # Geometry flow
+    links.new(in_node.outputs["Geometry"], mesh_to_points.inputs["Mesh"])
+    links.new(mesh_to_points.outputs["Points"], set_point_radius.inputs["Points"])
+    links.new(set_point_radius.outputs["Points"], set_material_node.inputs["Geometry"])
+    links.new(set_material_node.outputs["Geometry"], out_node.inputs["Geometry"])
+
+    # Position to Separate XYZ
+    links.new(position_node.outputs["Position"], separate_xyz.inputs["Vector"])
+
+    # Separate XYZ to Distance
+    links.new(separate_xyz.outputs["Y"], distance_node.inputs[0])
+
+    # Combine XYZ to Distance
+    links.new(combine_xyz.outputs["Vector"], distance_node.inputs[1])
+
+    # Distance to Divide Node 1
+    links.new(distance_node.outputs["Value"], divide_node_1.inputs[0])
+
+    # Link k_value_node to Divide Node 1
+    links.new(k_value_node.outputs[0], divide_node_1.inputs[1])
+
+    # Divide Node 1 to Divide Node 2
+    links.new(divide_node_1.outputs["Value"], divide_node_2.inputs[0])
+
+    # Square Root to Divide Node 2
+    links.new(sqrt_node.outputs["Value"], divide_node_2.inputs[1])
+
+    # Link num_of_points to Divide Node 2
+    links.new(num_of_points.outputs[0], sqrt_node.inputs[0])
+
+    # Link Divide Node 2 to Set Point Radius
+    links.new(divide_node_2.outputs["Value"], set_point_radius.inputs["Radius"])
+
 
 def import_room(path):
     # Import a room model and apply geometry node setup
@@ -83,7 +197,10 @@ def import_room(path):
     bpy.ops.node.new_geometry_nodes_modifier()
 
     create_material()
-    create_geo_node_tree()
+    if Config.BLENDER_ROOM_TYPE.value == "mesh":
+        create_geo_node_tree_for_mesh()
+    elif Config.BLENDER_ROOM_TYPE.value == "adaptive_points":
+        create_geo_node_tree_for_adaptive_points()
     bpy.context.object.visible_shadow = False
 
 
