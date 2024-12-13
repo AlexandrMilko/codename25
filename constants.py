@@ -44,6 +44,7 @@ class Path(Enum):
     DEPTH_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'depth_image.png')
     WALL_SEGMENTS_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'last_wall_segment.png')
     DOOR_SEG_IMG_OUTPUT = join(PREPROCESSED_DIR, 'doorway_seg.png')
+    REDUNDANT_WALLS_ON_FLOOR_MASK_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'redundant_walls_on_floor_mask.png')
 
     OUTPUT_IMAGE = join(PREPROCESSED_DIR, 'applied.jpg')
 

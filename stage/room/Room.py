@@ -7,7 +7,8 @@ from constants import Path, Config
 from preprocessing.preProcessSegment import ImageSegmentor
 from stage import Floor
 from tools import (get_image_size, calculate_angle_from_top_view, resize_and_save_image,
-                   downscale_image_if_bigger, run_subprocess, segment_lang_sam, substract_bbox_from_mask)
+                   downscale_image_if_bigger, run_subprocess, segment_lang_sam, substract_bbox_from_mask,
+                   find_middles_of_redundant_walls, check_pixels_in_white_area, bounding_boxes_to_pixels)
 from ..FloorLayout import FloorLayout
 
 
@@ -40,15 +41,19 @@ class Room:
         offset_relative_to_camera = rotate_3d_point(target_point, -pitch_rad, -roll_rad)
         return offset_relative_to_camera.tolist()  # We convert it to list to avoid serializing errors for blender_script
 
-    def create_floor_layout(self, pitch_rad: float, roll_rad: float):
+    def create_floor_layout(self, pitch_rad: float, roll_rad: float, pixels_from_walls_to_ignore):
         horizontal_borders = self.find_horizontal_borders()
-        for i, doorway in enumerate(self.doorways_bottom_pixels):
-            horizontal_borders[f"doorway_{i}"] = doorway
+        for i, doorway_boundary_pixel in enumerate(pixels_from_walls_to_ignore):
+            horizontal_borders[f"doorway_{i}"] = doorway_boundary_pixel
         print(horizontal_borders)
 
         middle_points_in_3d = {}
         borders_in_3d = {}
         for name, value in horizontal_borders.items():
+            if name.startswith("doorway"):
+                pixel = value
+                middle_points_in_3d[name] = self.infer_3d(pixel, pitch_rad, roll_rad)
+                continue
             left_pixel, right_pixel = value
             left_offset = self.infer_3d(left_pixel, pitch_rad, roll_rad)
             right_offset = self.infer_3d(right_pixel, pitch_rad, roll_rad)
@@ -211,9 +216,21 @@ class Room:
         Floor.save_mask(Path.SEG_INPUT_IMAGE.value, Path.FLOOR_MASK_IMAGE.value)
 
         doorways_bounding_boxes = segment_lang_sam(Path.INPUT_IMAGE.value, Path.DOOR_SEG_IMG_OUTPUT.value)
-        self.doorways_bottom_pixels = substract_bbox_from_mask(Path.FLOOR_MASK_IMAGE.value,
-                                                          Path.FLOOR_MASK_IMAGE.value,
-                                                          doorways_bounding_boxes)
+        print(doorways_bounding_boxes)
+        doorways_pixels = bounding_boxes_to_pixels(doorways_bounding_boxes)
+        print(doorways_pixels)
+        redundant_walls_middles = []
+        if check_pixels_in_white_area(doorways_pixels, Path.FLOOR_MASK_IMAGE.value):
+            # WARNING! redundant_walls_middles must be calculated before substract_bbox_from_mask
+            try:
+                redundant_walls_middles = find_middles_of_redundant_walls(Path.FLOOR_MASK_IMAGE.value, doorways_bounding_boxes)
+                substract_bbox_from_mask(Path.FLOOR_MASK_IMAGE.value,
+                                            Path.FLOOR_MASK_IMAGE.value,
+                                            doorways_bounding_boxes)
+            except ValueError:
+                print("WARNING! There was error finding redundant walls. ",
+                      "Probably their intersection with floor mask is too small ",
+                      "and it was neglected when removing noise.")
 
         Room.save_windows_mask(Path.SEG_INPUT_IMAGE.value, Path.WINDOWS_MASK_IMAGE.value)
 
@@ -241,7 +258,7 @@ class Room:
             (pitch_rad, roll_rad)
         )
 
-        self.create_floor_layout(pitch_rad, roll_rad)
+        self.create_floor_layout(pitch_rad, roll_rad, redundant_walls_middles)
 
         return camera_height, pitch_rad, roll_rad, height, scene_render_parameters
 
@@ -283,21 +300,24 @@ class Room:
         return curtains_parameters
 
     def calculate_plant_parameters(self, camera_angles_rad: tuple):
+        import random
         from stage.furniture.Plant import Plant
-        from stage.Floor import Floor
+        ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
+        pixels_dict = self.floor_layout.get_pixels_dict()
+
+        plant_pixels = Plant.find_floor_layout_placement_pixels(self.floor_layout.output_image_path)
+        if len(plant_pixels) <= 0: return None
+        random_index = random.randint(0, len(plant_pixels) - 1)
+        plant_point = plant_pixels[random_index]
+
+        pixel_diff = -1 * (plant_point[0] - pixels_dict['camera'][0]), plant_point[1] - pixels_dict['camera'][1]
+        plant_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
+
         pitch_rad, roll_rad = camera_angles_rad
         plant = Plant()
-        seg_image_path = Path.SEG_INPUT_IMAGE.value
-        save_path = Path.FLOOR_MASK_IMAGE.value
-        Floor.save_mask(seg_image_path, save_path)
-        pixels_for_placing = plant.find_placement_pixel(save_path)
-        print(f"PLANT placement pixels: {pixels_for_placing}")
-        import random
-        random_index = random.randint(0, len(pixels_for_placing) - 1)
-        plant_yaw_angle = 0  # We do not rotate plants
+        yaw_angle = 0
         render_parameters = (
-            plant.calculate_rendering_parameters(self, pixels_for_placing[random_index], plant_yaw_angle,
-                                                 (roll_rad, pitch_rad)))
+            plant.calculate_rendering_parameters(self, plant_offset_x_y, yaw_angle, (roll_rad, pitch_rad)))
         return render_parameters
 
     @staticmethod
