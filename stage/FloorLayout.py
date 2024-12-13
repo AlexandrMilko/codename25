@@ -191,7 +191,7 @@ class FloorLayout:
         return zone_names
 
     @staticmethod
-    def is_tangent_to_any(point1, point2, exclusion_zones, exclude_distance):
+    def is_tangent_to_any(point1, point2, exclusion_zones, exclude_distance, exclude_distance_doorway):
         for zone_name, zone_coords in exclusion_zones.items():
             exclusion_point = np.array(zone_coords)
 
@@ -217,22 +217,29 @@ class FloorLayout:
             # Calculate the distance from the exclusion point to the closest point on the line
             distance_to_line = np.linalg.norm(closest_point - exclusion_point)
 
-            if distance_to_line < exclude_distance:
-                return True
+            if zone_name.startswith("doorway"):
+                if distance_to_line < exclude_distance_doorway:
+                    return True
+            else:
+                if distance_to_line < exclude_distance:
+                    return True
 
         return False
 
     @staticmethod
-    def draw_points_and_contours(exclusion_zones, exclude_distance, sides, window_door_borders_pixels):
+    def draw_points_and_contours(exclusion_zones, exclude_distance, sides, window_door_borders_pixels, exclude_distance_doorway):
         image = cv2.imread(Path.FLOOR_LAYOUT_IMAGE.value)
 
         for side in sides:
             pt1, pt2 = side.get_points()
             cv2.line(image, pt1, pt2, (255, 0, 0), 2)  # Blue contours
 
-        for key, point in exclusion_zones.items():
-            # Draw the exclusion circle
-            cv2.circle(image, point, exclude_distance, (0, 255, 0), 2)  # Green circles
+        for name, point in exclusion_zones.items():
+            if name.startswith("doorway"):
+                # Draw the exclusion circle
+                cv2.circle(image, point, exclude_distance_doorway, (0, 255, 0), 2)  # Green circles
+            else:
+                cv2.circle(image, point, exclude_distance, (0, 255, 0), 2)  # Green circles
             # Draw the point itself
             cv2.circle(image, point, 5, (0, 0, 255), -1)  # Red points
 
@@ -243,7 +250,7 @@ class FloorLayout:
         cv2.imwrite(Path.FLOOR_LAYOUT_DEBUG_IMAGE.value, image)
 
 
-    def find_all_sides(self, exclude_distance=50, exclude_length=1.5):
+    def find_all_sides(self, exclude_distance=50, exclude_length=1.5, exclude_distance_doorway=25):
         exclusion_zones = self.pixels_dict
         image = cv2.imread(self.output_image_path)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -271,12 +278,12 @@ class FloorLayout:
                 FloorLayout.visualize_wall_segments(pt1, pt2, tangent_borders, free_side_segments)
             for segment in free_side_segments:
                 side = LayoutSide(segment)
-                if (not self.is_tangent_to_any(segment[0], segment[1], exclusion_zones, exclude_distance)
+                if (not self.is_tangent_to_any(segment[0], segment[1], exclusion_zones, exclude_distance, exclude_distance_doorway)
                         and side.calculate_wall_length(self.ratio_x, self.ratio_y) >= exclude_length):
                     sides.append(side)
                     
         # sides.sort(reverse=True, key=lambda x: x.calculate_wall_length(self.ratio_x, self.ratio_y))
-        self.draw_points_and_contours(exclusion_zones, exclude_distance, sides, self.window_door_borders_pixels)
+        self.draw_points_and_contours(exclusion_zones, exclude_distance, sides, self.window_door_borders_pixels, exclude_distance_doorway)
 
         return sides
 
