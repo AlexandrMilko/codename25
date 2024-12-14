@@ -2,17 +2,13 @@ from enum import Enum
 import os
 
 
-def join(directory, file):
-    return os.path.join(directory, file)
-
-
 class Config(Enum):
     IMAGE_HEIGHT_LIMIT = 1080  # For limiting the time it takes to render and depth calculation for the image
     RENDER_SAMPLES = 64  # Lower samples: faster render times but reduced image quality
     DO_POSTPROCESSING = False
     CONTROLNET_HEIGHT_LIMIT = 1024
     FLOOR_LAYOUT_CONTOUR_SIZE_TO_REMOVE = 1000
-    BLENDER_ROOM_TYPE = "adaptive_points"   #adaptive_points or mesh
+    BLENDER_ROOM_TYPE = "adaptive_points"  # adaptive_points or mesh
     K_VALUE = 0.833
 
 
@@ -22,6 +18,10 @@ class URL(Enum):
 
 
 class Path(Enum):
+    @staticmethod
+    def join(directory, file):
+        return os.path.join(directory, file)
+
     # pasiba Arsenu 😘😘😘
     # visuals
     VISUALS_DIR = os.path.abspath('visuals')
@@ -40,9 +40,6 @@ class Path(Enum):
     FLOOR_LAYOUT_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'floor_layout_debug.png')
     FLOOR_MASK_IMAGE = join(PREPROCESSED_DIR, 'floor_mask.png')
     WINDOWS_MASK_IMAGE = join(PREPROCESSED_DIR, 'windows_mask.png')
-    WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_DIR, 'windows_mask_inpainting.png')
-    STRETCHED_WINDOWS_MASK_INPAINTING_IMAGE = join(PREPROCESSED_DIR, 'stretched_windows_mask_inpainting.png')
-    DESIGNED_IMAGE = join(PREPROCESSED_DIR, 'designed.png')
     DEPTH_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'depth_image.png')
     WALL_SEGMENTS_DEBUG_IMAGE = join(PREPROCESSED_DIR, 'last_wall_segment.png')
     DOOR_SEG_IMG_OUTPUT = join(PREPROCESSED_DIR, 'doorway_seg.png')

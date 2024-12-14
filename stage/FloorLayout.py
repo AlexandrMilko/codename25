@@ -377,6 +377,8 @@ class FloorLayout:
     @staticmethod
     def visualize_wall_segments(wall_start, wall_end, window_door_borders, filtered_segments):
         import matplotlib.pyplot as plt
+        import matplotlib
+        matplotlib.use('agg')
         # Visualization
         plt.figure(figsize=(8, 8))
 
