@@ -8,7 +8,6 @@ from tools import create_visuals_dir, save_encoded_image, get_encoded_image_from
 
 app = Flask(__name__)
 CORS(app)
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", None)
 
 
 @app.route("/ai/get_insane_image_1337", methods=['POST'])

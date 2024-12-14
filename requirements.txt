@@ -23,3 +23,4 @@ torchvision==0.19.1
 sam2
 fvcore
 usd-core
+scikit-learn
