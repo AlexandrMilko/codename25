@@ -241,7 +241,8 @@ class Room:
         rotate_ply_file_with_colors(Path.DEPTH_PLY.value, Path.DEPTH_PLY.value, -pitch_rad, -roll_rad)
 
         # Run screened_poisson_surface_reconstruction()
-        run_subprocess(Path.MESHLAB_SCRIPT.value, Path.DEPTH_PLY.value)
+        if Config.BLENDER_ROOM_TYPE.value == "mesh":
+            run_subprocess(Path.MESHLAB_SCRIPT.value, Path.DEPTH_PLY.value)
 
         camera_height = self.estimate_camera_height((pitch_rad, roll_rad))
 
