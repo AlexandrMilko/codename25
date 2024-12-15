@@ -15,7 +15,7 @@ def screened_poisson_surface_reconstruction():
     ms.compute_normal_for_point_clouds()
 
     # Perform Screened Poisson Surface Reconstruction
-    ms.generate_surface_reconstruction_screened_poisson(depth=12, scale=1, samplespernode=2)
+    ms.generate_surface_reconstruction_screened_poisson(depth=8, scale=1, samplespernode=2)
 
     # Select faces with edges longer than a default threshold
     ms.compute_selection_by_edge_length()

@@ -1,5 +1,3 @@
-from constants import Path
-
 from .Furniture import FloorFurniture
 
 
