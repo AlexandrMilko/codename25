@@ -597,7 +597,7 @@ class FloorLayout:
         image_without_noise = np.zeros_like(img)
 
         for contour in contours:
-            epsilon = 0.02 * cv2.arcLength(contour, True)
+            epsilon = 0.005 * cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, epsilon, True)
             cv2.drawContours(image_without_noise, [approx], 0, (255, 255, 255), -1)
 
