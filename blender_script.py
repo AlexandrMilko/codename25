@@ -1,9 +1,10 @@
 import json
 import math
 import sys
+
 import bpy
-from constants import Config, Path
-from tools import get_image_size
+
+from constants import Config
 
 
 def clean_scene():
