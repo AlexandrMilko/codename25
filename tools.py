@@ -13,6 +13,7 @@ from constants import Path
 from lang_segment_anything.app import predict
 from sklearn.cluster import DBSCAN
 
+
 def calculate_pitch_angle(plane_normal):
     plane_normal = plane_normal / np.linalg.norm(plane_normal)
     pitch_angle_rad = np.arctan2(plane_normal[1], plane_normal[2])
@@ -199,6 +200,7 @@ def get_model_dimensions(model_path):
 
     return {'length': length, 'width': width, 'height': height}
 
+
 def get_image_bytes(image_path):
     # Open the image with PIL
     img = Image.open(image_path).convert("RGB")  # Convert to RGB for consistent encoding
@@ -223,6 +225,7 @@ def segment_lang_sam(image_path, output_path):
     output_image.save(output_path, format="PNG")
     return output["boxes"]
 
+
 def substract_bbox_from_mask(input_mask_path, output_mask_path, bounding_boxes):
     # Open the image and convert it to grayscale
     image = Image.open(input_mask_path).convert("L")
@@ -245,7 +248,9 @@ def substract_bbox_from_mask(input_mask_path, output_mask_path, bounding_boxes):
     result_image = Image.fromarray(image_array)
     result_image.save(output_mask_path)
 
-def find_middles_of_redundant_walls(floor_mask_path, doorway_bboxes, intersection_mask_path=Path.REDUNDANT_WALLS_ON_FLOOR_MASK_DEBUG_IMAGE.value):
+
+def find_middles_of_redundant_walls(floor_mask_path, doorway_bboxes,
+                                    intersection_mask_path=Path.REDUNDANT_WALLS_ON_FLOOR_MASK_DEBUG_IMAGE.value):
     def intersect_bbox_with_mask(input_mask_path, bounding_boxes, output_mask_path):
         """
         Process the mask image by keeping only the pixels that fall within the given bounding boxes.
@@ -452,6 +457,7 @@ def find_middles_of_redundant_walls(floor_mask_path, doorway_bboxes, intersectio
     groups = group_pixels_by_contour(intersection_mask_path, corners)
     return find_middles_of_corners(intersection_mask_path, groups)
 
+
 def check_pixels_in_white_area(pixel_array, floor_mask_path):
     """
     Check if any specified pixel is in the white area of the floor_mask.png.
@@ -480,6 +486,7 @@ def check_pixels_in_white_area(pixel_array, floor_mask_path):
                 return True
 
     return False
+
 
 def bounding_boxes_to_pixels(bounding_boxes):
     """

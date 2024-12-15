@@ -1,10 +1,8 @@
 import json
-import subprocess
 from math import radians
 
 from constants import Path, Config
-from tools import run_subprocess
-import os
+from tools import run_subprocess, get_image_size
 
 
 class Furniture:
@@ -25,6 +23,7 @@ class Furniture:
         data = json.dumps({
             'render_path': render_parameters['render_path'],
             'blend_file_path': Path.SCENE_FILE.value,
+            'input_img_dimensions': get_image_size(Path.INPUT_IMAGE.value),
             'render_samples': Config.RENDER_SAMPLES.value,
             'room_point_cloud_path': render_parameters['room_point_cloud_path'],
             'camera_location': render_parameters['camera_location'],

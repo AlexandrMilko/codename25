@@ -44,6 +44,7 @@ class LayoutSide:
 
     def __repr__(self):
         return f"Floor Layout Side: {self.points}, {self.middle_point}"
+
     @staticmethod
     def preserved_proportions(point, ratio_x, ratio_y):
         y_to_x = ratio_y / ratio_x  # Calculate how much smaller y is compared to x axis
