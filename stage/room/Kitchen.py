@@ -16,7 +16,7 @@ from ..furniture.Furniture import Furniture
 class Kitchen(Room):
     def stage(self):
         camera_height, pitch_rad, roll_rad, height, scene_render_parameters = self.prepare_empty_room_data()
-
+        self.kitchen_angle = None # We use it because we decided to use the same angle for kitchen and table
         all_sides = self.floor_layout.find_all_sides()
         permuted_sides = [list(perm) for perm in permutations(all_sides)]
 
@@ -110,7 +110,6 @@ class Kitchen(Room):
         # Получаем размеры стены в метрах
         ratio_x, ratio_y = self.floor_layout.get_pixels_per_meter_ratio()
         wall_length = side.calculate_wall_length(ratio_x, ratio_y)
-        wall_height = side.calculate_wall_height(ratio_y)
 
         # Доступные модели кухни
         kitchen_models = [
@@ -119,11 +118,10 @@ class Kitchen(Room):
             {'name': Path.KITCHEN_SMALL_TWO.value, **get_model_dimensions(Path.KITCHEN_SMALL_TWO.value)},
             {'name': Path.KITCHEN_SMALL_THREE.value, **get_model_dimensions(Path.KITCHEN_SMALL_THREE.value)},
         ]
-
         # Фильтруем подходящие модели
         suitable_models = [
             model for model in kitchen_models
-            if model['length'] <= wall_length and model['height'] <= wall_height
+            if model['length'] <= wall_length
         ]
 
         if not suitable_models:
@@ -142,6 +140,7 @@ class Kitchen(Room):
         kitchen_offset_x_y = self.floor_layout.calculate_offset_from_pixel_diff(pixel_diff, (ratio_x, ratio_y))
 
         yaw_angle = side.calculate_wall_angle(ratio_x, ratio_y)
+        self.kitchen_angle = yaw_angle
         pitch_rad, roll_rad = camera_angles_rad
 
         render_parameters = kitchen_set.calculate_rendering_parameters(
@@ -161,6 +160,7 @@ class Kitchen(Room):
             return None  # Нет подходящих мест для стола
 
         (chosen_pixel, yaw_angle) = placement_info[0]
+        yaw_angle = self.kitchen_angle if self.kitchen_angle is not None else yaw_angle # We decided to use the same angle for kitchen table as kitchen side
 
         # Доступные модели столов
         table_models = [
