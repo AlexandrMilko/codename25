@@ -33,9 +33,6 @@ class LayoutSide:
         second_leg = abs(self.points[0][1] - self.points[1][1]) / ratio_y
         return math.sqrt(first_leg ** 2 + second_leg ** 2)
 
-    def calculate_wall_height(self, ratio_y):
-        return abs(self.points[0][1] - self.points[1][1]) / ratio_y
-
     def get_points(self):
         return self.points
 
