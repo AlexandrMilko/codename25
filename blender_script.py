@@ -1,9 +1,10 @@
 import json
 import math
 import sys
+
 import bpy
-from constants import Config,Path
-from tools import get_image_size
+
+from constants import Config
 
 
 def clean_scene():
@@ -78,10 +79,11 @@ def create_geo_node_tree_for_mesh():
     node_tree.links.new(in_node.outputs["Geometry"], set_material_node.inputs['Geometry'])
     node_tree.links.new(set_material_node.outputs["Geometry"], out_node.inputs['Geometry'])
 
+
 def create_geo_node_tree_for_adaptive_points():
     node_tree = bpy.data.node_groups["Geometry Nodes"]
 
-    width, height = get_image_size(Path.INPUT_IMAGE.value)
+    width, height = input_img_dimensions
     num_of_pixels = width * height
 
     # Add and link geometry nodes for mesh and material processing
@@ -98,13 +100,13 @@ def create_geo_node_tree_for_adaptive_points():
 
     # k_value_node
     k_value_node, _ = create_node(node_tree, "ShaderNodeValue",
-                               node_x_location, node_location_step_x)
-    k_value_node.outputs[0].default_value = 1/Config.K_VALUE.value
+                                  node_x_location, node_location_step_x)
+    k_value_node.outputs[0].default_value = 1 / Config.K_VALUE.value
 
     # num_of_points
     num_of_points, _ = create_node(node_tree, "ShaderNodeValue",
-                               node_x_location, node_location_step_x)
-    num_of_points.outputs[0].default_value =  num_of_pixels
+                                   node_x_location, node_location_step_x)
+    num_of_points.outputs[0].default_value = num_of_pixels
 
     # Mesh to Points
     mesh_to_points, node_x_location = create_node(node_tree, "GeometryNodeMeshToPoints",
@@ -252,8 +254,8 @@ def add_area_light(light_params):
     yaw_angle = light_params.get('yaw_angle', 0)
     light_obj_1.rotation_euler = (math.radians(-90), 0, math.radians(yaw_angle))
     light_obj_1.data.shape = 'RECTANGLE'
-    light_obj_1.data.size = light_params.get('size', 1.0)/1.5  # Width of the light
-    light_obj_1.data.size_y = light_params.get('size_y', 1.0)/1.5  # Height of the light
+    light_obj_1.data.size = light_params.get('size', 1.0) / 1.5  # Width of the light
+    light_obj_1.data.size_y = light_params.get('size_y', 1.0) / 1.5  # Height of the light
     light_obj_1.data.energy = light_params.get('energy', 70.0)
     light_obj_1.data.color = light_params.get('color', (1.0, 1.0, 1.0))
     light_obj_1.data.shadow_soft_size = light_params.get('shadow_soft_size', 1.0)
@@ -266,8 +268,8 @@ def add_area_light(light_params):
     light_obj_2.location = light_params.get('offset')
     light_obj_2.rotation_euler = (math.radians(90), 0, math.radians(yaw_angle))  # Adjusted rotation on X-axis
     light_obj_2.data.shape = 'RECTANGLE'
-    light_obj_2.data.size = light_params.get('size', 1.0)/1.5  # Width of the light
-    light_obj_2.data.size_y = light_params.get('size_y', 1.0)/1.5  # Height of the light
+    light_obj_2.data.size = light_params.get('size', 1.0) / 1.5  # Width of the light
+    light_obj_2.data.size_y = light_params.get('size_y', 1.0) / 1.5  # Height of the light
     light_obj_2.data.energy = light_params.get('energy', 5.0)
     light_obj_2.data.color = light_params.get('color', (1.0, 1.0, 1.0))
     light_obj_2.data.shadow_soft_size = light_params.get('shadow_soft_size', 1.0)
@@ -360,6 +362,7 @@ if __name__ == "__main__":
 
     render_path = data['render_path']
     blend_file_path = data['blend_file_path']
+    input_img_dimensions = data['input_img_dimensions']
     render_samples = data['render_samples']
     room_point_cloud_path = data['room_point_cloud_path']
     focal_length_px = data['focal_length_px']
