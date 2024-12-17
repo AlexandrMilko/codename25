@@ -1,18 +1,18 @@
 import base64
+import math
 import os
 import subprocess
 from io import BytesIO
-from math import sqrt
 
 import cv2
 import numpy as np
 import open3d as o3d
 from PIL import Image
 from pxr import Usd, UsdGeom
+from sklearn.cluster import DBSCAN
 
 from constants import Path
 from lang_segment_anything.app import predict
-from sklearn.cluster import DBSCAN
 
 
 def calculate_pitch_angle(plane_normal):
@@ -517,6 +517,16 @@ def get_point_on_line(x1, y1, x2, y2, t):
     return x1 + t * (x2 - x1), y1 + t * (y2 - y1)
 
 
-def euclidean_distance(p1, p2):
-    """Euclidean distance between points p1 and p2."""
-    return sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
+def euclidean_distance(p1, p2, ratio_x, ratio_y):
+    """
+    Scaled Euclidean distance between two points p1 and p2 using ratio_x and ratio_y.
+
+    :param p1: Tuple (x1, y1)
+    :param p2: Tuple (x2, y2)
+    :param ratio_x: Ratio for scaling x-axis
+    :param ratio_y: Ratio for scaling y-axis
+    :return: Scaled Euclidean distance
+    """
+    dx = (p2[0] - p1[0]) / ratio_x
+    dy = (p2[1] - p1[1]) / ratio_y
+    return math.sqrt(dx ** 2 + dy ** 2)
