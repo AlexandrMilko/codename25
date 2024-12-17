@@ -1,18 +1,18 @@
 import base64
+import math
 import os
 import subprocess
 from io import BytesIO
-from math import sqrt
 
 import cv2
 import numpy as np
 import open3d as o3d
 from PIL import Image
 from pxr import Usd, UsdGeom
+from sklearn.cluster import DBSCAN
 
 from constants import Path
 from lang_segment_anything.app import predict
-from sklearn.cluster import DBSCAN
 
 
 def calculate_pitch_angle(plane_normal):
@@ -512,11 +512,6 @@ def bounding_boxes_to_pixels(bounding_boxes):
     return pixels
 
 
-def get_point_on_line(x1, y1, x2, y2, t):
-    """Returns (x,y) for a given parameter t in [0,1] on the line segment."""
-    return x1 + t * (x2 - x1), y1 + t * (y2 - y1)
-
-
 def euclidean_distance(p1, p2):
-    """Euclidean distance between points p1 and p2."""
-    return sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
+    """Euclidean distance between two points."""
+    return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
