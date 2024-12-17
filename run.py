@@ -19,13 +19,15 @@ def get_insane_image_1337():
     save_encoded_image(input_image, Path.INPUT_IMAGE.value)
     output_image_paths = apply_style(Path.INPUT_IMAGE.value, room_choice, style_budget_choice)
 
-    if Config.DO_POSTPROCESSING.value:
+    if not Config.OUTPUT_MULTIPLE_IMAGES.value:
         # WARNING! WE REMOVED WEBUI, so NOW THE POSTPROCESSING IS DONE THROUGH COMFYUI AND IT DOES NOT MAKE IMAGE BETTER
         # UNTIL we decide what we do with postprocessing - set DO_POSTPROCESSING to FALSE.
         # Plus, at this point, postprocessing is run only for one image
-        output_image = get_encoded_image_from_path(Path.OUTPUT_IMAGE.value)
+        import random
+        chosen_image = random.choice(output_image_paths)
+        output_image = get_encoded_image_from_path(chosen_image)
         return jsonify({'output_image': output_image})
-    else:
+    elif Config.OUTPUT_MULTIPLE_IMAGES.value:
         encoded_images_dict = dict()
         for i in range(len(output_image_paths)):
             image_path = output_image_paths[i]
