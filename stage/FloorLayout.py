@@ -659,7 +659,7 @@ class FloorLayout:
                 candidate_pt = get_point_on_line(data['x1'], data['y1'], data['x2'], data['y2'], candidate_t)
                 # Compute minimal distance to already chosen points
                 if chosen_points:
-                    dists = [euclidean_distance(candidate_pt, cp) for cp in chosen_points]
+                    dists = [euclidean_distance(candidate_pt, cp, self.ratio_x, self.ratio_y) for cp in chosen_points]
                     min_dist = min(dists)
                 else:
                     min_dist = float('inf')
