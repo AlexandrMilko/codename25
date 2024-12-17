@@ -512,11 +512,6 @@ def bounding_boxes_to_pixels(bounding_boxes):
     return pixels
 
 
-def get_point_on_line(x1, y1, x2, y2, t):
-    """Returns (x,y) for a given parameter t in [0,1] on the line segment."""
-    return x1 + t * (x2 - x1), y1 + t * (y2 - y1)
-
-
 def euclidean_distance(p1, p2, ratio_x, ratio_y):
     """
     Scaled Euclidean distance between two points p1 and p2 using ratio_x and ratio_y.
