@@ -5,7 +5,7 @@ import numpy as np
 import open3d as o3d
 
 from constants import Path, Config
-from tools import get_model_dimensions, get_point_on_line, euclidean_distance
+from tools import get_model_dimensions, euclidean_distance
 from .LayoutSide import LayoutSide
 
 
