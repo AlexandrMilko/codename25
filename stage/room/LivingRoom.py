@@ -5,7 +5,7 @@ from constants import Path, Config
 from postprocessing.postProcessing import PostProcessor
 from .Room import Room
 from ..furniture.Furniture import Furniture
-
+import os
 
 class LivingRoom(Room):
     def stage(self):
@@ -29,6 +29,7 @@ class LivingRoom(Room):
 
         import json
         print(json.dumps(scene_render_parameters, indent=4))
+        scene_render_parameters['render_path'] = Path.RENDER_IMAGE.value
 
         Furniture.start_blender_render(scene_render_parameters)
 
