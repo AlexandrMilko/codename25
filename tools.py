@@ -2,6 +2,7 @@ import base64
 import os
 import subprocess
 from io import BytesIO
+from math import sqrt
 
 import cv2
 import numpy as np
@@ -171,7 +172,7 @@ def calculate_angle_from_top_view(point1, point2):
     return -angle_neg_degrees * rotation_direction_neg
 
 
-def get_model_dimensions(model_path):
+def get_model_dimensions(model_path: str) -> dict:
     """
     Читает размеры модели из файла .usdc.
     :param model_path: Путь к файлу .usdc
@@ -509,3 +510,13 @@ def bounding_boxes_to_pixels(bounding_boxes):
     pixels = np.vstack((top_left, bottom_right))
 
     return pixels
+
+
+def get_point_on_line(x1, y1, x2, y2, t):
+    """Returns (x,y) for a given parameter t in [0,1] on the line segment."""
+    return x1 + t * (x2 - x1), y1 + t * (y2 - y1)
+
+
+def euclidean_distance(p1, p2):
+    """Euclidean distance between points p1 and p2."""
+    return sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)

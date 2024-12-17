@@ -3,7 +3,6 @@ import numpy as np
 
 from constants import Path, Config
 from postprocessing.postProcessing import PostProcessor
-from preprocessing.preProcessSegment import ImageSegmentor
 from .Room import Room
 from ..furniture.Furniture import Furniture
 
@@ -39,8 +38,8 @@ class LivingRoom(Room):
         # segment.execute()
 
         if Config.DO_POSTPROCESSING.value:
-            processor = PostProcessor()
-            processor.execute()
+            PostProcessor().execute()
+
         return [Path.RENDER_IMAGE.value] # We return just one image, because for living room we always have same layout for same image
 
     def calculate_sofa_with_table_parameters(self, all_sides, camera_angles_rad: tuple):
