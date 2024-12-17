@@ -5,11 +5,13 @@ import numpy as np
 import open3d as o3d
 
 from constants import Path, Config
+from tools import get_model_dimensions, get_point_on_line, euclidean_distance
 from .LayoutSide import LayoutSide
 
 
 class FloorLayout:
-    def __init__(self, ply_path, middle_points_3d_dict, window_door_borders_3d_dict, output_image_path=Path.FLOOR_LAYOUT_IMAGE.value):
+    def __init__(self, ply_path, middle_points_3d_dict, window_door_borders_3d_dict,
+                 output_image_path=Path.FLOOR_LAYOUT_IMAGE.value):
 
         """
         :param ply_path: path to the .ply file that represents 3d floor plane
@@ -105,7 +107,6 @@ class FloorLayout:
                 zone_pixel_borders.append([pixel_x, pixel_y])
             self.window_door_borders_pixels[zone_name] = zone_pixel_borders
 
-
         if self.output_image_path is not None:
             os.makedirs(os.path.dirname(self.output_image_path), exist_ok=True)
             cv2.imwrite(self.output_image_path, points_image)
@@ -116,9 +117,11 @@ class FloorLayout:
         self.pixels_dict = result
         camera_pixel = self.pixels_dict['camera']
 
-        refined_image = FloorLayout.refine_contours(self.output_image_path) # We perform additional cleaning made by Vova
+        refined_image = FloorLayout.refine_contours(
+            self.output_image_path)  # We perform additional cleaning made by Vova
         cv2.imwrite(self.output_image_path, refined_image)
-        FloorLayout.fill_small_contours(self.output_image_path, self.output_image_path, Config.FLOOR_LAYOUT_CONTOUR_SIZE_TO_REMOVE.value)
+        FloorLayout.fill_small_contours(self.output_image_path, self.output_image_path,
+                                        Config.FLOOR_LAYOUT_CONTOUR_SIZE_TO_REMOVE.value)
         FloorLayout.fill_layout_with_camera(self.output_image_path, camera_pixel, self.output_image_path)
 
         pixels_per_meter_ratio = self.calculate_pixels_per_meter_ratio()
@@ -227,7 +230,8 @@ class FloorLayout:
         return False
 
     @staticmethod
-    def draw_points_and_contours(exclusion_zones, exclude_distance, sides, window_door_borders_pixels, exclude_distance_doorway):
+    def draw_points_and_contours(exclusion_zones, exclude_distance, sides, window_door_borders_pixels,
+                                 exclude_distance_doorway):
         image = cv2.imread(Path.FLOOR_LAYOUT_IMAGE.value)
 
         for side in sides:
@@ -248,7 +252,6 @@ class FloorLayout:
             cv2.line(image, left_border_pixel, right_border_pixel, (0, 128, 128), 2)
 
         cv2.imwrite(Path.FLOOR_LAYOUT_DEBUG_IMAGE.value, image)
-
 
     def find_all_sides(self, exclude_distance=50, exclude_length=1.5, exclude_distance_doorway=25):
         exclusion_zones = self.pixels_dict
@@ -272,24 +275,29 @@ class FloorLayout:
             pt2 = biggest_contour[(i + 1) % len(biggest_contour)][0]
             # Exclude sides that are too close to the camera, windows, or doors
             zone_names = FloorLayout.find_all_tangent_zones(pt1, pt2, exclusion_zones, exclude_distance)
-            tangent_borders = [self.window_door_borders_pixels[zone_name] for zone_name in self.window_door_borders_pixels.keys() if zone_name in zone_names]
+            tangent_borders = [self.window_door_borders_pixels[zone_name] for zone_name in
+                               self.window_door_borders_pixels.keys() if zone_name in zone_names]
             free_side_segments = FloorLayout.find_empty_places_on_wall(pt1, pt2, tangent_borders)
             if tangent_borders:
                 FloorLayout.visualize_wall_segments(pt1, pt2, tangent_borders, free_side_segments)
+
             for segment in free_side_segments:
                 side = LayoutSide(segment)
-                if (not self.is_tangent_to_any(segment[0], segment[1], exclusion_zones, exclude_distance, exclude_distance_doorway)
+                if (not self.is_tangent_to_any(segment[0], segment[1], exclusion_zones, exclude_distance,
+                                               exclude_distance_doorway)
                         and side.calculate_wall_length(self.ratio_x, self.ratio_y) >= exclude_length):
                     sides.append(side)
-                    
+
         # sides.sort(reverse=True, key=lambda x: x.calculate_wall_length(self.ratio_x, self.ratio_y))
-        self.draw_points_and_contours(exclusion_zones, exclude_distance, sides, self.window_door_borders_pixels, exclude_distance_doorway)
+        self.draw_points_and_contours(exclusion_zones, exclude_distance, sides, self.window_door_borders_pixels,
+                                      exclude_distance_doorway)
 
         return sides
 
     @staticmethod
     def find_empty_places_on_wall(wall_start, wall_end, window_door_borders):
         if not window_door_borders: return [[wall_start, wall_end]]
+
         def find_intersections(wall_start, wall_end, all_points):
             def line_equation(p1, p2):
                 a = p2[1] - p1[1]  # y2 - y1
@@ -501,7 +509,7 @@ class FloorLayout:
         cv2.imwrite(output_path, filled_image)
 
     @staticmethod
-    def fill_small_contours(image_path, output_image_path, area_threshold): # We use it to remove the noise
+    def fill_small_contours(image_path, output_image_path, area_threshold):  # We use it to remove the noise
         # Read the image in grayscale mode
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         if image is None:
@@ -602,3 +610,71 @@ class FloorLayout:
             cv2.drawContours(image_without_noise, [approx], 0, (255, 255, 255), -1)
 
         return image_without_noise
+
+    def place_models_on_sides(self, layout_sides):
+        """
+        Places one model on each LayoutSide instance.
+
+        layout_sides: list of LayoutSide objects
+        model_paths: list of corresponding model paths for each side (same length as layout_sides)
+        ratio_x, ratio_y: conversion factors from coordinates to meters
+
+        After running, each LayoutSide will have:
+            - layout_side.chosen_model = model_path
+            - layout_side.chosen_point = (x, y) chosen coordinate on that side
+        """
+        # Precompute width constraints and t-ranges for each side
+        side_data = []
+        for side in layout_sides:
+            dim = get_model_dimensions(side.chosen_model_path)
+            width_m = dim['width']  # width in meters
+
+            # Extract the line endpoints
+            (x1, y1), (x2, y2) = side.points
+
+            line_len_m = side.calculate_wall_length(self.ratio_x,self.ratio_y)
+
+            half_w = width_m / 2
+            if half_w >= line_len_m / 2:
+                # If the model is too big to respect half-width constraints, place at midpoint (fallback)
+                t_min = t_max = 0.5
+            else:
+                t_min = half_w / line_len_m
+                t_max = 1 - (half_w / line_len_m)
+
+            side_data.append({
+                'side': side,
+                'model_path': side.chosen_model_path,
+                'x1': x1, 'y1': y1,
+                'x2': x2, 'y2': y2,
+                't_min': t_min,
+                't_max': t_max,
+            })
+
+        chosen_points = []
+        # For each side, choose t_min or t_max to maximize min distance to already chosen points
+        for data in side_data:
+            candidates = []
+            for candidate_t in [data['t_min'], data['t_max']]:
+                candidate_pt = get_point_on_line(data['x1'], data['y1'], data['x2'], data['y2'], candidate_t)
+                # Compute minimal distance to already chosen points
+                if chosen_points:
+                    dists = [euclidean_distance(candidate_pt, cp) for cp in chosen_points]
+                    min_dist = min(dists)
+                else:
+                    min_dist = float('inf')
+                candidates.append((candidate_t, candidate_pt, min_dist))
+
+            # Pick candidate that yields the largest minimum distance
+            best_candidate = max(candidates, key=lambda x: x[2])
+            chosen_t, chosen_pt, chosen_min_dist = best_candidate
+
+            # Store chosen model and point in the LayoutSide instance
+            data['side'].chosen_model = data['model_path']
+            data['side'].chosen_point = chosen_pt
+
+            # Add this point to the global chosen points list
+            chosen_points.append(chosen_pt)
+
+        return chosen_points
+

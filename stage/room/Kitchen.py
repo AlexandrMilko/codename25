@@ -3,12 +3,8 @@ import os
 import random
 from itertools import permutations
 
-import numpy as np
-
 from constants import Path, Config
 from postprocessing.postProcessing import PostProcessor
-from preprocessing.preProcessSegment import ImageSegmentor
-from tools import resize_and_save_image
 from .Room import Room
 from ..furniture.Furniture import Furniture
 
@@ -51,8 +47,7 @@ class Kitchen(Room):
             # Room.save_windows_mask(Path.SEG_RENDER_IMAGE.value, Path.WINDOWS_MASK_INPAINTING_IMAGE.value)
 
             if Config.DO_POSTPROCESSING.value:
-                processor = PostProcessor()
-                processor.execute()
+                PostProcessor().execute()
         return output_image_paths
 
     def get_available_space_length(self):
@@ -150,7 +145,6 @@ class Kitchen(Room):
 
     def calculate_table_parameters(self, camera_angles_rad: tuple):
         from stage.furniture.KitchenTableWithChairs import KitchenTableWithChairs
-        from tools import get_model_dimensions  # Импорт функции для расчета размеров модели
         import random
 
         # Определяем место для стола
