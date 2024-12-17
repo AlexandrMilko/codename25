@@ -30,7 +30,7 @@ class Bedroom(Room):
                     break
                 sides[i].chosen_model_path = models_path[i]
 
-            points.append(self.floor_layout.place_models_on_sides(sides))
+            points.append(self.floor_layout.place_models_on_layout(sides))
         print(f'Points: {points}')
 
         room_size_required = 6

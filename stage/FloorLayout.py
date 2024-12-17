@@ -611,70 +611,56 @@ class FloorLayout:
 
         return image_without_noise
 
-    def place_models_on_sides(self, layout_sides):
+    def place_models_on_layout(self, layout_sides):
         """
-        Places one model on each LayoutSide instance.
-
-        layout_sides: list of LayoutSide objects
-        model_paths: list of corresponding model paths for each side (same length as layout_sides)
-        ratio_x, ratio_y: conversion factors from coordinates to meters
-
-        After running, each LayoutSide will have:
-            - layout_side.chosen_model = model_path
-            - layout_side.chosen_point = (x, y) chosen coordinate on that side
+        Place models on a list of LayoutSide instances.
+        layout_sides: List of LayoutSide instances
+        ratio_x, ratio_y: Ratios for unit conversion
         """
-        # Precompute width constraints and t-ranges for each side
-        side_data = []
-        for side in layout_sides:
-            dim = get_model_dimensions(side.chosen_model_path)
-            width_m = dim['width']  # width in meters
+        chosen_points = []  # List to store chosen placement points
 
-            # Extract the line endpoints
-            (x1, y1), (x2, y2) = side.points
+        for layout_side in layout_sides:
+            # Calculate wall length
+            wall_length = layout_side.calculate_wall_length(self.ratio_x, self.ratio_y)
 
-            line_len_m = side.calculate_wall_length(self.ratio_x,self.ratio_y)
+            # Get model dimensions
+            model_path = layout_side.chosen_model_path
+            if model_path is None:
+                raise ValueError(f"Model path for wall {layout_side} is not set.")
+            model_dimensions = get_model_dimensions(model_path)
+            model_width = model_dimensions['width']
 
-            half_w = width_m / 2
-            if half_w >= line_len_m / 2:
-                # If the model is too big to respect half-width constraints, place at midpoint (fallback)
-                t_min = t_max = 0.5
+            # Compute t_min and t_max based on model width
+            t_min = (model_width / 2) / wall_length
+            t_max = 1 - (model_width / 2) / wall_length
+
+            # Get wall endpoints
+            p1, p2 = layout_side.get_points()
+
+            # Calculate candidate points on the wall (in the original coordinate system)
+            candidate_min = (
+                p1[0] + t_min * (p2[0] - p1[0]),
+                p1[1] + t_min * (p2[1] - p1[1])
+            )
+            candidate_max = (
+                p1[0] + t_max * (p2[0] - p1[0]),
+                p1[1] + t_max * (p2[1] - p1[1])
+            )
+
+            # Choose the candidate that maximizes distance to all previous points
+            if not chosen_points:
+                best_point = candidate_min  # For the first wall, just pick candidate_min
             else:
-                t_min = half_w / line_len_m
-                t_max = 1 - (half_w / line_len_m)
+                distances_min = [euclidean_distance(candidate_min, pt) for pt in chosen_points]
+                distances_max = [euclidean_distance(candidate_max, pt) for pt in chosen_points]
 
-            side_data.append({
-                'side': side,
-                'model_path': side.chosen_model_path,
-                'x1': x1, 'y1': y1,
-                'x2': x2, 'y2': y2,
-                't_min': t_min,
-                't_max': t_max,
-            })
-
-        chosen_points = []
-        # For each side, choose t_min or t_max to maximize min distance to already chosen points
-        for data in side_data:
-            candidates = []
-            for candidate_t in [data['t_min'], data['t_max']]:
-                candidate_pt = get_point_on_line(data['x1'], data['y1'], data['x2'], data['y2'], candidate_t)
-                # Compute minimal distance to already chosen points
-                if chosen_points:
-                    dists = [euclidean_distance(candidate_pt, cp) for cp in chosen_points]
-                    min_dist = min(dists)
+                # Select the point that has the maximum minimum distance
+                if min(distances_min) > min(distances_max):
+                    best_point = candidate_min
                 else:
-                    min_dist = float('inf')
-                candidates.append((candidate_t, candidate_pt, min_dist))
+                    best_point = candidate_max
 
-            # Pick candidate that yields the largest minimum distance
-            best_candidate = max(candidates, key=lambda x: x[2])
-            chosen_t, chosen_pt, chosen_min_dist = best_candidate
-
-            # Store chosen model and point in the LayoutSide instance
-            data['side'].chosen_model = data['model_path']
-            data['side'].chosen_point = chosen_pt
-
-            # Add this point to the global chosen points list
-            chosen_points.append(chosen_pt)
+            chosen_points.append(best_point)
 
         return chosen_points
 
