@@ -512,16 +512,6 @@ def bounding_boxes_to_pixels(bounding_boxes):
     return pixels
 
 
-def euclidean_distance(p1, p2, ratio_x, ratio_y):
-    """
-    Scaled Euclidean distance between two points p1 and p2 using ratio_x and ratio_y.
-
-    :param p1: Tuple (x1, y1)
-    :param p2: Tuple (x2, y2)
-    :param ratio_x: Ratio for scaling x-axis
-    :param ratio_y: Ratio for scaling y-axis
-    :return: Scaled Euclidean distance
-    """
-    dx = (p2[0] - p1[0]) / ratio_x
-    dy = (p2[1] - p1[1]) / ratio_y
-    return math.sqrt(dx ** 2 + dy ** 2)
+def euclidean_distance(p1, p2):
+    """Euclidean distance between two points."""
+    return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
