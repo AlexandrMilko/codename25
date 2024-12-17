@@ -9,7 +9,8 @@ class Config(Enum):
     CONTROLNET_HEIGHT_LIMIT = 1024
     FLOOR_LAYOUT_CONTOUR_SIZE_TO_REMOVE = 1000
     BLENDER_ROOM_TYPE = "adaptive_points"  # adaptive_points or mesh
-    K_VALUE = 0.73
+    K_VALUE = 0.7
+    OUTPUT_MULTIPLE_IMAGES = False
 
 
 class URL(Enum):
