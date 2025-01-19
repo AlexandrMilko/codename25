@@ -1,8 +1,10 @@
 # Documentation
 
 This application consists of several components that work together to create a staged room image based on an empty room input and style preferences. Below is an overview of the key parts and installation steps.
-[link to flowchart](https://miro.com/app/board/uXjVLV9t9UI=/)
-
+Interesting links:
+1) [link to flowchart](https://miro.com/app/board/uXjVLV9t9UI=/)
+2) [Last tests from November - December of 2024 for Bedrooms](https://drive.google.com/drive/folders/1h40hiGPe5YR-0qQE-AkL4Wa5tM2Z_DqJ?usp=drive_link)
+3) [Some of the good results we got with postprocessing](https://drive.google.com/drive/folders/1RD0QD8b955mVSouCyZdUKc254pT331rT?usp=drive_link)
 ## Application Components
 
 1. **codename25 Repo**  
