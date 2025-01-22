@@ -116,3 +116,6 @@ sudo docker exec -it vistagerVova bash
 ```bash
 sudo docker cp <docker_container>:<path_in_docker> <path_in_host_system>
 ```
+## Special thanks
+- [ml_depth_pro](https://github.com/apple/ml-depth-pro): for depth estimation to calculate 3D structure of rooms
+- [segment_anything](https://github.com/facebookresearch/segment-anything): for masking neighbouring rooms
