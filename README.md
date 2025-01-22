@@ -41,7 +41,19 @@ Interesting links:
 5. `pip install -r requirements.txt`
 
 ### Blender models
-1. Download [3D models](https://drive.google.com/drive/folders/1Bq_OSmUj9t5iwL2zB5yfb1n_nRBtqSVf?usp=sharing) and put them instead of the folder 3Ds in visuals/
+Unfortunately, we cannot provide pre-existing 3D models due to licensing restrictions. Follow the steps below.
+
+1. Find or create your own 3d models in USDC format.
+2. Test models in Blender to confirm they work as intended, including textures, scaling, and positioning.
+3. Prepare the Folder Structure <br />
+Navigate to the `Projects/codename25/visuals/3Ds/` directory.
+Identify the appropriate category folder for your model (e.g., `living_room` for living room assets).
+If the category does not exist, create a new folder with a relevant name (e.g., `bedroom`, `living_room`).
+4. Place the .usdc file in the appropriate category folder. <br />
+   ![image](https://github.com/user-attachments/assets/854c5add-77bc-424f-b0e4-24df246d121c)
+   ![image](https://github.com/user-attachments/assets/53e2ddaf-dfd8-45c3-9d1c-5bf40e6b8703)
+
+
 
 ### APP itself (codename25)
 1. `git clone https://github.com/AlexandrMilko/codename25.git`
