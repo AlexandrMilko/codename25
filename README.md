@@ -1,3 +1,18 @@
+# Team
+## IT guys:
+- **[Mykhailo Lapko](https://www.linkedin.com/in/mykhailo-lapko-6928a726b/)**: Motivated DevOps, developed a boatload of algorithms for the app. Pure fun and pleasure to work with.
+- **[Illia Martynov](https://www.linkedin.com/in/illia-martynov-335800283/)**: Pentester with passion(and Frontender in past), always knows how to support and speedrunned the frontend tasks.
+- **[Arsen Rudnytskyi](https://www.linkedin.com/in/arsen-rudnytskyi/)**: Machine Learning guy thanks to whom you can read our code. Excellent at refactoring and organizing information.
+- **[Sviatoslav Pylyp](https://www.linkedin.com/in/sviatoslav-pylyp-3a60b8261/)**: Greatest Backender I've worked with. Need a backend, devops solution? Describe a task in couple of words, he will deliver perfectly. Did it for the startup using clean and maintainable APIs in Java, microservice infrastructure, and hybrid infrastructure leveraging AWS.
+- **[Volodymyr Lapkin](https://www.linkedin.com/in/volodymyr-lapkin-5188a92b0/)**: Algorithm engineer. Learns how to work in new environment quickly. He will change the world, give him time.
+- **[Kyrylo Turchyn](https://www.linkedin.com/in/kyrylo-turchyn-aa198a248/)**: Machine Learning engineer. Worked outsourced, so you dont see his commits. Helped a lot though with 3D estimation. He is driven to learn AI to train ginormous revolutionary models. Just give him oportunity.
+- **[Oleksandr Milko](https://www.linkedin.com/in/oleksandrmilko/)**: Guess we'll find out some day. Cheers!
+## Business guys:
+- **[Dawid Tambor](https://www.linkedin.com/in/dawid-tambor/)**: The man thanks to whom I started doing this project. He's been a good mentor for me.
+- **[Agnieszka Solarz](https://www.linkedin.com/in/agnieszka-solarz/)**: Managed all the work with Designing the app and more. Always brought good energy to our meetings even on the hardest days.
+- **[Marcin Mika](https://www.linkedin.com/in/marcin-mika-69656a140/)**: Helped significantly with accounting projections and bureaucracy. Realist, makes conclusions based on facts and statistics.
+</br>
+
 # Documentation
 
 An application for virtual staging of rooms(empty room photos). 
@@ -16,6 +31,8 @@ Interesting links:
 1) [link to Miro flowchart](https://miro.com/app/board/uXjVLV9t9UI=/?share_link_id=722076167204)
 2) [Last tests from November - December of 2024 for Bedrooms](https://drive.google.com/drive/folders/1h40hiGPe5YR-0qQE-AkL4Wa5tM2Z_DqJ?usp=drive_link)
 3) [Some of the good results we got with postprocessing](https://drive.google.com/drive/folders/1RD0QD8b955mVSouCyZdUKc254pT331rT?usp=drive_link)
+4) links to Backend DockerHub and Github(Made by Sviatoslav): [auth-service](https://hub.docker.com/r/1aughingbird543/auth-service), [email-service](https://hub.docker.com/r/1aughingbird543/email-service), [api-gateway](https://hub.docker.com/r/1aughingbird543/api-gateway), [ai-queue](https://hub.docker.com/r/1aughingbird543/ai-queue), [Backend Github](https://github.com/Codename25)
+5) links to Frontend(Made by Illia): [illiamartynov/startup](https://github.com/illiamartynov/startup)
 ## Application Components
 
 1. **codename25 Repo**  
