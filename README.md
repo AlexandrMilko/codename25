@@ -2,6 +2,7 @@
 
 An application for virtual staging of rooms(empty room photos) that uses real 3D models. **75% accuracy** from the last test(on simple bedroom layouts)! :sunglasses:
 We made the app use real-world 3D furniture models because it is the right step toward what was desired by many interior designers.
+</br>
 This application consists of several components that work together to create a staged room image based on an empty room input and style preferences. Below is an overview of the key parts and installation steps.
 
 Interesting links:
