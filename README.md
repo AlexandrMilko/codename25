@@ -33,6 +33,7 @@ Interesting links:
 3) [Some of the good results we got with postprocessing](https://drive.google.com/drive/folders/1RD0QD8b955mVSouCyZdUKc254pT331rT?usp=drive_link)
 4) links to Backend DockerHub and Github(Made by Sviatoslav): [auth-service](https://hub.docker.com/r/1aughingbird543/auth-service), [email-service](https://hub.docker.com/r/1aughingbird543/email-service), [api-gateway](https://hub.docker.com/r/1aughingbird543/api-gateway), [ai-queue](https://hub.docker.com/r/1aughingbird543/ai-queue), [Backend Github](https://github.com/Codename25)
 5) links to Frontend(Made by Illia): [illiamartynov/startup](https://github.com/illiamartynov/startup)
+6) [link for testing scripts](https://github.com/AlexandrMilko/codename25other)
 ## Application Components
 
 1. **codename25 Repo**  
