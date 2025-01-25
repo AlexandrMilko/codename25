@@ -70,7 +70,7 @@ Interesting links:
 Unfortunately, we cannot provide pre-existing 3D models due to licensing restrictions. Follow the steps below.
 
 1. Find or create your own 3d models in USDC format.
-2. Test models in Blender to confirm they work as intended, including textures, scaling, and positioning.
+2. Test mode1s in Blender to confirm they work as intended, including textures, scaling, and positioning.
 3. Prepare the Folder Structure <br />
 Navigate to the `Projects/codename25/visuals/3Ds/` directory.
 Identify the appropriate category folder for your model (e.g., `living_room` for living room assets).
