@@ -28,12 +28,13 @@ This application consists of several components that work together to create a s
 Interesting links:
 
 0) [link to Miro Management Board(since Summer 2024)](https://miro.com/app/board/uXjVKGo-O6M=/?share_link_id=615622177572)
-1) [link to Miro flowchart](https://miro.com/app/board/uXjVLV9t9UI=/?share_link_id=722076167204)
-2) [Last tests from November - December of 2024 for Bedrooms](https://drive.google.com/drive/folders/1h40hiGPe5YR-0qQE-AkL4Wa5tM2Z_DqJ?usp=drive_link)
-3) [Some of the good results we got with postprocessing](https://drive.google.com/drive/folders/1RD0QD8b955mVSouCyZdUKc254pT331rT?usp=drive_link)
-4) links to Backend DockerHub and Github(Made by Sviatoslav): [auth-service](https://hub.docker.com/r/1aughingbird543/auth-service), [email-service](https://hub.docker.com/r/1aughingbird543/email-service), [api-gateway](https://hub.docker.com/r/1aughingbird543/api-gateway), [ai-queue](https://hub.docker.com/r/1aughingbird543/ai-queue), [Backend Github](https://github.com/Codename25)
-5) links to Frontend(Made by Illia): [illiamartynov/startup](https://github.com/illiamartynov/startup)
-6) [link for testing scripts](https://github.com/AlexandrMilko/codename25other)
+1) [link to Trello Management Board(until Summer 2024)](https://drive.google.com/file/d/1D_77hu8ViCSUsE9VgCZHz5eRHnrW9n-t/view?usp=drive_link)
+2) [link to Miro flowchart](https://miro.com/app/board/uXjVLV9t9UI=/?share_link_id=722076167204)
+3) [Last tests from November - December of 2024 for Bedrooms](https://drive.google.com/drive/folders/1h40hiGPe5YR-0qQE-AkL4Wa5tM2Z_DqJ?usp=drive_link)
+4) [Some of the good results we got with postprocessing](https://drive.google.com/drive/folders/1RD0QD8b955mVSouCyZdUKc254pT331rT?usp=drive_link)
+5) links to Backend DockerHub and Github(Made by Sviatoslav): [auth-service](https://hub.docker.com/r/1aughingbird543/auth-service), [email-service](https://hub.docker.com/r/1aughingbird543/email-service), [api-gateway](https://hub.docker.com/r/1aughingbird543/api-gateway), [ai-queue](https://hub.docker.com/r/1aughingbird543/ai-queue), [Backend Github](https://github.com/Codename25)
+6) links to Frontend(Made by Illia): [illiamartynov/startup](https://github.com/illiamartynov/startup)
+7) [link for testing scripts](https://github.com/AlexandrMilko/codename25other)
 ## Application Components
 
 1. **codename25 Repo**  
