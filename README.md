@@ -13,7 +13,7 @@
 - **[Marcin Mika](https://www.linkedin.com/in/marcin-mika-69656a140/)**: Helped significantly with accounting projections and bureaucracy. Realist, makes conclusions based on facts and statistics.
 </br>
 
-# Documentation
+# Documentation 
 
 An application for virtual staging of rooms(empty room photos). 
 - **75% accuracy** from the last test(on simple bedroom layouts)! :sunglasses:
