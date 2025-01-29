@@ -16,7 +16,7 @@
 # Documentation 
 
 An application for virtual staging of rooms(empty room photos). 
-- **75% accuracy** from the last test(on simple bedroom layouts)! :sunglasses:
+- **74% accuracy** from the last test(on simple bedroom layouts)! :sunglasses:
 - Takes only **2 minutes**(per picture) to stage a room.
 - Uses **real 3D models**. Not an ordinary GenAI. </br>
 </br>
